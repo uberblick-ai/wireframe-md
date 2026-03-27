@@ -1,0 +1,194 @@
+:root {
+  --wf-paper: #f5f0e7;
+  --wf-paper-deep: #ebdfcf;
+  --wf-surface: #fffdf9;
+  --wf-surface-alt: #f4ebdc;
+  --wf-ink: #2a251f;
+  --wf-muted: #6c6458;
+  --wf-line: #8e8578;
+  --wf-line-soft: rgba(110, 100, 85, 0.22);
+  --wf-shadow: 0 18px 46px rgba(46, 39, 28, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(118, 95, 62, 0.12), transparent 26%),
+    linear-gradient(180deg, #f8f4ed 0%, #efe6d9 100%);
+  color: var(--wf-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.wf-fixture-root {
+  display: grid;
+  gap: 24px;
+  justify-content: start;
+  align-content: start;
+}
+
+.wf-empty {
+  padding: 18px 20px;
+  border: 1px dashed var(--wf-line);
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.8);
+  color: var(--wf-muted);
+}
+
+.wf-block-box {
+  overflow: hidden;
+}
+
+.wf-doc {
+  display: grid;
+  gap: 20px;
+  justify-content: start;
+  transform-origin: top left;
+}
+
+.wf-screen-shell {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--wf-line-soft);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 235, 220, 0.92)),
+    linear-gradient(135deg, rgba(115, 94, 67, 0.05), transparent);
+  box-shadow: var(--wf-shadow);
+}
+
+.wf-shell-head {
+  min-height: 28px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wf-shell-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.wf-shell-meta {
+  color: var(--wf-muted);
+  font-size: 0.82rem;
+}
+
+.wf-preview-box {
+  padding: 12px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(136, 111, 77, 0.06), rgba(136, 111, 77, 0)),
+    rgba(248, 243, 234, 0.9);
+}
+
+.wf-screen-frame {
+  position: relative;
+  width: max-content;
+}
+
+.wf-device-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wf-device-viewport {
+  position: absolute;
+  overflow: hidden;
+  background: #fbf8f1;
+}
+
+.wf-screen {
+  margin: 0;
+  position: relative;
+  background: #fbf8f1;
+  border: 2px solid #72695c;
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--wf-ink);
+}
+
+.wf-screen.in-device-frame {
+  border: 0;
+  border-radius: inherit;
+}
+
+.wf-screen-body {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background-image:
+    linear-gradient(transparent 95%, rgba(114, 105, 92, 0.06) 100%);
+  background-size: 100% 28px;
+}
+
+.wf-screen-placeholder {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: min(320px, 100%);
+  padding: 24px 18px;
+  border: 2px dashed rgba(114, 105, 92, 0.38);
+  border-radius: 18px;
+  background: rgba(255, 252, 246, 0.9);
+  text-align: center;
+}
+
+.wf-screen-device {
+  color: var(--wf-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wf-screen-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.wf-screen-size {
+  color: var(--wf-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+.wf-screen-lines {
+  display: grid;
+  gap: 8px;
+  width: min(260px, 100%);
+  margin-top: 6px;
+}
+
+.wf-screen-lines span {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(114, 105, 92, 0.18);
+}
+
+.wf-screen-lines .short {
+  width: 48%;
+}
+
+.wf-screen-lines .medium {
+  width: 74%;
+}
+
+.wf-screen-lines .long {
+  width: 100%;
+}

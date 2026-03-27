@@ -1,0 +1,12 @@
+{
+  "name": "@wireframe-md/html",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./styles.css": "./styles.css"
+  },
+  "dependencies": {
+    "@wireframe-md/core": "0.0.0"
+  }
+}

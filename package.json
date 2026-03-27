@@ -1,0 +1,21 @@
+{
+  "name": "wireframe-md-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.11.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "vitest run",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:docker": "docker compose run --rm playwright",
+    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install && npm run test:visual:update\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.0",
+    "vitest": "4.1.2"
+  }
+}

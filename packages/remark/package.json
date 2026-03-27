@@ -1,0 +1,13 @@
+{
+  "name": "@wireframe-md/remark",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@wireframe-md/core": "0.0.0",
+    "@wireframe-md/html": "0.0.0",
+    "unist-util-visit": "5.1.0"
+  }
+}
