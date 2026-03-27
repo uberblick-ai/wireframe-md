@@ -4,18 +4,21 @@ import { fileURLToPath } from "node:url";
 import { getDefaultStyles, renderMarkdownWireframesToHtml } from "../packages/html/src/index.js";
 import { siteCatalog } from "../site/catalog.js";
 
-const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
-const outDir = `${rootDir}/site-dist`;
-const siteStyles = readFileSync(`${rootDir}/site/site.css`, "utf8");
-const rendererStyles = getDefaultStyles();
+export const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
+export const outDir = `${rootDir}/site-dist`;
 
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
+export function buildSite() {
+  rmSync(outDir, { recursive: true, force: true });
+  mkdirSync(outDir, { recursive: true });
 
-writeFileSync(`${outDir}/.nojekyll`, "");
-writeFileSync(`${outDir}/index.html`, buildHtmlDocument());
+  writeFileSync(`${outDir}/.nojekyll`, "");
+  writeFileSync(`${outDir}/index.html`, buildHtmlDocument());
+}
 
-function buildHtmlDocument() {
+export function buildHtmlDocument() {
+  const siteStyles = readFileSync(`${rootDir}/site/site.css`, "utf8");
+  const rendererStyles = getDefaultStyles();
+
   return [
     "<!doctype html>",
     "<html lang=\"en\">",
@@ -162,4 +165,8 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  buildSite();
 }
