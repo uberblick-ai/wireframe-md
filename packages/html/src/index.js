@@ -135,7 +135,7 @@ function renderDeviceFrameMarkup(frameKind, metrics, title) {
     top: px(metrics.viewportTop),
     width: px(metrics.viewportWidth),
     height: px(metrics.viewportHeight),
-    borderRadius: px(metrics.viewportRadius),
+    ...getViewportRadiusStyles(frameKind, metrics),
   });
 
   return {
@@ -164,7 +164,7 @@ function getFrameMetrics(frameKind, width, height) {
         viewportTop: 76,
         viewportWidth: width,
         viewportHeight: height,
-        viewportRadius: 0,
+        viewportRadius: 18,
       };
     case "app":
     default:
@@ -198,7 +198,7 @@ function buildFrameSvg(frameKind, metrics, title) {
   const shared = [
     `<svg class="wf-device-svg" viewBox="0 0 ${metrics.outerWidth} ${metrics.outerHeight}" width="${metrics.outerWidth}" height="${metrics.outerHeight}" aria-hidden="true">`,
     `  <rect x="1" y="1" width="${metrics.outerWidth - 2}" height="${metrics.outerHeight - 2}" rx="${outerRadius}" fill="#f4ead7" stroke="#8d8372" stroke-width="2" />`,
-    `  <rect x="2" y="2" width="${metrics.outerWidth - 4}" height="${metrics.viewportTop - 2}" rx="${chromeRadius}" fill="${chromeFill}" />`,
+    buildTopRoundedChrome(metrics, chromeRadius, chromeFill),
     `  <line x1="2" y1="${metrics.viewportTop}" x2="${metrics.outerWidth - 2}" y2="${metrics.viewportTop}" stroke="#a39884" stroke-width="1.5" />`,
     "  <circle cx=\"18\" cy=\"20\" r=\"5\" fill=\"#d98b7b\" opacity=\"0.92\" />",
     "  <circle cx=\"32\" cy=\"20\" r=\"5\" fill=\"#d3b46d\" opacity=\"0.92\" />",
@@ -217,6 +217,33 @@ function buildFrameSvg(frameKind, metrics, title) {
   shared.push("  <text x=\"232\" y=\"28\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
   shared.push("</svg>");
   return shared.join("\n");
+}
+
+function getViewportRadiusStyles(frameKind, metrics) {
+  if (frameKind === "mobile") {
+    return {
+      borderRadius: px(metrics.viewportRadius),
+    };
+  }
+
+  return {
+    borderTopLeftRadius: "0",
+    borderTopRightRadius: "0",
+    borderBottomRightRadius: px(metrics.viewportRadius),
+    borderBottomLeftRadius: px(metrics.viewportRadius),
+  };
+}
+
+function buildTopRoundedChrome(metrics, radius, fill) {
+  const width = metrics.outerWidth - 4;
+  const height = metrics.viewportTop - 2;
+  const squareFillTop = 2 + radius;
+  const squareFillHeight = Math.max(0, height - radius);
+
+  return [
+    `  <rect x="2" y="2" width="${width}" height="${height}" rx="${radius}" fill="${fill}" />`,
+    `  <rect x="2" y="${squareFillTop}" width="${width}" height="${squareFillHeight}" fill="${fill}" />`,
+  ].join("\n");
 }
 
 function computeScale(naturalWidth, naturalHeight, box) {
