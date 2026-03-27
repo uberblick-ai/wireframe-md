@@ -214,9 +214,8 @@ function buildFrameSvg(frameKind, metrics, title) {
 
   shared.push(buildBrowserToolbarIcon("back", 78, 21));
   shared.push(buildBrowserToolbarIcon("forward", 98, 21));
-  shared.push(buildBrowserToolbarIcon("reload", 120, 21));
-  shared.push(`  <rect x="142" y="8" width="${Math.max(220, metrics.outerWidth - 158)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
-  shared.push("  <text x=\"160\" y=\"23\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
+  shared.push(`  <rect x="118" y="8" width="${Math.max(220, metrics.outerWidth - 134)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
+  shared.push("  <text x=\"136\" y=\"23\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
   shared.push("</svg>");
   return shared.join("\n");
 }
@@ -259,11 +258,7 @@ function buildBrowserToolbarIcon(kind, cx, cy) {
     return `  <path d="M ${cx - 4} ${cy - 6} L ${cx + 2} ${cy} L ${cx - 4} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />`;
   }
 
-  return [
-    `  <path d="M ${cx - 4.5} ${cy + 4.5} A 7 7 0 1 1 ${cx + 4.5} ${cy - 3.5}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
-    `  <path d="M ${cx + 4.5} ${cy - 3.5} L ${cx + 1.5} ${cy - 6.2}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
-    `  <path d="M ${cx + 4.5} ${cy - 3.5} L ${cx + 8.2} ${cy - 3.1}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
-  ].join("\n");
+  return "";
 }
 
 function computeScale(naturalWidth, naturalHeight, box) {
