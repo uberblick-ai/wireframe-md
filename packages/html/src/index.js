@@ -159,9 +159,9 @@ function getFrameMetrics(frameKind, width, height) {
     case "browser":
       return {
         outerWidth: width + 4,
-        outerHeight: height + 78,
+        outerHeight: height + 56,
         viewportLeft: 2,
-        viewportTop: 76,
+        viewportTop: 54,
         viewportWidth: width,
         viewportHeight: height,
         viewportRadius: 18,
@@ -211,10 +211,11 @@ function buildFrameSvg(frameKind, metrics, title) {
     return shared.join("\n");
   }
 
-  shared.push("  <rect x=\"78\" y=\"12\" width=\"122\" height=\"24\" rx=\"12\" fill=\"#fbf7ef\" stroke=\"#b4a894\" stroke-width=\"1\" />");
-  shared.push(`  <text x="98" y="28" font-size="11" font-family="ui-sans-serif, system-ui, sans-serif" fill="#7f7669">${escapeHtml(title || "wireframe.local")}</text>`);
-  shared.push(`  <rect x="214" y="12" width="${Math.max(220, metrics.outerWidth - 236)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
-  shared.push("  <text x=\"232\" y=\"28\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
+  shared.push(buildBrowserToolbarIcon("back", 80, 24));
+  shared.push(buildBrowserToolbarIcon("forward", 100, 24));
+  shared.push(buildBrowserToolbarIcon("reload", 122, 24));
+  shared.push(`  <rect x="142" y="11" width="${Math.max(220, metrics.outerWidth - 158)}" height="26" rx="13" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
+  shared.push("  <text x=\"160\" y=\"28\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
   shared.push("</svg>");
   return shared.join("\n");
 }
@@ -243,6 +244,23 @@ function buildTopRoundedChrome(metrics, radius, fill) {
   return [
     `  <rect x="2" y="2" width="${width}" height="${height}" rx="${radius}" fill="${fill}" />`,
     `  <rect x="2" y="${squareFillTop}" width="${width}" height="${squareFillHeight}" fill="${fill}" />`,
+  ].join("\n");
+}
+
+function buildBrowserToolbarIcon(kind, cx, cy) {
+  const stroke = "#7f7669";
+
+  if (kind === "back") {
+    return `  <path d="M ${cx + 4} ${cy - 6} L ${cx - 2} ${cy} L ${cx + 4} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />`;
+  }
+
+  if (kind === "forward") {
+    return `  <path d="M ${cx - 4} ${cy - 6} L ${cx + 2} ${cy} L ${cx - 4} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />`;
+  }
+
+  return [
+    `  <path d="M ${cx + 5} ${cy - 4} A 7 7 0 1 0 ${cx + 3} ${cy + 5}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
+    `  <path d="M ${cx + 1} ${cy + 3} L ${cx + 7} ${cy + 4} L ${cx + 5} ${cy - 1}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />`,
   ].join("\n");
 }
 
