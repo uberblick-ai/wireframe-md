@@ -130,9 +130,7 @@ body {
   display: grid;
   place-items: center;
   padding: 28px;
-  background-image:
-    linear-gradient(transparent 95%, rgba(114, 105, 92, 0.06) 100%);
-  background-size: 100% 28px;
+  background: #fbf8f1;
 }
 
 .wf-screen-placeholder {
