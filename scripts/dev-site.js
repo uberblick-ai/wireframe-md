@@ -1,11 +1,15 @@
 import { createServer } from "node:http";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, watch } from "node:fs";
-import { extname, join, normalize } from "node:path";
-import { buildSite, outDir, rootDir } from "./build-site.js";
+import { dirname, extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.PORT || 4173);
 const LIVE_RELOAD_PATH = "/__wireframe_md/live";
+const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
+const outDir = join(rootDir, "site-dist");
+const buildScriptPath = join(rootDir, "scripts/build-site.js");
 const WATCH_PATHS = [
   join(rootDir, "site"),
   join(rootDir, "scripts"),
@@ -27,7 +31,10 @@ const server = createServer((request, response) => {
 
   const filePath = resolveFilePath(url.pathname);
   if (!filePath || !existsSync(filePath)) {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+    response.writeHead(404, {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+    });
     response.end("Not found");
     return;
   }
@@ -35,7 +42,10 @@ const server = createServer((request, response) => {
   const raw = readFileSync(filePath);
   const type = contentType(filePath);
 
-  response.writeHead(200, { "content-type": type });
+  response.writeHead(200, {
+    "content-type": type,
+    "cache-control": "no-store",
+  });
 
   if (type.startsWith("text/html")) {
     response.end(injectLiveReload(raw.toString("utf8")));
@@ -127,13 +137,19 @@ function scheduleRebuild(filename) {
 }
 
 function buildAndLog(reason) {
-  try {
-    buildSite();
+  const result = spawnSync(process.execPath, [buildScriptPath], {
+    cwd: rootDir,
+    encoding: "utf8",
+  });
+
+  if (result.status === 0) {
     console.log(`[wireframe-md] rebuilt site (${reason})`);
-  } catch (error) {
-    console.error("[wireframe-md] site build failed");
-    console.error(error);
+    return;
   }
+
+  console.error("[wireframe-md] site build failed");
+  if (result.stdout) process.stderr.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
 }
 
 function broadcastReload() {
