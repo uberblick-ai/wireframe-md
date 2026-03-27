@@ -135,11 +135,6 @@ export function resolveDeviceProfile(rawDevice = "app") {
 }
 
 export function resolveScreenSize(attrs = {}, profile = DEVICE_PROFILES.app) {
-  if (attrs.size && /^(\d+)x(\d+)$/.test(String(attrs.size))) {
-    const [, width, height] = String(attrs.size).match(/^(\d+)x(\d+)$/);
-    return { width: Number(width), height: Number(height) };
-  }
-
   return {
     width: Number(attrs.width || profile.width),
     height: Number(attrs.height || profile.height),

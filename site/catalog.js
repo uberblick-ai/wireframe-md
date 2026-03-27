@@ -13,7 +13,7 @@ export const siteCatalog = {
       syntax: [
         "screen profile title=\"Profile\" device=mobile",
         "screen settings title=\"Settings\" device=app width=1120 height=760",
-        "screen dashboard title=\"Dashboard\" device=browser size=1366x900",
+        "screen dashboard title=\"Dashboard\" device=browser width=1366 height=900",
       ],
       options: [
         {
@@ -35,11 +35,6 @@ export const siteCatalog = {
           name: "height",
           values: "number",
           description: "Overrides the intrinsic height for the screen.",
-        },
-        {
-          name: "size",
-          values: "`<width>x<height>`",
-          description: "Shorthand for intrinsic width and height.",
         },
       ],
       blockOptions: [
@@ -102,12 +97,12 @@ export const siteCatalog = {
           ].join("\n"),
         },
         {
-          id: "explicit-size",
-          title: "Explicit Intrinsic Size",
-          description: "Intrinsic dimensions can be driven with `size` instead of separate width and height.",
+          id: "explicit-dimensions",
+          title: "Explicit Width and Height",
+          description: "Intrinsic dimensions are defined directly with `width` and `height`.",
           markdown: [
             "```wireframe[820x360]",
-            "screen analytics title=\"Analytics Overview\" device=browser size=1440x520",
+            "screen analytics title=\"Analytics Overview\" device=browser width=1440 height=520",
             "```",
           ].join("\n"),
         },

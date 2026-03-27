@@ -38,6 +38,13 @@ describe("core parsing", () => {
     expect(ast.children[1].attrs.height).toBe(640);
   });
 
+  it("ignores unsupported size shorthand and uses explicit dimensions only", () => {
+    const ast = parseWireframe("screen analytics title=\"Analytics\" device=browser size=1440x520 width=1200 height=600");
+    const screen = ast.children[0];
+
+    expect(screen.attrs.size).toBe("1440x520");
+  });
+
   it("rejects nested content in the screens-only v0", () => {
     expect(() =>
       parseWireframe([
