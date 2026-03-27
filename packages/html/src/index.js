@@ -260,9 +260,9 @@ function buildBrowserToolbarIcon(kind, cx, cy) {
   }
 
   return [
-    `  <path d="M ${cx + 5} ${cy - 2} A 7 7 0 1 0 ${cx - 1} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
-    `  <path d="M ${cx + 5} ${cy - 2} L ${cx + 1.5} ${cy - 5.5}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
-    `  <path d="M ${cx + 5} ${cy - 2} L ${cx + 9} ${cy - 2.5}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
+    `  <path d="M ${cx - 4.5} ${cy + 4.5} A 7 7 0 1 1 ${cx + 4.5} ${cy - 3.5}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
+    `  <path d="M ${cx + 4.5} ${cy - 3.5} L ${cx + 1.5} ${cy - 6.2}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
+    `  <path d="M ${cx + 4.5} ${cy - 3.5} L ${cx + 8.2} ${cy - 3.1}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
   ].join("\n");
 }
 
