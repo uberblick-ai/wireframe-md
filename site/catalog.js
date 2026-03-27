@@ -91,13 +91,13 @@ export const siteCatalog = {
           ].join("\n"),
         },
         {
-          id: "device-aliases",
-          title: "Device Aliases",
-          description: "The aliases `desktop` and `web` resolve to `app` and `browser`.",
+          id: "multiple-screens",
+          title: "Multiple Screens in One Block",
+          description: "A single wireframe block can render more than one screen, stacked in document order.",
           markdown: [
             "```wireframe[980x1220]",
-            "screen studio title=\"Studio App\" device=desktop width=1120 height=760",
-            "screen marketing title=\"Marketing Site\" device=web width=1280 height=720",
+            "screen studio title=\"Studio App\" device=app width=1120 height=760",
+            "screen marketing title=\"Marketing Site\" device=browser width=1280 height=720",
             "```",
           ].join("\n"),
         },

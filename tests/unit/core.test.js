@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  extractWireframeBlocks,
-  parseFenceInfo,
-  parseWireframe,
-  resolveDeviceProfile,
-} from "@wireframe-md/core";
+import { extractWireframeBlocks, parseFenceInfo, parseWireframe, resolveDeviceProfile } from "@wireframe-md/core";
 
 describe("core parsing", () => {
   it("parses inline fence render-box syntax", () => {
@@ -52,8 +47,8 @@ describe("core parsing", () => {
     ).toThrow(/Only top-level screens are supported/);
   });
 
-  it("resolves device aliases", () => {
-    expect(resolveDeviceProfile("desktop").name).toBe("app");
-    expect(resolveDeviceProfile("web").name).toBe("browser");
+  it("rejects unsupported devices", () => {
+    expect(() => resolveDeviceProfile("desktop")).toThrow(/Unsupported device "desktop"/);
+    expect(() => resolveDeviceProfile("web")).toThrow(/Unsupported device "web"/);
   });
 });

@@ -4,11 +4,6 @@ export const DEVICE_PROFILES = {
   browser: { name: "browser", label: "web browser", frame: "browser", width: 1440, height: 900 },
 };
 
-export const DEVICE_ALIASES = {
-  desktop: "app",
-  web: "browser",
-};
-
 const FENCE_REGEX = /```([^\n]*)\n([\s\S]*?)```/g;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
 
@@ -126,8 +121,17 @@ export function parseNodeLine(line, lineNumber = 1) {
 
 export function resolveDeviceProfile(rawDevice = "app") {
   const requested = String(rawDevice || "app").toLowerCase();
-  const resolved = DEVICE_ALIASES[requested] || requested;
-  return DEVICE_PROFILES[resolved] || DEVICE_PROFILES.app;
+  const profile = DEVICE_PROFILES[requested];
+
+  if (profile) {
+    return profile;
+  }
+
+  if (!rawDevice) {
+    return DEVICE_PROFILES.app;
+  }
+
+  throw new Error(`Unsupported device "${rawDevice}". Expected one of: mobile, app, browser.`);
 }
 
 export function resolveScreenSize(attrs = {}, profile = DEVICE_PROFILES.app) {
