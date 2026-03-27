@@ -159,9 +159,9 @@ function getFrameMetrics(frameKind, width, height) {
     case "browser":
       return {
         outerWidth: width + 4,
-        outerHeight: height + 56,
+        outerHeight: height + 48,
         viewportLeft: 2,
-        viewportTop: 54,
+        viewportTop: 46,
         viewportWidth: width,
         viewportHeight: height,
         viewportRadius: 18,
@@ -195,14 +195,15 @@ function buildFrameSvg(frameKind, metrics, title) {
   const outerRadius = frameKind === "browser" ? 18 : 20;
   const chromeRadius = frameKind === "browser" ? 16 : 18;
   const chromeFill = frameKind === "browser" ? "#efe3cf" : "#eadfc9";
+  const trafficLightY = frameKind === "browser" ? 17 : 20;
   const shared = [
     `<svg class="wf-device-svg" viewBox="0 0 ${metrics.outerWidth} ${metrics.outerHeight}" width="${metrics.outerWidth}" height="${metrics.outerHeight}" aria-hidden="true">`,
     `  <rect x="1" y="1" width="${metrics.outerWidth - 2}" height="${metrics.outerHeight - 2}" rx="${outerRadius}" fill="#f4ead7" stroke="#8d8372" stroke-width="2" />`,
     buildTopRoundedChrome(metrics, chromeRadius, chromeFill),
     `  <line x1="2" y1="${metrics.viewportTop}" x2="${metrics.outerWidth - 2}" y2="${metrics.viewportTop}" stroke="#a39884" stroke-width="1.5" />`,
-    "  <circle cx=\"18\" cy=\"20\" r=\"5\" fill=\"#d98b7b\" opacity=\"0.92\" />",
-    "  <circle cx=\"32\" cy=\"20\" r=\"5\" fill=\"#d3b46d\" opacity=\"0.92\" />",
-    "  <circle cx=\"46\" cy=\"20\" r=\"5\" fill=\"#8db485\" opacity=\"0.92\" />",
+    `  <circle cx="18" cy="${trafficLightY}" r="5" fill="#d98b7b" opacity="0.92" />`,
+    `  <circle cx="32" cy="${trafficLightY}" r="5" fill="#d3b46d" opacity="0.92" />`,
+    `  <circle cx="46" cy="${trafficLightY}" r="5" fill="#8db485" opacity="0.92" />`,
   ];
 
   if (frameKind === "app") {
@@ -211,11 +212,11 @@ function buildFrameSvg(frameKind, metrics, title) {
     return shared.join("\n");
   }
 
-  shared.push(buildBrowserToolbarIcon("back", 80, 24));
-  shared.push(buildBrowserToolbarIcon("forward", 100, 24));
-  shared.push(buildBrowserToolbarIcon("reload", 122, 24));
-  shared.push(`  <rect x="142" y="11" width="${Math.max(220, metrics.outerWidth - 158)}" height="26" rx="13" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
-  shared.push("  <text x=\"160\" y=\"28\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
+  shared.push(buildBrowserToolbarIcon("back", 78, 21));
+  shared.push(buildBrowserToolbarIcon("forward", 98, 21));
+  shared.push(buildBrowserToolbarIcon("reload", 120, 21));
+  shared.push(`  <rect x="142" y="8" width="${Math.max(220, metrics.outerWidth - 158)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
+  shared.push("  <text x=\"160\" y=\"23\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
   shared.push("</svg>");
   return shared.join("\n");
 }
@@ -259,8 +260,9 @@ function buildBrowserToolbarIcon(kind, cx, cy) {
   }
 
   return [
-    `  <path d="M ${cx + 5} ${cy - 4} A 7 7 0 1 0 ${cx + 3} ${cy + 5}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
-    `  <path d="M ${cx + 1} ${cy + 3} L ${cx + 7} ${cy + 4} L ${cx + 5} ${cy - 1}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />`,
+    `  <path d="M ${cx + 5} ${cy - 2} A 7 7 0 1 0 ${cx - 1} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" />`,
+    `  <path d="M ${cx + 5} ${cy - 2} L ${cx + 1.5} ${cy - 5.5}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
+    `  <path d="M ${cx + 5} ${cy - 2} L ${cx + 9} ${cy - 2.5}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" />`,
   ].join("\n");
 }
 
