@@ -4,6 +4,8 @@ export const DEVICE_PROFILES = {
   browser: { name: "browser", label: "web browser", frame: "browser", width: 1440, height: 900 },
 };
 
+const INDENT_SIZE = 2;
+const SUPPORTED_NODE_KINDS = new Set(["screen", "split", "region"]);
 const FENCE_REGEX = /```([^\n]*)\n([\s\S]*?)```/g;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
 
@@ -65,25 +67,38 @@ export function normalizeRenderBox(options = {}) {
 
 export function parseWireframe(source) {
   const lines = source.replace(/\t/g, "  ").split("\n");
-  const children = [];
+  const root = {
+    kind: "root",
+    children: [],
+  };
+  const stack = [{ indent: -1, node: root, lineNumber: 0 }];
 
   lines.forEach((rawLine, lineIndex) => {
     if (!rawLine.trim()) return;
 
-    const indent = rawLine.match(/^ */)[0].length;
-    if (indent !== 0) {
-      throw new Error(`Only top-level screens are supported in v0. Found indentation on line ${lineIndex + 1}.`);
+    const lineNumber = lineIndex + 1;
+    const indent = normalizeIndent(rawLine.match(/^ */)[0].length, lineNumber);
+
+    while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
+      finalizeNode(stack.pop());
     }
 
-    const node = parseNodeLine(rawLine.trim(), lineIndex + 1);
-    if (node.kind !== "screen") {
-      throw new Error(`Only "screen" is supported in v0. Found "${node.kind}" on line ${lineIndex + 1}.`);
+    const parentEntry = stack[stack.length - 1];
+    if (indent > parentEntry.indent + 1) {
+      throw new Error(`Invalid indentation on line ${lineNumber}. Indentation can only increase by one level at a time.`);
     }
 
-    children.push(node);
+    const node = parseNodeLine(rawLine.trim(), lineNumber);
+    validateParentChild(parentEntry.node, node, lineNumber);
+    parentEntry.node.children.push(node);
+    stack.push({ indent, node, lineNumber });
   });
 
-  return { kind: "root", children };
+  while (stack.length > 1) {
+    finalizeNode(stack.pop());
+  }
+
+  return root;
 }
 
 export function parseNodeLine(line, lineNumber = 1) {
@@ -141,6 +156,65 @@ export function resolveScreenSize(attrs = {}, profile = DEVICE_PROFILES.app) {
   };
 }
 
+export function resolveSplitAxis(rawAxis = "horizontal") {
+  const axis = String(rawAxis || "horizontal").toLowerCase();
+
+  if (axis === "horizontal" || axis === "vertical") {
+    return axis;
+  }
+
+  throw new Error(`Unsupported split axis "${rawAxis}". Expected "horizontal" or "vertical".`);
+}
+
+export function resolveSplitDefinition(attrs = {}, childCount = 0) {
+  if (childCount < 2) {
+    throw new Error(`A "split" must contain at least 2 child nodes. Found ${childCount}.`);
+  }
+
+  const axis = resolveSplitAxis(attrs.axis);
+  const surface = resolveSurfaceStyle(attrs.surface);
+  const sizes = resolveSplitSizes(attrs.sizes, childCount);
+
+  return { axis, surface, sizes };
+}
+
+export function resolveSurfaceStyle(rawSurface = "card") {
+  const surface = String(rawSurface || "card").toLowerCase();
+
+  if (surface === "card" || surface === "plain") {
+    return surface;
+  }
+
+  throw new Error(`Unsupported surface "${rawSurface}". Expected "card" or "plain".`);
+}
+
+function resolveSplitSizes(rawSizes = "", childCount = 0) {
+  if (rawSizes == null || rawSizes === "") {
+    return Array.from({ length: childCount }, () => ({ kind: "rest" }));
+  }
+
+  const tokens = String(rawSizes)
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (tokens.length !== childCount) {
+    throw new Error(`Split sizes must provide one entry per child. Expected ${childCount}, received ${tokens.length}.`);
+  }
+
+  return tokens.map((token) => {
+    if (token.toLowerCase() === "rest") {
+      return { kind: "rest" };
+    }
+
+    if (/^\d+$/.test(token)) {
+      return { kind: "fixed", value: Number(token) };
+    }
+
+    throw new Error(`Unsupported split size "${token}". Use pixels like "260" or "rest".`);
+  });
+}
+
 function parseValue(rawValue) {
   if (isQuoted(rawValue)) return unquote(rawValue);
   if (rawValue === "true") return true;
@@ -155,4 +229,55 @@ function isQuoted(token) {
 
 function unquote(token) {
   return token.slice(1, -1).replace(/\\"/g, "\"");
+}
+
+function normalizeIndent(rawIndent, lineNumber) {
+  if (rawIndent % INDENT_SIZE !== 0) {
+    throw new Error(`Invalid indentation on line ${lineNumber}. Use multiples of ${INDENT_SIZE} spaces.`);
+  }
+
+  return rawIndent / INDENT_SIZE;
+}
+
+function validateParentChild(parent, node, lineNumber) {
+  if (!SUPPORTED_NODE_KINDS.has(node.kind)) {
+    throw new Error(`Unsupported node "${node.kind}" on line ${lineNumber}. Expected one of: screen, split, region.`);
+  }
+
+  switch (parent.kind) {
+    case "root":
+      if (node.kind !== "screen") {
+        throw new Error(`Only "screen" is supported at the top level. Found "${node.kind}" on line ${lineNumber}.`);
+      }
+      return;
+    case "screen":
+      if (parent.children.length >= 1) {
+        throw new Error(`A "screen" can only contain one child layout node. Found "${node.kind}" on line ${lineNumber}.`);
+      }
+      if (node.kind !== "split" && node.kind !== "region") {
+        throw new Error(`Only "split" and "region" are supported inside "screen". Found "${node.kind}" on line ${lineNumber}.`);
+      }
+      return;
+    case "split":
+      if (node.kind !== "split" && node.kind !== "region") {
+        throw new Error(`Only "split" and "region" are supported inside "split". Found "${node.kind}" on line ${lineNumber}.`);
+      }
+      return;
+    case "region":
+      throw new Error(`"region" cannot contain nested content. Found "${node.kind}" on line ${lineNumber}.`);
+    default:
+      throw new Error(`Unsupported parent "${parent.kind}" on line ${lineNumber}.`);
+  }
+}
+
+function finalizeNode(entry) {
+  if (entry.node.kind !== "split") {
+    return;
+  }
+
+  try {
+    resolveSplitDefinition(entry.node.attrs, entry.node.children.length);
+  } catch (error) {
+    throw new Error(`Split on line ${entry.lineNumber}: ${error.message}`);
+  }
 }

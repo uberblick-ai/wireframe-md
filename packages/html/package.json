@@ -7,6 +7,6 @@
     "./styles.css": "./styles.css"
   },
   "dependencies": {
-    "@wireframe-md/core": "0.0.0"
+    "@wireframe-md/core": "workspace:*"
   }
 }

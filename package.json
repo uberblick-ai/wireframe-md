@@ -2,21 +2,24 @@
   "name": "wireframe-md-workspace",
   "private": true,
   "type": "module",
-  "packageManager": "npm@11.11.0",
+  "packageManager": "bun@1.3.10",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build:site": "node scripts/build-site.js",
-    "dev:site": "node scripts/dev-site.js",
-    "test": "npm run test:unit",
+    "build:site": "bun scripts/build-site.js",
+    "dev:site": "bun scripts/dev-site.js",
+    "test": "bun run test:unit",
     "test:unit": "vitest run",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "test:visual:docker": "docker compose run --rm playwright",
-    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install && npm run test:visual:update\""
+    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install -g bun@1.3.10 && bun install --frozen-lockfile && bun run test:visual:update\""
   },
   "devDependencies": {
+    "@wireframe-md/core": "workspace:*",
+    "@wireframe-md/html": "workspace:*",
+    "@wireframe-md/remark": "workspace:*",
     "@playwright/test": "1.58.0",
     "vitest": "4.1.2"
   }

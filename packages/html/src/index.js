@@ -5,6 +5,8 @@ import {
   parseWireframe,
   resolveDeviceProfile,
   resolveScreenSize,
+  resolveSplitDefinition,
+  resolveSurfaceStyle,
 } from "@wireframe-md/core";
 
 const DEFAULT_STYLES = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -81,32 +83,25 @@ function buildScreenModel(node) {
   const profile = resolveDeviceProfile(node.attrs.device);
   const { width, height } = resolveScreenSize(node.attrs, profile);
   const title = node.attrs.title || node.texts[0] || node.bare[0] || "Screen";
+  const url = node.attrs.url || null;
   const metrics = getFrameMetrics(profile.frame, width, height);
   const naturalWidth = metrics.outerWidth + PREVIEW_PADDING * 2 + SHELL_PADDING * 2;
   const naturalHeight = metrics.outerHeight + PREVIEW_PADDING * 2 + SHELL_PADDING * 2 + SHELL_GAP + SHELL_HEAD_HEIGHT;
+  const screenContent = buildScreenContent(node, { profile, title, width, height });
 
   return {
     naturalWidth,
     naturalHeight,
-    html: renderScreenShell({ metrics, profile, title, width, height }),
+    html: renderScreenShell({ metrics, profile, title, url, width, height, ...screenContent }),
   };
 }
 
-function renderScreenShell({ metrics, profile, title, width, height }) {
-  const { frameMarkup, viewportStyle } = renderDeviceFrameMarkup(profile.frame, metrics, title);
+function renderScreenShell({ metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
+  const { frameMarkup, viewportStyle } = renderDeviceFrameMarkup(profile.frame, metrics, title, url);
   const screenMarkup = [
     `<figure class="wf-screen in-device-frame ${escapeHtml(profile.frame)}" style="${styleAttr({ width: px(width), height: px(height) })}">`,
-    "  <div class=\"wf-screen-body\">",
-    "    <div class=\"wf-screen-placeholder\">",
-    `      <div class="wf-screen-device">${escapeHtml(profile.label)}</div>`,
-    `      <div class="wf-screen-name">${escapeHtml(title)}</div>`,
-    `      <div class="wf-screen-size">${width}x${height}</div>`,
-    "      <div class=\"wf-screen-lines\" aria-hidden=\"true\">",
-    "        <span class=\"long\"></span>",
-    "        <span class=\"medium\"></span>",
-    "        <span class=\"short\"></span>",
-    "      </div>",
-    "    </div>",
+    `  <div class="${escapeHtml(bodyClassName)}">`,
+    screenContent,
     "  </div>",
     "</figure>",
   ].join("\n");
@@ -129,7 +124,86 @@ function renderScreenShell({ metrics, profile, title, width, height }) {
   ].join("\n");
 }
 
-function renderDeviceFrameMarkup(frameKind, metrics, title) {
+function buildScreenContent(node, { profile, title, width, height }) {
+  if (!node.children.length) {
+    return {
+      bodyClassName: "wf-screen-body",
+      screenContent: renderScreenPlaceholder({ profile, title, width, height }),
+    };
+  }
+
+  return {
+    bodyClassName: "wf-screen-body has-layout",
+    screenContent: [
+      "    <div class=\"wf-layout-root\">",
+      renderLayoutNode(node.children[0], 0),
+      "    </div>",
+    ].join("\n"),
+  };
+}
+
+function renderScreenPlaceholder({ profile, title, width, height }) {
+  return [
+    "    <div class=\"wf-screen-placeholder\">",
+    `      <div class="wf-screen-device">${escapeHtml(profile.label)}</div>`,
+    `      <div class="wf-screen-name">${escapeHtml(title)}</div>`,
+    `      <div class="wf-screen-size">${width}x${height}</div>`,
+    "      <div class=\"wf-screen-lines\" aria-hidden=\"true\">",
+    "        <span class=\"long\"></span>",
+    "        <span class=\"medium\"></span>",
+    "        <span class=\"short\"></span>",
+    "      </div>",
+    "    </div>",
+  ].join("\n");
+}
+
+function renderLayoutNode(node, depth) {
+  switch (node.kind) {
+    case "split":
+      return renderSplitNode(node, depth);
+    case "region":
+      return renderRegionNode(node, depth);
+    default:
+      return `<div class="wf-empty">Unsupported node: ${escapeHtml(node.kind)}</div>`;
+  }
+}
+
+function renderSplitNode(node, depth) {
+  const split = resolveSplitDefinition(node.attrs, node.children.length);
+
+  return [
+    `      <section class="wf-split axis-${escapeHtml(split.axis)} surface-${escapeHtml(split.surface)} depth-${depth}">`,
+    ...node.children.map((child, index) => {
+      const paneStyle = styleAttr(buildSplitPaneStyles(split.axis, split.sizes[index]));
+
+      return [
+        `        <div class="wf-split-pane" style="${paneStyle}">`,
+        renderLayoutNode(child, depth + 1),
+        "        </div>",
+      ].join("\n");
+    }),
+    "      </section>",
+  ].join("\n");
+}
+
+function renderRegionNode(node, depth) {
+  const surface = resolveSurfaceStyle(node.attrs.surface);
+  const label = node.attrs.label || node.texts[0] || node.bare[0] || "Region";
+
+  return [
+    `          <section class="wf-region surface-${escapeHtml(surface)} depth-${depth}">`,
+    "            <div class=\"wf-region-chip\">region</div>",
+    `            <div class="wf-region-label">${escapeHtml(label)}</div>`,
+    "            <div class=\"wf-region-lines\" aria-hidden=\"true\">",
+    "              <span class=\"long\"></span>",
+    "              <span class=\"medium\"></span>",
+    "              <span class=\"short\"></span>",
+    "            </div>",
+    "          </section>",
+  ].join("\n");
+}
+
+function renderDeviceFrameMarkup(frameKind, metrics, title, url) {
   const viewportStyle = styleAttr({
     left: px(metrics.viewportLeft),
     top: px(metrics.viewportTop),
@@ -140,7 +214,7 @@ function renderDeviceFrameMarkup(frameKind, metrics, title) {
 
   return {
     viewportStyle,
-    frameMarkup: buildFrameSvg(frameKind, metrics, title),
+    frameMarkup: buildFrameSvg(frameKind, metrics, title, url),
   };
 }
 
@@ -180,7 +254,7 @@ function getFrameMetrics(frameKind, width, height) {
   }
 }
 
-function buildFrameSvg(frameKind, metrics, title) {
+function buildFrameSvg(frameKind, metrics, title, url) {
   if (frameKind === "mobile") {
     return [
       `<svg class="wf-device-svg" viewBox="0 0 ${metrics.outerWidth} ${metrics.outerHeight}" width="${metrics.outerWidth}" height="${metrics.outerHeight}" aria-hidden="true">`,
@@ -215,7 +289,7 @@ function buildFrameSvg(frameKind, metrics, title) {
   shared.push(buildBrowserToolbarIcon("back", 78, 21));
   shared.push(buildBrowserToolbarIcon("forward", 98, 21));
   shared.push(`  <rect x="118" y="8" width="${Math.max(220, metrics.outerWidth - 134)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
-  shared.push("  <text x=\"136\" y=\"23\" font-size=\"11\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" fill=\"#7f7669\">https://wireframe.local</text>");
+  shared.push(`  <text x="136" y="23" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#7f7669">${escapeHtml(url || "https://wireframe.local")}</text>`);
   shared.push("</svg>");
   return shared.join("\n");
 }
@@ -277,6 +351,34 @@ function computeScale(naturalWidth, naturalHeight, box) {
   }
 
   return round(scale);
+}
+
+function buildSplitPaneStyles(axis, size) {
+  const base = {
+    minWidth: "0",
+    minHeight: "0",
+  };
+
+  if (size.kind === "rest") {
+    return {
+      ...base,
+      flex: "1 1 0",
+    };
+  }
+
+  if (axis === "horizontal") {
+    return {
+      ...base,
+      flex: `0 0 ${px(size.value)}`,
+      width: px(size.value),
+    };
+  }
+
+  return {
+    ...base,
+    flex: `0 0 ${px(size.value)}`,
+    height: px(size.value),
+  };
 }
 
 function styleAttr(styles) {
