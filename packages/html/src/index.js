@@ -41,11 +41,14 @@ export function renderMarkdownWireframesToHtml(markdownSource) {
 
 export function renderFixtureDocument(markdownSource, options = {}) {
   const title = options.title || "wireframe-md fixture";
+  const theme = normalizeThemeOption(options.theme);
+  const htmlClass = theme === "auto" ? "" : theme;
+  const rootClassName = ["wf-fixture-root", resolveThemeClassName(theme)].filter(Boolean).join(" ");
   const body = renderMarkdownWireframesToHtml(markdownSource) || "<div class=\"wf-empty\">No wireframe blocks found.</div>";
 
   return [
     "<!doctype html>",
-    "<html lang=\"en\">",
+    `<html lang="en"${htmlClass ? ` class="${htmlClass}"` : ""}>`,
     "  <head>",
     "    <meta charset=\"utf-8\">",
     "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
@@ -53,7 +56,7 @@ export function renderFixtureDocument(markdownSource, options = {}) {
     `    <style>${DEFAULT_STYLES}</style>`,
     "  </head>",
     "  <body>",
-    `    <main class="wf-fixture-root" data-testid="fixture-root">${body}</main>`,
+    `    <main class="${rootClassName}" data-testid="fixture-root">${body}</main>`,
     "  </body>",
     "</html>",
   ].join("\n");
@@ -72,6 +75,7 @@ export function renderWireframeBlockToHtml(source, options = {}) {
   const scale = computeScale(naturalWidth, naturalHeight, box);
   const renderedWidth = round(naturalWidth * scale);
   const renderedHeight = round(naturalHeight * scale);
+  const themeClassName = resolveThemeClassName(normalizeThemeOption(options.theme));
   const blockStyles = styleAttr({
     width: px(box.boxWidth ?? renderedWidth),
     height: px(box.boxHeight ?? renderedHeight),
@@ -83,12 +87,28 @@ export function renderWireframeBlockToHtml(source, options = {}) {
   });
 
   return [
-    `<div class="wf-block-box" style="${blockStyles}">`,
+    `<div class="wf-block-box${themeClassName ? ` ${themeClassName}` : ""}" style="${blockStyles}">`,
     `  <div class="wf-doc" style="${docStyles}">`,
     models.map((model) => model.html).join("\n"),
     "  </div>",
     "</div>",
   ].join("\n");
+}
+
+function normalizeThemeOption(rawTheme = "auto") {
+  const theme = String(rawTheme || "auto").toLowerCase();
+
+  if (theme === "auto" || theme === "light" || theme === "dark") {
+    return theme;
+  }
+
+  throw new Error(`Unsupported theme "${rawTheme}". Expected "auto", "light", or "dark".`);
+}
+
+function resolveThemeClassName(theme) {
+  if (theme === "light") return "wf-theme-light";
+  if (theme === "dark") return "wf-theme-dark";
+  return "";
 }
 
 function buildTopLevelModel(node) {
@@ -343,38 +363,38 @@ function buildFrameSvg(frameKind, metrics, title, url) {
   if (frameKind === "mobile") {
     return [
       `<svg class="wf-device-svg" viewBox="0 0 ${metrics.outerWidth} ${metrics.outerHeight}" width="${metrics.outerWidth}" height="${metrics.outerHeight}" aria-hidden="true">`,
-      `  <rect x="3" y="3" width="${metrics.outerWidth - 6}" height="${metrics.outerHeight - 6}" rx="42" fill="#23211d" stroke="#6a6259" stroke-width="2" />`,
-      `  <rect x="${round(metrics.outerWidth / 2 - 42)}" y="10" width="84" height="8" rx="4" fill="#141311" />`,
-      `  <circle cx="${round(metrics.outerWidth / 2 + 56)}" cy="14" r="3.5" fill="#141311" />`,
-      `  <rect x="${round(metrics.outerWidth / 2 - 44)}" y="${metrics.outerHeight - 14}" width="88" height="5" rx="2.5" fill="#c6b9a4" opacity="0.65" />`,
+      `  <rect x="3" y="3" width="${metrics.outerWidth - 6}" height="${metrics.outerHeight - 6}" rx="42" fill="var(--wf-device-mobile-fill)" stroke="var(--wf-device-mobile-stroke)" stroke-width="2" />`,
+      `  <rect x="${round(metrics.outerWidth / 2 - 42)}" y="10" width="84" height="8" rx="4" fill="var(--wf-device-mobile-cutout)" />`,
+      `  <circle cx="${round(metrics.outerWidth / 2 + 56)}" cy="14" r="3.5" fill="var(--wf-device-mobile-cutout)" />`,
+      `  <rect x="${round(metrics.outerWidth / 2 - 44)}" y="${metrics.outerHeight - 14}" width="88" height="5" rx="2.5" fill="var(--wf-device-mobile-home)" opacity="0.72" />`,
       "</svg>",
     ].join("\n");
   }
 
   const outerRadius = frameKind === "browser" ? 18 : 20;
   const chromeRadius = frameKind === "browser" ? 16 : 18;
-  const chromeFill = frameKind === "browser" ? "#efe3cf" : "#eadfc9";
+  const chromeFill = frameKind === "browser" ? "var(--wf-device-browser-chrome)" : "var(--wf-device-app-chrome)";
   const trafficLightY = frameKind === "browser" ? 17 : 20;
   const shared = [
     `<svg class="wf-device-svg" viewBox="0 0 ${metrics.outerWidth} ${metrics.outerHeight}" width="${metrics.outerWidth}" height="${metrics.outerHeight}" aria-hidden="true">`,
-    `  <rect x="1" y="1" width="${metrics.outerWidth - 2}" height="${metrics.outerHeight - 2}" rx="${outerRadius}" fill="#f4ead7" stroke="#8d8372" stroke-width="2" />`,
+    `  <rect x="1" y="1" width="${metrics.outerWidth - 2}" height="${metrics.outerHeight - 2}" rx="${outerRadius}" fill="var(--wf-device-outer-fill)" stroke="var(--wf-device-outer-stroke)" stroke-width="2" />`,
     buildTopRoundedChrome(metrics, chromeRadius, chromeFill),
-    `  <line x1="2" y1="${metrics.viewportTop}" x2="${metrics.outerWidth - 2}" y2="${metrics.viewportTop}" stroke="#a39884" stroke-width="1.5" />`,
-    `  <circle cx="18" cy="${trafficLightY}" r="5" fill="#d98b7b" opacity="0.92" />`,
-    `  <circle cx="32" cy="${trafficLightY}" r="5" fill="#d3b46d" opacity="0.92" />`,
-    `  <circle cx="46" cy="${trafficLightY}" r="5" fill="#8db485" opacity="0.92" />`,
+    `  <line x1="2" y1="${metrics.viewportTop}" x2="${metrics.outerWidth - 2}" y2="${metrics.viewportTop}" stroke="var(--wf-device-divider)" stroke-width="1.5" />`,
+    `  <circle cx="18" cy="${trafficLightY}" r="5" fill="var(--wf-device-traffic-red)" opacity="0.92" />`,
+    `  <circle cx="32" cy="${trafficLightY}" r="5" fill="var(--wf-device-traffic-yellow)" opacity="0.92" />`,
+    `  <circle cx="46" cy="${trafficLightY}" r="5" fill="var(--wf-device-traffic-green)" opacity="0.92" />`,
   ];
 
   if (frameKind === "app") {
-    shared.push(`  <text x="${round(metrics.outerWidth / 2)}" y="25" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif" fill="#655d52">${escapeHtml(title)}</text>`);
+    shared.push(`  <text x="${round(metrics.outerWidth / 2)}" y="25" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif" fill="var(--wf-device-title)">${escapeHtml(title)}</text>`);
     shared.push("</svg>");
     return shared.join("\n");
   }
 
   shared.push(buildBrowserToolbarIcon("back", 78, 21));
   shared.push(buildBrowserToolbarIcon("forward", 98, 21));
-  shared.push(`  <rect x="118" y="8" width="${Math.max(220, metrics.outerWidth - 134)}" height="24" rx="12" fill="#fffdf8" stroke="#b4a894" stroke-width="1" />`);
-  shared.push(`  <text x="136" y="23" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#7f7669">${escapeHtml(url || "https://wireframe.local")}</text>`);
+  shared.push(`  <rect x="118" y="8" width="${Math.max(220, metrics.outerWidth - 134)}" height="24" rx="12" fill="var(--wf-device-url-fill)" stroke="var(--wf-device-url-stroke)" stroke-width="1" />`);
+  shared.push(`  <text x="136" y="23" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--wf-device-url-text)">${escapeHtml(url || "https://wireframe.local")}</text>`);
   shared.push("</svg>");
   return shared.join("\n");
 }
@@ -407,7 +427,7 @@ function buildTopRoundedChrome(metrics, radius, fill) {
 }
 
 function buildBrowserToolbarIcon(kind, cx, cy) {
-  const stroke = "#7f7669";
+  const stroke = "var(--wf-device-toolbar)";
 
   if (kind === "back") {
     return `  <path d="M ${cx + 4} ${cy - 6} L ${cx - 2} ${cy} L ${cx + 4} ${cy + 6}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />`;

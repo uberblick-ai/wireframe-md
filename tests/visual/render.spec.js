@@ -8,8 +8,9 @@ const fixtureFiles = readdirSync(fixturesDir).filter((name) => name.endsWith(".m
 for (const fixtureName of fixtureFiles) {
   test(fixtureName, async ({ page }) => {
     const markdown = readFileSync(new URL(`./fixtures/${fixtureName}`, import.meta.url), "utf8");
+    const theme = fixtureName.endsWith("-dark.md") ? "dark" : "auto";
 
-    await page.setContent(renderFixtureDocument(markdown, { title: fixtureName }), {
+    await page.setContent(renderFixtureDocument(markdown, { title: fixtureName, theme }), {
       waitUntil: "load",
     });
 
