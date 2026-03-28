@@ -2,7 +2,7 @@
 
 /**
  * @typedef {"mobile" | "app" | "browser"} DeviceName
- * @typedef {"screen" | "split" | "region"} WireframeNodeKind
+ * @typedef {"screen" | "frame" | "split" | "region"} WireframeNodeKind
  * @typedef {"horizontal" | "vertical"} SplitAxis
  * @typedef {"card" | "plain"} SurfaceStyle
  * @typedef {string | number | boolean} WireframeAttrValue
@@ -26,7 +26,7 @@ export const DEVICE_PROFILES = {
 };
 
 const INDENT_SIZE = 2;
-const SUPPORTED_NODE_KINDS = new Set(["screen", "split", "region"]);
+const SUPPORTED_NODE_KINDS = new Set(["screen", "frame", "split", "region"]);
 const FENCE_START_REGEX = /^( {0,3})(`{3,}|~{3,})([^\n]*)$/;
 const FENCE_CLOSE_REGEX = /^( {0,3})(`{3,}|~{3,})[ \t]*$/;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
@@ -327,16 +327,17 @@ function validateParentChild(parent, node, lineNumber) {
 
   switch (parent.kind) {
     case "root":
-      if (node.kind !== "screen") {
-        throw new Error(`Only "screen" is supported at the top level. Found "${node.kind}" on line ${lineNumber}.`);
+      if (node.kind !== "screen" && node.kind !== "frame") {
+        throw new Error(`Only "screen" and "frame" are supported at the top level. Found "${node.kind}" on line ${lineNumber}.`);
       }
       return;
     case "screen":
+    case "frame":
       if (parent.children.length >= 1) {
-        throw new Error(`A "screen" can only contain one child layout node. Found "${node.kind}" on line ${lineNumber}.`);
+        throw new Error(`A "${parent.kind}" can only contain one child layout node. Found "${node.kind}" on line ${lineNumber}.`);
       }
       if (node.kind !== "split" && node.kind !== "region") {
-        throw new Error(`Only "split" and "region" are supported inside "screen". Found "${node.kind}" on line ${lineNumber}.`);
+        throw new Error(`Only "split" and "region" are supported inside "${parent.kind}". Found "${node.kind}" on line ${lineNumber}.`);
       }
       return;
     case "split":

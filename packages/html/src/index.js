@@ -26,6 +26,8 @@ const SHELL_PADDING = 16;
 const SHELL_GAP = 10;
 const SHELL_HEAD_HEIGHT = 28;
 const PREVIEW_PADDING = 12;
+const FRAME_DEFAULT_WIDTH = 640;
+const FRAME_DEFAULT_HEIGHT = 420;
 
 export function getDefaultStyles() {
   return DEFAULT_STYLES;
@@ -63,9 +65,9 @@ export function renderWireframeBlockToHtml(source, options = {}) {
     return "<div class=\"wf-empty\">Empty wireframe block.</div>";
   }
 
-  const screens = ast.children.map(buildScreenModel);
-  const naturalWidth = Math.max(...screens.map((screen) => screen.naturalWidth));
-  const naturalHeight = screens.reduce((sum, screen) => sum + screen.naturalHeight, 0) + (screens.length - 1) * DOC_GAP;
+  const models = ast.children.map(buildTopLevelModel);
+  const naturalWidth = Math.max(...models.map((model) => model.naturalWidth));
+  const naturalHeight = models.reduce((sum, model) => sum + model.naturalHeight, 0) + (models.length - 1) * DOC_GAP;
   const box = normalizeRenderBox(options);
   const scale = computeScale(naturalWidth, naturalHeight, box);
   const renderedWidth = round(naturalWidth * scale);
@@ -83,10 +85,25 @@ export function renderWireframeBlockToHtml(source, options = {}) {
   return [
     `<div class="wf-block-box" style="${blockStyles}">`,
     `  <div class="wf-doc" style="${docStyles}">`,
-    screens.map((screen) => screen.html).join("\n"),
+    models.map((model) => model.html).join("\n"),
     "  </div>",
     "</div>",
   ].join("\n");
+}
+
+function buildTopLevelModel(node) {
+  switch (node.kind) {
+    case "screen":
+      return buildScreenModel(node);
+    case "frame":
+      return buildFrameModel(node);
+    default:
+      return {
+        naturalWidth: 480,
+        naturalHeight: 160,
+        html: `<div class="wf-empty">Unsupported top-level node: ${escapeHtml(node.kind)}</div>`,
+      };
+  }
 }
 
 function buildScreenModel(node) {
@@ -103,6 +120,20 @@ function buildScreenModel(node) {
     naturalWidth,
     naturalHeight,
     html: renderScreenShell({ metrics, profile, title, url, width, height, ...screenContent }),
+  };
+}
+
+function buildFrameModel(node) {
+  const surface = resolveSurfaceStyle(node.attrs.surface);
+  const title = node.attrs.title || node.texts[0] || node.bare[0] || "";
+  const width = Number(node.attrs.width || FRAME_DEFAULT_WIDTH);
+  const height = Number(node.attrs.height || FRAME_DEFAULT_HEIGHT);
+  const frameContent = buildFrameContent(node, { title, width, height });
+
+  return {
+    naturalWidth: width,
+    naturalHeight: height,
+    html: renderFrameShell({ surface, title, width, height, ...frameContent }),
   };
 }
 
@@ -134,6 +165,17 @@ function renderScreenShell({ metrics, profile, title, url, width, height, bodyCl
   ].join("\n");
 }
 
+function renderFrameShell({ surface, title, width, height, bodyClassName, frameContent }) {
+  return [
+    `<section class="wf-frame surface-${escapeHtml(surface)}" style="${styleAttr({ width: px(width), height: px(height) })}">`,
+    title ? `  <div class="wf-frame-head"><div class="wf-frame-title">${escapeHtml(title)}</div></div>` : "",
+    `  <div class="${escapeHtml(bodyClassName)}">`,
+    frameContent,
+    "  </div>",
+    "</section>",
+  ].filter(Boolean).join("\n");
+}
+
 function buildScreenContent(node, { profile, title, width, height }) {
   if (!node.children.length) {
     return {
@@ -152,12 +194,45 @@ function buildScreenContent(node, { profile, title, width, height }) {
   };
 }
 
+function buildFrameContent(node, { title, width, height }) {
+  if (!node.children.length) {
+    return {
+      bodyClassName: "wf-frame-body",
+      frameContent: renderFramePlaceholder({ title, width, height }),
+    };
+  }
+
+  return {
+    bodyClassName: "wf-frame-body has-layout",
+    frameContent: [
+      "    <div class=\"wf-layout-root\">",
+      renderLayoutNode(node.children[0], 0),
+      "    </div>",
+    ].join("\n"),
+  };
+}
+
 function renderScreenPlaceholder({ profile, title, width, height }) {
   return [
     "    <div class=\"wf-screen-placeholder\">",
     `      <div class="wf-screen-device">${escapeHtml(profile.label)}</div>`,
     `      <div class="wf-screen-name">${escapeHtml(title)}</div>`,
     `      <div class="wf-screen-size">${width}x${height}</div>`,
+    "      <div class=\"wf-screen-lines\" aria-hidden=\"true\">",
+    "        <span class=\"long\"></span>",
+    "        <span class=\"medium\"></span>",
+    "        <span class=\"short\"></span>",
+    "      </div>",
+    "    </div>",
+  ].join("\n");
+}
+
+function renderFramePlaceholder({ title, width, height }) {
+  return [
+    "    <div class=\"wf-frame-placeholder\">",
+    "      <div class=\"wf-frame-chip\">frame</div>",
+    title ? `      <div class="wf-frame-name">${escapeHtml(title)}</div>` : "",
+    `      <div class="wf-frame-size">${width}x${height}</div>`,
     "      <div class=\"wf-screen-lines\" aria-hidden=\"true\">",
     "        <span class=\"long\"></span>",
     "        <span class=\"medium\"></span>",

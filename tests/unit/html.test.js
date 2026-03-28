@@ -24,4 +24,16 @@ describe("html rendering", () => {
 
     expect(html).not.toContain("https://example.com/mobile");
   });
+
+  it("renders a top-level frame without device shell chrome", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame contact title=\"Contact Form\" width=480 height=360",
+      "  region label=\"Form\"",
+    ].join("\n"));
+
+    expect(html).toContain("wf-frame");
+    expect(html).toContain("Contact Form");
+    expect(html).not.toContain("wf-shell-head");
+    expect(html).not.toContain("wf-device-svg");
+  });
 });

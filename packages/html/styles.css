@@ -151,6 +151,104 @@ body {
   text-align: center;
 }
 
+.wf-frame {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--wf-ink);
+}
+
+.wf-frame.surface-card {
+  padding: 18px;
+  border: 2px solid rgba(114, 105, 92, 0.32);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(244, 235, 220, 0.94)),
+    linear-gradient(135deg, rgba(115, 94, 67, 0.08), transparent 48%);
+  box-shadow: inset 0 0 0 1px rgba(255, 253, 249, 0.7);
+}
+
+.wf-frame.surface-plain {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.wf-frame-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 28px;
+  margin-bottom: 12px;
+}
+
+.wf-frame-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.wf-frame-body {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  background: rgba(251, 248, 241, 0.72);
+  border-radius: 18px;
+}
+
+.wf-frame.surface-plain .wf-frame-body {
+  background: transparent;
+  border-radius: 0;
+}
+
+.wf-frame-body.has-layout {
+  display: block;
+  height: 100%;
+  padding: 18px;
+}
+
+.wf-frame.surface-plain .wf-frame-body.has-layout {
+  padding: 0;
+}
+
+.wf-frame-placeholder {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: min(320px, 100%);
+  padding: 24px 18px;
+  border: 2px dashed rgba(114, 105, 92, 0.38);
+  border-radius: 18px;
+  background: rgba(255, 252, 246, 0.9);
+  text-align: center;
+}
+
+.wf-frame-chip {
+  color: var(--wf-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wf-frame-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.wf-frame-size {
+  color: var(--wf-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
 .wf-screen-device {
   color: var(--wf-muted);
   font-size: 0.72rem;

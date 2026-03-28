@@ -51,13 +51,16 @@ describe("core parsing", () => {
   it("parses top-level screens", () => {
     const ast = parseWireframe([
       "screen dashboard title=\"Dashboard\" device=browser",
+      "frame contact title=\"Contact Form\" width=480 height=360",
       "screen detail title=\"Detail\" device=app width=1024 height=640",
     ].join("\n"));
 
-    expect(ast.children).toHaveLength(2);
+    expect(ast.children).toHaveLength(3);
     expect(ast.children[0].attrs.title).toBe("Dashboard");
-    expect(ast.children[1].attrs.width).toBe(1024);
-    expect(ast.children[1].attrs.height).toBe(640);
+    expect(ast.children[1].kind).toBe("frame");
+    expect(ast.children[1].attrs.width).toBe(480);
+    expect(ast.children[2].attrs.width).toBe(1024);
+    expect(ast.children[2].attrs.height).toBe(640);
   });
 
   it("ignores unsupported size shorthand and uses explicit dimensions only", () => {
@@ -67,7 +70,7 @@ describe("core parsing", () => {
     expect(screen.attrs.size).toBe("1440x520");
   });
 
-  it("parses nested split layouts beneath a screen", () => {
+  it("parses nested split layouts beneath a screen or frame", () => {
     const ast = parseWireframe([
       "screen lookbook title=\"Lookbook\" device=browser",
       "  split axis=horizontal sizes=\"260,rest\"",
@@ -75,14 +78,18 @@ describe("core parsing", () => {
       "    split axis=vertical sizes=\"rest,180\"",
       "      region label=\"Preview\"",
       "      region label=\"Params\"",
+      "frame contact title=\"Contact Form\" width=480 height=360",
+      "  region label=\"Form\"",
     ].join("\n"));
 
-    expect(ast.children).toHaveLength(1);
+    expect(ast.children).toHaveLength(2);
     expect(ast.children[0].kind).toBe("screen");
     expect(ast.children[0].children).toHaveLength(1);
     expect(ast.children[0].children[0].kind).toBe("split");
     expect(ast.children[0].children[0].children[0].attrs.label).toBe("Previews");
     expect(ast.children[0].children[0].children[1].children[1].attrs.label).toBe("Params");
+    expect(ast.children[1].kind).toBe("frame");
+    expect(ast.children[1].children[0].attrs.label).toBe("Form");
   });
 
   it("rejects invalid indentation", () => {
@@ -95,8 +102,8 @@ describe("core parsing", () => {
     ).toThrow(/Use multiples of 2 spaces/);
   });
 
-  it("rejects non-screen top-level nodes", () => {
-    expect(() => parseWireframe("split axis=horizontal")).toThrow(/Only "screen" is supported at the top level/);
+  it("rejects non-screen or non-frame top-level nodes", () => {
+    expect(() => parseWireframe("split axis=horizontal")).toThrow(/Only "screen" and "frame" are supported at the top level/);
   });
 
   it("validates split definitions", () => {

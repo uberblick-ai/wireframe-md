@@ -9,7 +9,7 @@ export const siteCatalog = {
       name: "screen",
       summary: "A screen is the top-level application, browser, or mobile frame. Screens can render as placeholder shells or host one nested layout tree.",
       notes: [
-        "A wireframe document still starts with top-level screen nodes.",
+        "A wireframe document can start with top-level `screen` or `frame` nodes.",
         "When a screen has no children, it renders the original placeholder body.",
         "When a screen contains one child layout node, the viewport renders nested layout instead of placeholder content.",
       ],
@@ -138,6 +138,79 @@ export const siteCatalog = {
       ],
     },
     {
+      id: "frame",
+      name: "frame",
+      summary: "A frame is a shell-less top-level container for isolated wireframes such as a form, card, or modal body when surrounding device chrome is irrelevant.",
+      notes: [
+        "Use `frame` when you care about the component or artifact itself, not the browser, app, or phone shell around it.",
+        "A frame can host one nested layout node, just like a screen.",
+        "Default rendering uses a bounded card surface; `surface=plain` removes that chrome.",
+      ],
+      syntax: [
+        "frame contact title=\"Contact Form\" width=480 height=360",
+        "frame modal title=\"Invite People\" width=560 height=420 surface=card",
+        "frame panel title=\"Sidebar\" width=280 height=640 surface=plain",
+      ],
+      options: [
+        {
+          name: "title",
+          values: "string",
+          description: "Optional label shown inside the frame container.",
+        },
+        {
+          name: "width",
+          values: "number",
+          description: "Sets the intrinsic width for the frame. Defaults to 640.",
+        },
+        {
+          name: "height",
+          values: "number",
+          description: "Sets the intrinsic height for the frame. Defaults to 420.",
+        },
+        {
+          name: "surface",
+          values: "`card` | `plain`",
+          description: "Controls whether the frame renders as a bounded card or as a chrome-less container.",
+        },
+      ],
+      blockOptions: [
+        {
+          name: "top-level `frame`",
+          values: "standalone artifact",
+          description: "Use this when a standalone wireframe should not be tied to browser or app chrome.",
+        },
+        {
+          name: "nested under `frame`",
+          values: "one child layout tree",
+          description: "A frame can host one nested `split` or `region` node in the same way as `screen`.",
+        },
+      ],
+      demos: [
+        {
+          id: "contact-form",
+          title: "Standalone Contact Form",
+          description: "An isolated form-sized artifact without browser or app shell chrome.",
+          markdown: [
+            "```wireframe[640x420]",
+            "frame contact title=\"Contact Form\" width=480 height=360",
+            "  region label=\"Form\"",
+            "```",
+          ].join("\n"),
+        },
+        {
+          id: "plain-sidebar",
+          title: "Plain Frame",
+          description: "The same standalone container can remove the card chrome when the outer surface should feel invisible.",
+          markdown: [
+            "```wireframe[340x520]",
+            "frame panel title=\"Sidebar\" width=280 height=460 surface=plain",
+            "  region label=\"Filters\" surface=plain",
+            "```",
+          ].join("\n"),
+        },
+      ],
+    },
+    {
       id: "split",
       name: "split",
       summary: "A recursive layout primitive that divides available space horizontally or vertically and nests inside a screen or another split.",
@@ -172,9 +245,9 @@ export const siteCatalog = {
       ],
       blockOptions: [
         {
-          name: "nested under `screen`",
+          name: "nested under `screen` or `frame`",
           values: "one child layout tree",
-          description: "A screen may host one nested layout node instead of the default placeholder content.",
+          description: "A top-level container may host one nested layout node instead of its default placeholder content.",
         },
         {
           name: "`region label=\"...\"`",
