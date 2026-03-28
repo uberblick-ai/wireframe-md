@@ -180,7 +180,7 @@ function buildFrameModel(node) {
 }
 
 function renderScreenShell({ surface, metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
-  const screenFrameMarkup = renderScreenFrame({ metrics, profile, title, url, width, height, bodyClassName, screenContent });
+  const screenFrameMarkup = renderScreenFrame({ surface, metrics, profile, title, url, width, height, bodyClassName, screenContent });
 
   if (surface === "plain") {
     return screenFrameMarkup;
@@ -199,7 +199,7 @@ function renderScreenShell({ surface, metrics, profile, title, url, width, heigh
   ].join("\n");
 }
 
-function renderScreenFrame({ metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
+function renderScreenFrame({ surface, metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
   const { frameMarkup, viewportStyle } = renderDeviceFrameMarkup(profile.frame, metrics, title, url);
   const screenMarkup = [
     `<figure class="wf-screen in-device-frame ${escapeHtml(profile.frame)}" style="${styleAttr({ width: px(width), height: px(height) })}">`,
@@ -210,7 +210,7 @@ function renderScreenFrame({ metrics, profile, title, url, width, height, bodyCl
   ].join("\n");
 
   return [
-    `    <div class="wf-screen-frame frame-${escapeHtml(profile.frame)}" style="${styleAttr({ width: px(metrics.outerWidth), height: px(metrics.outerHeight) })}">`,
+    `    <div class="wf-screen-frame frame-${escapeHtml(profile.frame)} surface-${escapeHtml(surface)}" style="${styleAttr({ width: px(metrics.outerWidth), height: px(metrics.outerHeight) })}">`,
     frameMarkup,
     `      <div class="wf-device-viewport" style="${viewportStyle}">`,
     screenMarkup,

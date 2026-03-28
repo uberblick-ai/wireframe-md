@@ -278,6 +278,11 @@ body {
   width: max-content;
 }
 
+.wf-screen-frame.surface-plain {
+  --wf-device-outer-stroke: transparent;
+  --wf-device-mobile-stroke: transparent;
+}
+
 .wf-device-svg {
   display: block;
   width: 100%;

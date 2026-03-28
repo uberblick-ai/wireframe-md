@@ -37,16 +37,17 @@ describe("html rendering", () => {
     expect(html).not.toContain("wf-device-svg");
   });
 
-  it("supports plain screen surfaces without the outer preview card", () => {
+  it("supports plain screen surfaces without the outer preview card or device outline", () => {
     const html = renderWireframeBlockToHtml([
       "screen lookbook title=\"Lookbook\" device=browser surface=plain",
       "  region label=\"Preview\"",
     ].join("\n"));
 
-    expect(html).toContain("wf-screen-frame frame-browser");
+    expect(html).toContain("wf-screen-frame frame-browser surface-plain");
     expect(html).toContain("wf-device-svg");
     expect(html).not.toContain("wf-shell-head");
     expect(html).not.toContain("wf-preview-box");
+    expect(getDefaultStyles()).toContain(".wf-screen-frame.surface-plain");
   });
 
   it("allows regions to hide fallback placeholder lines", () => {

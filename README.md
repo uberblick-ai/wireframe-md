@@ -44,7 +44,7 @@ Authoring notes:
 - `split` divides space horizontally or vertically
 - split track sizes accept fixed pixels, `auto`, and `rest`
 - `region` is the current low-fidelity leaf node
-- `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`
+- `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`; on `screen` it also drops the outer device stroke
 - `placeholder=false` hides the fallback placeholder bars in a `region`
 - omitting a render box keeps the block fluid within its container; explicit `wireframe[960x]` or `wireframe[x420]` sizes still work
 

@@ -48,7 +48,7 @@ export const siteCatalog = {
         {
           name: "surface",
           values: "`card` | `plain`",
-          description: "Controls whether the screen renders inside the outer preview card or as the bare device frame.",
+          description: "Controls whether the screen renders inside the outer preview card or as the bare device frame; `plain` also suppresses the device outline stroke.",
         },
       ],
       blockOptions: [
