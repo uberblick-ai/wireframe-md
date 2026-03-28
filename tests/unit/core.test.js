@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractWireframeBlocks, formatWireframeFenceInfo, normalizeRenderBox, parseFenceInfo, parseWireframe, resolveDeviceProfile, resolveSplitDefinition, resolveSurfaceStyle } from "@wireframe-md/core";
+import { ELEMENT_DEFINITIONS, compileWireframe, extractWireframeBlocks, formatWireframeFenceInfo, normalizeRenderBox, parseFenceInfo, parseWireframe, resolveDeviceProfile, resolveSplitDefinition, resolveSurfaceStyle } from "@wireframe-md/core";
 
 describe("core parsing", () => {
   it("parses inline fence render-box syntax", () => {
@@ -63,6 +63,12 @@ describe("core parsing", () => {
     expect(ast.children[2].attrs.height).toBe(640);
   });
 
+  it("exposes a central element registry", () => {
+    expect(Object.keys(ELEMENT_DEFINITIONS)).toEqual(["screen", "frame", "split", "region"]);
+    expect(ELEMENT_DEFINITIONS.screen.allowedChildren).toEqual(["split", "region"]);
+    expect(ELEMENT_DEFINITIONS.split.attributes.sizes.defaultValue).toBeUndefined();
+  });
+
   it("ignores unsupported size shorthand and uses explicit dimensions only", () => {
     const ast = parseWireframe("screen analytics title=\"Analytics\" device=browser size=1440x520 width=1200 height=600");
     const screen = ast.children[0];
@@ -90,6 +96,33 @@ describe("core parsing", () => {
     expect(ast.children[0].children[0].children[1].children[1].attrs.label).toBe("Params");
     expect(ast.children[1].kind).toBe("frame");
     expect(ast.children[1].children[0].attrs.label).toBe("Form");
+  });
+
+  it("compiles raw nodes into a normalized model for renderers", () => {
+    const ast = compileWireframe([
+      "screen lookbook title=\"Lookbook\" device=browser surface=plain url=\"https://wireframe.md/lookbook\"",
+      "  split axis=vertical sizes=\"auto,rest\" surface=plain",
+      "    region label=\"Top Bar\" surface=plain placeholder=false",
+      "    region label=\"Preview\"",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "screen",
+      title: "Lookbook",
+      surface: "plain",
+      device: "browser",
+      url: "https://wireframe.md/lookbook",
+      child: {
+        kind: "split",
+        axis: "vertical",
+        surface: "plain",
+        sizes: [{ kind: "auto" }, { kind: "rest" }],
+        children: [
+          { kind: "region", label: "Top Bar", surface: "plain", placeholder: false },
+          { kind: "region", label: "Preview", surface: "card", placeholder: true },
+        ],
+      },
+    });
   });
 
   it("rejects invalid indentation", () => {

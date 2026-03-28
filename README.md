@@ -37,6 +37,12 @@ Packages:
 - `@wireframe-md/markdown-it`: fenced-block parser and HTML element bridge for editor integrations
 - `@wireframe-md/remark`: remark plugin for fenced blocks
 
+Internal structure:
+
+- `@wireframe-md/core` now separates fence parsing, raw parsing, and normalized compilation via `compileWireframe(...)`
+- the core package also exposes `ELEMENT_DEFINITIONS` as the central schema for supported node kinds and their attributes
+- `@wireframe-md/html` is split into focused renderer modules for block layout, top-level shells, nested layout nodes, themes, and device chrome
+
 Authoring notes:
 
 - `screen` renders inside browser, app, or mobile chrome
