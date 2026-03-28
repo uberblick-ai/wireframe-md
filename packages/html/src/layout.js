@@ -68,9 +68,10 @@ export function renderSplitNode(node, depth) {
 export function renderRegionNode(node, depth) {
   const placeholderClass = !node.child && node.placeholder ? "has-placeholder" : "no-placeholder";
   const labelClass = node.showLabel ? "show-label" : "hide-label";
+  const contentClass = node.child ? "has-content" : "no-content";
 
   return [
-    `          <section class="wf-region surface-${escapeHtml(node.surface)} ${placeholderClass} ${labelClass} depth-${depth}">`,
+    `          <section class="wf-region surface-${escapeHtml(node.surface)} ${placeholderClass} ${labelClass} ${contentClass} depth-${depth}">`,
     ...(node.showLabel ? [
       "            <div class=\"wf-region-chip\">region</div>",
       `            <div class="wf-region-label">${escapeHtml(node.label)}</div>`,
