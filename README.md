@@ -32,11 +32,12 @@ screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="
             item label="Tree" selected=true
       split axis=vertical sizes="rest,240"
         region label="Preview: selected wireframe example"
-        split axis=horizontal sizes="rest,rest"
+        split axis=horizontal sizes="320,rest"
           region label="Params"
-            props
-              prop key="device" value="browser"
-              prop key="surface" value="plain"
+            stack gap=14
+              select label="Device" value="browser" options="mobile,app,browser"
+              select label="Surface" value="plain" options="card,plain"
+              input label="URL" type="url" value="https://wireframe.md/lookbook"
           region label="Markdown"
             code_block language="wireframe"
               code_line "screen lookbook title=\"wireframe.md Lookbook\" device=browser surface=plain"
@@ -69,6 +70,7 @@ Authoring notes:
 - `group expanded=false` collapses a branch, and `item selected=true` highlights the current example
 - `stack` composes multiple content blocks vertically inside a region
 - `props` and `prop` render static key-value inspector rows
+- `select` and `input` render static form-like controls for params panes
 - `code_block` and `code_line` render read-only source snippets inside a pane
 - `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`; on `screen` it also drops the outer device stroke
 - `placeholder=false` hides the fallback placeholder bars in a `region`

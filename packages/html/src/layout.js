@@ -14,7 +14,9 @@ import { escapeHtml, px, styleAttr } from "./utils.js";
  * @typedef {{ kind: "props", children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
- * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode} CompiledContentNode
+ * @typedef {{ kind: "select", label: string, value: string, options: string[] }} CompiledSelectNode
+ * @typedef {{ kind: "input", label: string, value: string, inputType: string | null }} CompiledInputNode
+ * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode | CompiledSelectNode | CompiledInputNode} CompiledContentNode
  * @typedef {{ kind: "region", label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {CompiledSplitNode | CompiledContentNode} CompiledRegionChildNode
  * @typedef {CompiledSplitNode | CompiledRegionNode} CompiledLayoutNode
@@ -126,6 +128,10 @@ function renderContentNode(node, depth) {
       return renderPropsNode(node, depth);
     case "code_block":
       return renderCodeBlockNode(node, depth);
+    case "select":
+      return renderSelectNode(node, depth);
+    case "input":
+      return renderInputNode(node, depth);
     default:
       return "<div class=\"wf-empty\">Unsupported content node.</div>";
   }
@@ -260,6 +266,43 @@ function renderCodeBlockNode(node, depth) {
  */
 function renderCodeLineNode(node, depth) {
   return `                  <span class="wf-code-line depth-${depth}">${escapeHtml(node.value)}</span>`;
+}
+
+/**
+ * @param {CompiledSelectNode} node
+ * @param {number} depth
+ * @returns {string}
+ */
+function renderSelectNode(node, depth) {
+  const hint = node.options.length ? ` data-options="${escapeHtml(node.options.join(","))}"` : "";
+
+  return [
+    `              <div class="wf-control wf-select depth-${depth}"${hint}>`,
+    `                <div class="wf-control-label">${escapeHtml(node.label)}</div>`,
+    "                <div class=\"wf-control-box\" role=\"presentation\">",
+    `                  <span class="wf-control-value">${escapeHtml(node.value)}</span>`,
+    "                  <span class=\"wf-select-caret\" aria-hidden=\"true\">▾</span>",
+    "                </div>",
+    "              </div>",
+  ].join("\n");
+}
+
+/**
+ * @param {CompiledInputNode} node
+ * @param {number} depth
+ * @returns {string}
+ */
+function renderInputNode(node, depth) {
+  const typeClass = node.inputType ? ` type-${escapeHtml(node.inputType)}` : "";
+
+  return [
+    `              <div class="wf-control wf-input${typeClass} depth-${depth}">`,
+    `                <div class="wf-control-label">${escapeHtml(node.label)}</div>`,
+    "                <div class=\"wf-control-box\" role=\"presentation\">",
+    `                  <span class="wf-control-value">${escapeHtml(node.value)}</span>`,
+    "                </div>",
+    "              </div>",
+  ].join("\n");
 }
 
 /**

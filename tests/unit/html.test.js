@@ -117,6 +117,23 @@ describe("html rendering", () => {
     expect(html).not.toContain("wf-region-lines");
   });
 
+  it("renders select and input controls inside a params stack", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    stack gap=14",
+      "      select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+      "      select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+      "      input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    expect(html).toContain("wf-select");
+    expect(html).toContain("wf-input type-url");
+    expect(html).toContain("wf-select-caret");
+    expect(html).toContain("data-options=\"mobile,app,browser\"");
+    expect(html).toContain("https://wireframe.md/lookbook");
+  });
+
   it("supports auto-sized split tracks for content-height rows", () => {
     const html = renderWireframeBlockToHtml([
       "screen lookbook title=\"Lookbook\" device=browser surface=plain",

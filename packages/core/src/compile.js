@@ -19,7 +19,9 @@ const FRAME_DEFAULT_HEIGHT = 420;
  * @typedef {{ kind: "props", lineNumber: number, children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", lineNumber: number, value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", lineNumber: number, language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
- * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode} CompiledContentNode
+ * @typedef {{ kind: "select", lineNumber: number, label: string, value: string, options: string[] }} CompiledSelectNode
+ * @typedef {{ kind: "input", lineNumber: number, label: string, value: string, inputType: string | null }} CompiledInputNode
+ * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode | CompiledSelectNode | CompiledInputNode} CompiledContentNode
  * @typedef {{ kind: "region", lineNumber: number, label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {{ kind: "split", lineNumber: number, axis: SplitDefinition["axis"], surface: SplitDefinition["surface"], sizes: SplitDefinition["sizes"], children: CompiledLayoutNode[] }} CompiledSplitNode
  * @typedef {CompiledSplitNode | CompiledRegionNode} CompiledLayoutNode
@@ -167,6 +169,10 @@ function normalizeRegionChildNode(node) {
       return normalizePropsNode(node);
     case "code_block":
       return normalizeCodeBlockNode(node);
+    case "select":
+      return normalizeSelectNode(node);
+    case "input":
+      return normalizeInputNode(node);
     default:
       throw new Error(`Unsupported region child "${node.kind}" on line ${node.lineNumber}.`);
   }
@@ -186,6 +192,10 @@ function normalizeContentNode(node) {
       return normalizePropsNode(node);
     case "code_block":
       return normalizeCodeBlockNode(node);
+    case "select":
+      return normalizeSelectNode(node);
+    case "input":
+      return normalizeInputNode(node);
     default:
       throw new Error(`Unsupported content node "${node.kind}" on line ${node.lineNumber}.`);
   }
@@ -310,6 +320,34 @@ function normalizeCodeLineNode(node) {
 
 /**
  * @param {RawWireframeNode} node
+ * @returns {CompiledSelectNode}
+ */
+function normalizeSelectNode(node) {
+  return {
+    kind: "select",
+    lineNumber: node.lineNumber,
+    label: pickNodeLabel(node, "Select"),
+    value: stringifyAttrValue(node.attrs.value, ""),
+    options: splitOptions(node.attrs.options),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledInputNode}
+ */
+function normalizeInputNode(node) {
+  return {
+    kind: "input",
+    lineNumber: node.lineNumber,
+    label: pickNodeLabel(node, "Input"),
+    value: stringifyAttrValue(node.attrs.value, ""),
+    inputType: pickStringAttr(node.attrs.type),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
  * @param {string} fallback
  */
 function pickNodeLabel(node, fallback) {
@@ -337,4 +375,13 @@ function stringifyAttrValue(value, fallback) {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return fallback;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
+function splitOptions(value) {
+  if (typeof value !== "string") return [];
+  return value.split(",").map((entry) => entry.trim()).filter(Boolean);
 }

@@ -6,7 +6,7 @@ const INDENT_SIZE = 2;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
 
 /**
- * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line"} WireframeNodeKind
+ * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line" | "select" | "input"} WireframeNodeKind
  * @typedef {"horizontal" | "vertical"} SplitAxis
  * @typedef {"card" | "plain"} SurfaceStyle
  * @typedef {string | number | boolean} WireframeAttrValue
@@ -254,7 +254,7 @@ function normalizeIndent(rawIndent, lineNumber) {
  */
 function validateParentChild(parent, node, lineNumber) {
   if (!isSupportedNodeKind(node.kind)) {
-    throw new Error(`Unsupported node "${node.kind}" on line ${lineNumber}. Expected one of: screen, frame, split, region, tree, group, item, stack, props, prop, code_block, code_line.`);
+    throw new Error(`Unsupported node "${node.kind}" on line ${lineNumber}. Expected one of: screen, frame, split, region, tree, group, item, stack, props, prop, code_block, code_line, select, input.`);
   }
 
   if (parent.kind === "root") {

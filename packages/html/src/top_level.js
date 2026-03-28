@@ -19,7 +19,9 @@ const PREVIEW_PADDING = 12;
  * @typedef {{ kind: "props", children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
- * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode} CompiledContentNode
+ * @typedef {{ kind: "select", label: string, value: string, options: string[] }} CompiledSelectNode
+ * @typedef {{ kind: "input", label: string, value: string, inputType: string | null }} CompiledInputNode
+ * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode | CompiledSelectNode | CompiledInputNode} CompiledContentNode
  * @typedef {{ kind: "region", label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {{ kind: "split", axis: "horizontal" | "vertical", surface: "card" | "plain", sizes: Array<{ kind: "rest" } | { kind: "auto" } | { kind: "fixed", value: number }>, children: CompiledLayoutNode[] }} CompiledSplitNode
  * @typedef {CompiledSplitNode | CompiledRegionNode} CompiledLayoutNode

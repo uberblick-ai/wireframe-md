@@ -2,7 +2,7 @@
 
 /**
  * @typedef {"mobile" | "app" | "browser"} DeviceName
- * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line"} WireframeNodeKind
+ * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line" | "select" | "input"} WireframeNodeKind
  * @typedef {"horizontal" | "vertical"} SplitAxis
  * @typedef {"card" | "plain"} SurfaceStyle
  * @typedef {{ name: DeviceName, label: string, frame: DeviceName, width: number, height: number }} DeviceProfile
@@ -18,7 +18,7 @@ export const DEVICE_PROFILES = {
 };
 
 /** @type {WireframeNodeKind[]} */
-export const SUPPORTED_NODE_KINDS = ["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line"];
+export const SUPPORTED_NODE_KINDS = ["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line", "select", "input"];
 
 /** @type {Record<WireframeNodeKind, ElementDefinition>} */
 export const ELEMENT_DEFINITIONS = {
@@ -63,7 +63,7 @@ export const ELEMENT_DEFINITIONS = {
     kind: "region",
     placement: "layout",
     maxChildren: 1,
-    allowedChildren: ["split", "tree", "stack", "props", "code_block"],
+    allowedChildren: ["split", "tree", "stack", "props", "code_block", "select", "input"],
     attributes: {
       label: { type: "string" },
       surface: { type: "enum", defaultValue: "card", values: ["card", "plain"] },
@@ -102,7 +102,7 @@ export const ELEMENT_DEFINITIONS = {
     kind: "stack",
     placement: "layout",
     maxChildren: null,
-    allowedChildren: ["tree", "stack", "props", "code_block"],
+    allowedChildren: ["tree", "stack", "props", "code_block", "select", "input"],
     attributes: {
       gap: { type: "number", defaultValue: 12 },
     },
@@ -140,6 +140,28 @@ export const ELEMENT_DEFINITIONS = {
     allowedChildren: [],
     attributes: {
       value: { type: "string" },
+    },
+  },
+  select: {
+    kind: "select",
+    placement: "layout",
+    maxChildren: 0,
+    allowedChildren: [],
+    attributes: {
+      label: { type: "string" },
+      value: { type: "string" },
+      options: { type: "string" },
+    },
+  },
+  input: {
+    kind: "input",
+    placement: "layout",
+    maxChildren: 0,
+    allowedChildren: [],
+    attributes: {
+      label: { type: "string" },
+      value: { type: "string" },
+      type: { type: "string" },
     },
   },
 };

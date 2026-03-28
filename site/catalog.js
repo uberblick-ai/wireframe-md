@@ -222,7 +222,7 @@ export const siteCatalog = {
       notes: [
         "This is the first nested layout primitive in the DSL.",
         "A split must contain at least two children.",
-        "Regions can now host nested content such as `tree`, `stack`, `props`, and `code_block`, which makes the lookbook shell feel more like product UI without adding interaction yet.",
+        "Regions can now host nested content such as `tree`, `stack`, `select`, `input`, `props`, and `code_block`, which makes the lookbook shell feel more like product UI without adding interaction yet.",
       ],
       syntax: [
         "split axis=horizontal sizes=\"260,rest\"",
@@ -257,7 +257,7 @@ export const siteCatalog = {
         {
           name: "`region label=\"...\"`",
           values: "temporary leaf placeholder",
-          description: "Use `region` as a low-fidelity leaf or container. `surface=plain` removes the card chrome, `placeholder=false` suppresses fallback lines, `show_label=false` hides the region title chrome, and a region can host one nested `split` or content node such as `tree`, `stack`, `props`, or `code_block`.",
+          description: "Use `region` as a low-fidelity leaf or container. `surface=plain` removes the card chrome, `placeholder=false` suppresses fallback lines, `show_label=false` hides the region title chrome, and a region can host one nested `split` or content node such as `tree`, `stack`, `select`, `input`, `props`, or `code_block`.",
         },
       ],
       demos: [
@@ -284,12 +284,12 @@ export const siteCatalog = {
             "            item label=\"Item\"",
             "      split axis=vertical sizes=\"rest,220\"",
             "        region label=\"Preview\"",
-            "        split axis=horizontal sizes=\"280,rest\"",
+            "        split axis=horizontal sizes=\"320,rest\"",
             "          region label=\"Params\"",
-            "            props",
-            "              prop key=\"device\" value=\"browser\"",
-            "              prop key=\"surface\" value=\"plain\"",
-            "              prop key=\"url\" value=\"https://wireframe.md/lookbook\"",
+            "            stack gap=14",
+            "              select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+            "              select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+            "              input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
             "          region label=\"Markdown\"",
             "            code_block language=\"wireframe\"",
             "              code_line \"screen lookbook title=\\\"Lookbook\\\" device=browser surface=plain\"",
@@ -396,14 +396,14 @@ export const siteCatalog = {
       summary: "A vertical composition primitive for multiple content blocks inside one region, such as a params list above supporting notes or a source panel.",
       notes: [
         "Use `stack` when one region needs more than one nested content block.",
-        "A stack can currently contain other stacks, trees, props lists, and code blocks.",
+        "A stack can currently contain other stacks, trees, selects, inputs, props lists, and code blocks.",
         "`gap` keeps spacing explicit in the DSL instead of burying layout assumptions in CSS.",
       ],
       syntax: [
         "region label=\"Inspector\"",
         "  stack gap=16",
-        "    props",
-        "      prop key=\"device\" value=\"browser\"",
+        "    select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+        "    input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
         "    code_block language=\"wireframe\"",
         "      code_line \"screen lookbook\"",
       ],
@@ -431,9 +431,9 @@ export const siteCatalog = {
             "frame inspect title=\"Inspector\" width=460 height=400",
             "  region label=\"Selection Details\"",
             "    stack gap=16",
-            "      props",
-            "        prop key=\"device\" value=\"browser\"",
-            "        prop key=\"surface\" value=\"plain\"",
+            "      select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+            "      select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+            "      input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
             "      code_block language=\"wireframe\"",
             "        code_line \"screen inspect title=\\\"Inspect\\\" device=browser\"",
             "```",
@@ -488,6 +488,111 @@ export const siteCatalog = {
             "      prop key=\"device\" value=\"browser\"",
             "      prop key=\"surface\" value=\"plain\"",
             "      prop key=\"placeholder\" value=false",
+            "```",
+          ].join("\n"),
+        },
+      ],
+    },
+    {
+      id: "select",
+      name: "select",
+      summary: "A static dropdown-like control for params panes and inspector controls.",
+      notes: [
+        "`select` is visual only in the current DSL. It communicates a constrained choice without adding interaction yet.",
+        "`options` is mainly descriptive today. The renderer uses `value` as the visible selection and keeps the full list available as metadata.",
+        "This is a better fit than `prop` when the UI should read like a control rather than a summary row.",
+      ],
+      syntax: [
+        "select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+        "select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+      ],
+      options: [
+        {
+          name: "label",
+          values: "string",
+          description: "Small field label shown above the select chrome.",
+        },
+        {
+          name: "value",
+          values: "string",
+          description: "The current visible selection.",
+        },
+        {
+          name: "options",
+          values: "comma-separated string list",
+          description: "Describes the available choices for the control.",
+        },
+      ],
+      blockOptions: [
+        {
+          name: "nested under `region` or `stack`",
+          values: "static select control",
+          description: "Use this for params panes when the UI should read like a dropdown rather than a property list.",
+        },
+      ],
+      demos: [
+        {
+          id: "params-selects",
+          title: "Static Select Controls",
+          description: "A params pane with dropdown-like controls for constrained choices.",
+          markdown: [
+            "```wireframe[420x360]",
+            "frame params title=\"Params\" width=360 height=300",
+            "  region label=\"Selected Params\"",
+            "    stack gap=14",
+            "      select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+            "      select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+            "```",
+          ].join("\n"),
+        },
+      ],
+    },
+    {
+      id: "input",
+      name: "input",
+      summary: "A static single-line input for longer freeform values such as URLs or labels.",
+      notes: [
+        "`input` is also visual only in the current DSL.",
+        "This works well beside `select` controls in params panes.",
+        "Use `type=\"url\"` when the value should read like an address or route.",
+      ],
+      syntax: [
+        "input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
+      ],
+      options: [
+        {
+          name: "label",
+          values: "string",
+          description: "Small field label shown above the input chrome.",
+        },
+        {
+          name: "value",
+          values: "string",
+          description: "The visible input value.",
+        },
+        {
+          name: "type",
+          values: "string",
+          description: "Optional hint for styling variants such as `url`.",
+        },
+      ],
+      blockOptions: [
+        {
+          name: "nested under `region` or `stack`",
+          values: "static text field",
+          description: "Use this when the UI should read like a freeform field instead of a key-value row.",
+        },
+      ],
+      demos: [
+        {
+          id: "url-input",
+          title: "URL Input",
+          description: "A params field for a longer URL value without forcing it into a two-column property row.",
+          markdown: [
+            "```wireframe[460x260]",
+            "frame params title=\"Params\" width=400 height=200",
+            "  region label=\"Selected Params\"",
+            "    input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
             "```",
           ].join("\n"),
         },

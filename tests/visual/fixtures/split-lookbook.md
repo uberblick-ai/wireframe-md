@@ -16,12 +16,12 @@ screen lookbook title="Lookbook" device=browser width=1366 height=820 surface=pl
             item label="Item"
       split axis=vertical sizes="rest,220"
         region label="Preview"
-        split axis=horizontal sizes="280,rest"
+        split axis=horizontal sizes="320,rest"
           region label="Params"
-            props
-              prop key="device" value="browser"
-              prop key="surface" value="plain"
-              prop key="url" value="https://wireframe.md/lookbook"
+            stack gap=14
+              select label="Device" value="browser" options="mobile,app,browser"
+              select label="Surface" value="plain" options="card,plain"
+              input label="URL" type="url" value="https://wireframe.md/lookbook"
           region label="Markdown"
             code_block language="wireframe"
               code_line "screen lookbook title=\"Lookbook\" device=browser surface=plain"

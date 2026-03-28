@@ -64,13 +64,14 @@ describe("core parsing", () => {
   });
 
   it("exposes a central element registry", () => {
-    expect(Object.keys(ELEMENT_DEFINITIONS)).toEqual(["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line"]);
+    expect(Object.keys(ELEMENT_DEFINITIONS)).toEqual(["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line", "select", "input"]);
     expect(ELEMENT_DEFINITIONS.screen.allowedChildren).toEqual(["split", "region"]);
     expect(ELEMENT_DEFINITIONS.split.attributes.sizes.defaultValue).toBeUndefined();
-    expect(ELEMENT_DEFINITIONS.region.allowedChildren).toEqual(["split", "tree", "stack", "props", "code_block"]);
+    expect(ELEMENT_DEFINITIONS.region.allowedChildren).toEqual(["split", "tree", "stack", "props", "code_block", "select", "input"]);
+    expect(ELEMENT_DEFINITIONS.stack.allowedChildren).toEqual(["tree", "stack", "props", "code_block", "select", "input"]);
+    expect(ELEMENT_DEFINITIONS.select.attributes.options.type).toBe("string");
     expect(ELEMENT_DEFINITIONS.region.attributes.show_label.defaultValue).toBe(true);
     expect(ELEMENT_DEFINITIONS.tree.allowedChildren).toEqual(["group", "item"]);
-    expect(ELEMENT_DEFINITIONS.stack.allowedChildren).toEqual(["tree", "stack", "props", "code_block"]);
     expect(ELEMENT_DEFINITIONS.props.allowedChildren).toEqual(["prop"]);
     expect(ELEMENT_DEFINITIONS.code_block.allowedChildren).toEqual(["code_line"]);
   });
@@ -229,6 +230,24 @@ describe("core parsing", () => {
     expect(stack.children[1].children[0].kind).toBe("code_line");
   });
 
+  it("parses select and input controls inside a stack", () => {
+    const ast = parseWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    stack gap=14",
+      "      select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+      "      select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+      "      input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    const stack = ast.children[0].children[0].children[0];
+
+    expect(stack.kind).toBe("stack");
+    expect(stack.children[0].kind).toBe("select");
+    expect(stack.children[1].kind).toBe("select");
+    expect(stack.children[2].kind).toBe("input");
+  });
+
   it("compiles stack, props, and code blocks into normalized content nodes", () => {
     const ast = compileWireframe([
       "frame inspect title=\"Inspect\" width=520 height=420",
@@ -265,6 +284,33 @@ describe("core parsing", () => {
                 { kind: "code_line", value: "  region label=\"Preview\"" },
               ],
             },
+          ],
+        },
+      },
+    });
+  });
+
+  it("compiles select and input controls into normalized content nodes", () => {
+    const ast = compileWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    stack gap=14",
+      "      select label=\"Device\" value=\"browser\" options=\"mobile,app,browser\"",
+      "      select label=\"Surface\" value=\"plain\" options=\"card,plain\"",
+      "      input label=\"URL\" type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "frame",
+      child: {
+        kind: "region",
+        child: {
+          kind: "stack",
+          gap: 14,
+          children: [
+            { kind: "select", label: "Device", value: "browser", options: ["mobile", "app", "browser"] },
+            { kind: "select", label: "Surface", value: "plain", options: ["card", "plain"] },
+            { kind: "input", label: "URL", value: "https://wireframe.md/lookbook", inputType: "url" },
           ],
         },
       },
@@ -314,7 +360,7 @@ describe("core parsing", () => {
         "  region label=\"Inspector\"",
         "    prop key=\"device\" value=\"browser\"",
       ].join("\n")),
-    ).toThrow(/Only "split" and "tree" and "stack" and "props" and "code_block" are supported inside "region"/);
+    ).toThrow(/Only "split" and "tree" and "stack" and "props" and "code_block" and "select" and "input" are supported inside "region"/);
   });
 
   it("rejects code lines outside code blocks", () => {
@@ -325,7 +371,19 @@ describe("core parsing", () => {
         "    stack",
         "      code_line \"screen lookbook\"",
       ].join("\n")),
-    ).toThrow(/Only "tree" and "stack" and "props" and "code_block" are supported inside "stack"/);
+    ).toThrow(/Only "tree" and "stack" and "props" and "code_block" and "select" and "input" are supported inside "stack"/);
+  });
+
+  it("rejects nested content inside select controls", () => {
+    expect(() =>
+      parseWireframe([
+        "frame inspect title=\"Inspect\"",
+        "  region label=\"Params\"",
+        "    stack",
+        "      select label=\"Device\" value=\"browser\"",
+        "        item label=\"Invalid\"",
+      ].join("\n")),
+    ).toThrow(/"select" cannot contain nested content/);
   });
 
   it("validates split definitions", () => {
