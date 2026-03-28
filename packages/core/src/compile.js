@@ -15,7 +15,8 @@ const FRAME_DEFAULT_HEIGHT = 420;
  * @typedef {{ kind: "tree", lineNumber: number, children: CompiledTreeChildNode[] }} CompiledTreeNode
  * @typedef {CompiledGroupNode | CompiledItemNode} CompiledTreeChildNode
  * @typedef {{ kind: "stack", lineNumber: number, gap: number, children: CompiledContentNode[] }} CompiledStackNode
- * @typedef {{ kind: "prop", lineNumber: number, key: string, value: string }} CompiledPropNode
+ * @typedef {CompiledSelectNode | CompiledInputNode} CompiledPropControlNode
+ * @typedef {{ kind: "prop", lineNumber: number, key: string, value: string | null, control: CompiledPropControlNode | null }} CompiledPropNode
  * @typedef {{ kind: "props", lineNumber: number, children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", lineNumber: number, value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", lineNumber: number, language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
@@ -285,12 +286,30 @@ function normalizePropsNode(node) {
  * @returns {CompiledPropNode}
  */
 function normalizePropNode(node) {
+  const control = node.children[0] ? normalizePropControlNode(node.children[0]) : null;
+
   return {
     kind: "prop",
     lineNumber: node.lineNumber,
     key: pickStringAttr(node.attrs.key) || pickNodeLabel(node, "Property"),
-    value: stringifyAttrValue(node.attrs.value, "Value"),
+    value: control ? null : stringifyAttrValue(node.attrs.value, "Value"),
+    control,
   };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledPropControlNode}
+ */
+function normalizePropControlNode(node) {
+  switch (node.kind) {
+    case "select":
+      return normalizeSelectNode(node);
+    case "input":
+      return normalizeInputNode(node);
+    default:
+      throw new Error(`Unsupported prop control "${node.kind}" on line ${node.lineNumber}.`);
+  }
 }
 
 /**

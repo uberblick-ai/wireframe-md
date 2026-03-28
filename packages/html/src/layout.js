@@ -10,12 +10,13 @@ import { escapeHtml, px, styleAttr } from "./utils.js";
  * @typedef {{ kind: "tree", children: CompiledTreeChildNode[] }} CompiledTreeNode
  * @typedef {CompiledGroupNode | CompiledItemNode} CompiledTreeChildNode
  * @typedef {{ kind: "stack", gap: number, children: CompiledContentNode[] }} CompiledStackNode
- * @typedef {{ kind: "prop", key: string, value: string }} CompiledPropNode
+ * @typedef {{ kind: "prop", key: string, value: string | null, control: CompiledPropControlNode | null }} CompiledPropNode
  * @typedef {{ kind: "props", children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
  * @typedef {{ kind: "select", label: string, value: string, options: string[] }} CompiledSelectNode
  * @typedef {{ kind: "input", label: string, value: string, inputType: string | null }} CompiledInputNode
+ * @typedef {CompiledSelectNode | CompiledInputNode} CompiledPropControlNode
  * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode | CompiledSelectNode | CompiledInputNode} CompiledContentNode
  * @typedef {{ kind: "region", label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {CompiledSplitNode | CompiledContentNode} CompiledRegionChildNode
@@ -107,6 +108,8 @@ function renderRegionChildNode(node, depth) {
     case "stack":
     case "props":
     case "code_block":
+    case "select":
+    case "input":
       return renderContentNode(node, depth);
     default:
       return "<div class=\"wf-empty\">Unsupported region content.</div>";
@@ -236,9 +239,11 @@ function renderPropsNode(node, depth) {
  */
 function renderPropNode(node, depth) {
   return [
-    `                <div class="wf-prop depth-${depth}">`,
+    `                <div class="wf-prop${node.control ? " has-control" : ""} depth-${depth}">`,
     `                  <dt class="wf-prop-key">${escapeHtml(node.key)}</dt>`,
-    `                  <dd class="wf-prop-value">${escapeHtml(node.value)}</dd>`,
+    "                  <dd class=\"wf-prop-value\">",
+    ...(node.control ? [renderPropControlNode(node.control, depth + 1)] : [escapeHtml(node.value || "")]),
+    "                  </dd>",
     "                </div>",
   ].join("\n");
 }
@@ -273,12 +278,12 @@ function renderCodeLineNode(node, depth) {
  * @param {number} depth
  * @returns {string}
  */
-function renderSelectNode(node, depth) {
+function renderSelectNode(node, depth, inline = false) {
   const hint = node.options.length ? ` data-options="${escapeHtml(node.options.join(","))}"` : "";
 
   return [
-    `              <div class="wf-control wf-select depth-${depth}"${hint}>`,
-    `                <div class="wf-control-label">${escapeHtml(node.label)}</div>`,
+    `              <div class="wf-control wf-select${inline ? " is-inline" : ""} depth-${depth}"${hint}>`,
+    ...(inline ? [] : [`                <div class="wf-control-label">${escapeHtml(node.label)}</div>`]),
     "                <div class=\"wf-control-box\" role=\"presentation\">",
     `                  <span class="wf-control-value">${escapeHtml(node.value)}</span>`,
     "                  <span class=\"wf-select-caret\" aria-hidden=\"true\">▾</span>",
@@ -292,17 +297,33 @@ function renderSelectNode(node, depth) {
  * @param {number} depth
  * @returns {string}
  */
-function renderInputNode(node, depth) {
+function renderInputNode(node, depth, inline = false) {
   const typeClass = node.inputType ? ` type-${escapeHtml(node.inputType)}` : "";
 
   return [
-    `              <div class="wf-control wf-input${typeClass} depth-${depth}">`,
-    `                <div class="wf-control-label">${escapeHtml(node.label)}</div>`,
+    `              <div class="wf-control wf-input${typeClass}${inline ? " is-inline" : ""} depth-${depth}">`,
+    ...(inline ? [] : [`                <div class="wf-control-label">${escapeHtml(node.label)}</div>`]),
     "                <div class=\"wf-control-box\" role=\"presentation\">",
     `                  <span class="wf-control-value">${escapeHtml(node.value)}</span>`,
     "                </div>",
     "              </div>",
   ].join("\n");
+}
+
+/**
+ * @param {CompiledPropControlNode} node
+ * @param {number} depth
+ * @returns {string}
+ */
+function renderPropControlNode(node, depth) {
+  switch (node.kind) {
+    case "select":
+      return renderSelectNode(node, depth, true);
+    case "input":
+      return renderInputNode(node, depth, true);
+    default:
+      return "<div class=\"wf-empty\">Unsupported prop control.</div>";
+  }
 }
 
 /**

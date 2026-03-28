@@ -15,7 +15,8 @@ const PREVIEW_PADDING = 12;
  * @typedef {{ kind: "tree", children: CompiledTreeChildNode[] }} CompiledTreeNode
  * @typedef {CompiledGroupNode | CompiledItemNode} CompiledTreeChildNode
  * @typedef {{ kind: "stack", gap: number, children: CompiledContentNode[] }} CompiledStackNode
- * @typedef {{ kind: "prop", key: string, value: string }} CompiledPropNode
+ * @typedef {CompiledSelectNode | CompiledInputNode} CompiledPropControlNode
+ * @typedef {{ kind: "prop", key: string, value: string | null, control: CompiledPropControlNode | null }} CompiledPropNode
  * @typedef {{ kind: "props", children: CompiledPropNode[] }} CompiledPropsNode
  * @typedef {{ kind: "code_line", value: string }} CompiledCodeLineNode
  * @typedef {{ kind: "code_block", language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode

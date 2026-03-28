@@ -73,6 +73,7 @@ describe("core parsing", () => {
     expect(ELEMENT_DEFINITIONS.region.attributes.show_label.defaultValue).toBe(true);
     expect(ELEMENT_DEFINITIONS.tree.allowedChildren).toEqual(["group", "item"]);
     expect(ELEMENT_DEFINITIONS.props.allowedChildren).toEqual(["prop"]);
+    expect(ELEMENT_DEFINITIONS.prop.allowedChildren).toEqual(["select", "input"]);
     expect(ELEMENT_DEFINITIONS.code_block.allowedChildren).toEqual(["code_line"]);
   });
 
@@ -248,6 +249,27 @@ describe("core parsing", () => {
     expect(stack.children[2].kind).toBe("input");
   });
 
+  it("parses select and input controls inside prop rows", () => {
+    const ast = parseWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    props",
+      "      prop key=\"Device\"",
+      "        select value=\"browser\" options=\"mobile,app,browser\"",
+      "      prop key=\"Surface\"",
+      "        select value=\"plain\" options=\"card,plain\"",
+      "      prop key=\"URL\"",
+      "        input type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    const props = ast.children[0].children[0].children[0];
+
+    expect(props.kind).toBe("props");
+    expect(props.children[0].kind).toBe("prop");
+    expect(props.children[0].children[0].kind).toBe("select");
+    expect(props.children[2].children[0].kind).toBe("input");
+  });
+
   it("compiles stack, props, and code blocks into normalized content nodes", () => {
     const ast = compileWireframe([
       "frame inspect title=\"Inspect\" width=520 height=420",
@@ -311,6 +333,42 @@ describe("core parsing", () => {
             { kind: "select", label: "Device", value: "browser", options: ["mobile", "app", "browser"] },
             { kind: "select", label: "Surface", value: "plain", options: ["card", "plain"] },
             { kind: "input", label: "URL", value: "https://wireframe.md/lookbook", inputType: "url" },
+          ],
+        },
+      },
+    });
+  });
+
+  it("compiles props with nested controls into inline value nodes", () => {
+    const ast = compileWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    props",
+      "      prop key=\"Device\"",
+      "        select value=\"browser\" options=\"mobile,app,browser\"",
+      "      prop key=\"URL\"",
+      "        input type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "frame",
+      child: {
+        kind: "region",
+        child: {
+          kind: "props",
+          children: [
+            {
+              kind: "prop",
+              key: "Device",
+              value: null,
+              control: { kind: "select", value: "browser", options: ["mobile", "app", "browser"] },
+            },
+            {
+              kind: "prop",
+              key: "URL",
+              value: null,
+              control: { kind: "input", value: "https://wireframe.md/lookbook", inputType: "url" },
+            },
           ],
         },
       },

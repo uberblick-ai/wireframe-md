@@ -134,6 +134,26 @@ describe("html rendering", () => {
     expect(html).toContain("https://wireframe.md/lookbook");
   });
 
+  it("renders prop rows with inline control values", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Params\"",
+      "    props",
+      "      prop key=\"Device\"",
+      "        select value=\"browser\" options=\"mobile,app,browser\"",
+      "      prop key=\"Surface\"",
+      "        select value=\"plain\" options=\"card,plain\"",
+      "      prop key=\"URL\"",
+      "        input type=\"url\" value=\"https://wireframe.md/lookbook\"",
+    ].join("\n"));
+
+    expect(html).toContain("wf-prop has-control");
+    expect(html).toContain("wf-control wf-select is-inline");
+    expect(html).toContain("wf-control wf-input type-url is-inline");
+    expect(html).toContain("wf-prop-key\">Device<");
+    expect(html).toContain("https://wireframe.md/lookbook");
+  });
+
   it("supports auto-sized split tracks for content-height rows", () => {
     const html = renderWireframeBlockToHtml([
       "screen lookbook title=\"Lookbook\" device=browser surface=plain",
@@ -192,5 +212,14 @@ describe("html rendering", () => {
     expect(styles).toContain("white-space: pre;");
     expect(styles).toContain("overflow: hidden;");
     expect(styles).toContain("text-overflow: clip;");
+  });
+
+  it("keeps prop values and control values on one line with clipping", () => {
+    const styles = getDefaultStyles();
+
+    expect(styles).toContain(".wf-prop-value");
+    expect(styles).toContain("white-space: nowrap;");
+    expect(styles).toContain(".wf-control-value");
+    expect(styles).toContain("text-overflow: ellipsis;");
   });
 });

@@ -669,6 +669,10 @@ body {
   min-width: 0;
 }
 
+.wf-control.is-inline {
+  gap: 0;
+}
+
 .wf-control-label {
   color: var(--wf-muted);
   font-size: 0.74rem;
@@ -693,12 +697,17 @@ body {
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wf-panel) 18%, transparent);
 }
 
+.wf-control.is-inline .wf-control-box {
+  min-height: 36px;
+}
+
 .wf-control-value {
   min-width: 0;
   flex: 1 1 auto;
   color: var(--wf-ink);
   font-size: 0.92rem;
   line-height: 1.3;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -712,8 +721,9 @@ body {
 .wf-input.type-url .wf-control-value {
   font-size: 0.84rem;
   font-family: "SFMono-Regular", ui-monospace, monospace;
-  overflow-wrap: anywhere;
-  text-overflow: clip;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .wf-props {
@@ -727,7 +737,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 110px) minmax(0, 1fr);
   gap: 12px;
-  align-items: start;
+  align-items: center;
   min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--wf-line-soft);
@@ -753,6 +763,18 @@ body {
   color: var(--wf-ink);
   font-size: 0.92rem;
   line-height: 1.35;
+  align-self: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wf-prop.has-control .wf-prop-value {
+  white-space: normal;
+}
+
+.wf-prop-value > .wf-control {
+  width: 100%;
 }
 
 .wf-code-block {

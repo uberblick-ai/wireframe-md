@@ -34,10 +34,13 @@ screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="
         region label="Preview: selected wireframe example"
         split axis=horizontal sizes="rest,rest"
           region label="Params"
-            stack gap=14
-              select label="Device" value="browser" options="mobile,app,browser"
-              select label="Surface" value="plain" options="card,plain"
-              input label="URL" type="url" value="https://wireframe.md/lookbook"
+            props
+              prop key="Device"
+                select value="browser" options="mobile,app,browser"
+              prop key="Surface"
+                select value="plain" options="card,plain"
+              prop key="URL"
+                input type="url" value="https://wireframe.md/lookbook"
           region label="Markdown"
             code_block language="wireframe"
               code_line "screen lookbook title=\"wireframe.md Lookbook\" device=browser surface=plain"
@@ -69,7 +72,7 @@ Authoring notes:
 - `tree` renders static grouped navigation with `group` and `item`
 - `group expanded=false` collapses a branch, and `item selected=true` highlights the current example
 - `stack` composes multiple content blocks vertically inside a region
-- `props` and `prop` render static key-value inspector rows
+- `props` and `prop` render static key-value inspector rows, and a `prop` can optionally host one nested `select` or `input` control on its value side
 - `select` and `input` render static form-like controls for params panes
 - `code_block` and `code_line` render read-only source snippets inside a pane
 - `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`; on `screen` it also drops the outer device stroke

@@ -117,8 +117,8 @@ export const ELEMENT_DEFINITIONS = {
   prop: {
     kind: "prop",
     placement: "layout",
-    maxChildren: 0,
-    allowedChildren: [],
+    maxChildren: 1,
+    allowedChildren: ["select", "input"],
     attributes: {
       key: { type: "string" },
       value: { type: "string" },
