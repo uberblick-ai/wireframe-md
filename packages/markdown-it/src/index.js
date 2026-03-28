@@ -61,7 +61,7 @@ export function installWireframeMarkdownParser(markdownit, config = {}) {
         break;
       }
 
-      lines.push(state.src.slice(state.bMarks[nextLine], state.eMarks[nextLine]));
+      lines.push(state.src.slice(linePos, lineMax));
       nextLine++;
     }
 

@@ -60,4 +60,22 @@ describe("markdown-it wireframe helpers", () => {
     expect(rendered).toContain("<wireframe-md-block");
     expect(decodeWireframeBlockOptions(optionsMatch[1])).toEqual({ boxWidth: null, boxHeight: 400 });
   });
+
+  it("normalizes fenced source indentation inside list items", () => {
+    const md = new MarkdownIt();
+    installWireframeMarkdownParser(md);
+
+    const rendered = md.render([
+      "- Example",
+      "",
+      "  ```wireframe",
+      "  screen lookbook title=\"Lookbook\" device=browser",
+      "  ```",
+    ].join("\n"));
+
+    const sourceMatch = rendered.match(/data-source="([^"]*)"/);
+
+    expect(sourceMatch).toBeTruthy();
+    expect(decodeURIComponent(sourceMatch[1])).toBe("screen lookbook title=\"Lookbook\" device=browser");
+  });
 });
