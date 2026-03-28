@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractWireframeBlocks, parseFenceInfo, parseWireframe, resolveDeviceProfile, resolveSplitDefinition, resolveSurfaceStyle } from "@wireframe-md/core";
+import { extractWireframeBlocks, formatWireframeFenceInfo, normalizeRenderBox, parseFenceInfo, parseWireframe, resolveDeviceProfile, resolveSplitDefinition, resolveSurfaceStyle } from "@wireframe-md/core";
 
 describe("core parsing", () => {
   it("parses inline fence render-box syntax", () => {
@@ -10,6 +10,17 @@ describe("core parsing", () => {
         boxHeight: 800,
       },
     });
+  });
+
+  it("formats wireframe fence info from render-box options", () => {
+    expect(formatWireframeFenceInfo({})).toBe("wireframe");
+    expect(formatWireframeFenceInfo({ boxWidth: 1280, boxHeight: 820 })).toBe("wireframe[1280x820]");
+    expect(formatWireframeFenceInfo({ boxWidth: null, boxHeight: 400 })).toBe("wireframe[x400]");
+  });
+
+  it("normalizes render-box options to the canonical boxWidth/boxHeight shape", () => {
+    expect(normalizeRenderBox({ boxWidth: 1280, boxHeight: 820 })).toEqual({ boxWidth: 1280, boxHeight: 820 });
+    expect(normalizeRenderBox({ width: 960, height: 540 })).toEqual({ boxWidth: 960, boxHeight: 540 });
   });
 
   it("extracts wireframe blocks from markdown", () => {
@@ -24,6 +35,17 @@ describe("core parsing", () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0].code).toContain("screen settings");
     expect(blocks[0].info.options).toEqual({ boxWidth: null, boxHeight: 400 });
+  });
+
+  it("extracts tilde-fenced wireframe blocks from markdown", () => {
+    const blocks = extractWireframeBlocks([
+      "~~~wireframe[1280x820]",
+      "screen lookbook title=\"Lookbook\" device=browser",
+      "~~~",
+    ].join("\n"));
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].info.options).toEqual({ boxWidth: 1280, boxHeight: 820 });
   });
 
   it("parses top-level screens", () => {

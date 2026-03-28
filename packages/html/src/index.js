@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+// @ts-check
+
 import {
   extractWireframeBlocks,
   normalizeRenderBox,
@@ -8,8 +9,17 @@ import {
   resolveSplitDefinition,
   resolveSurfaceStyle,
 } from "@wireframe-md/core";
+import { DEFAULT_STYLES } from "./default_styles.js";
 
-const DEFAULT_STYLES = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+/**
+ * @typedef {ReturnType<typeof normalizeRenderBox>} RenderBox
+ * @typedef {ReturnType<typeof resolveDeviceProfile>} DeviceProfile
+ * @typedef {ReturnType<typeof parseWireframe>} WireframeRoot
+ * @typedef {WireframeRoot["children"][number]} WireframeNode
+ * @typedef {{ outerWidth: number, outerHeight: number, viewportLeft: number, viewportTop: number, viewportWidth: number, viewportHeight: number, viewportRadius: number }} ScreenMetrics
+ * @typedef {{ bodyClassName: string, screenContent: string }} ScreenContent
+ * @typedef {{ naturalWidth: number, naturalHeight: number, html: string }} ScreenModel
+ */
 
 const DOC_GAP = 20;
 const SHELL_PADDING = 16;
@@ -61,8 +71,8 @@ export function renderWireframeBlockToHtml(source, options = {}) {
   const renderedWidth = round(naturalWidth * scale);
   const renderedHeight = round(naturalHeight * scale);
   const blockStyles = styleAttr({
-    width: px(box.width ?? renderedWidth),
-    height: px(box.height ?? renderedHeight),
+    width: px(box.boxWidth ?? renderedWidth),
+    height: px(box.boxHeight ?? renderedHeight),
   });
   const docStyles = styleAttr({
     width: px(naturalWidth),
@@ -338,12 +348,12 @@ function buildBrowserToolbarIcon(kind, cx, cy) {
 function computeScale(naturalWidth, naturalHeight, box) {
   let scale = 1;
 
-  if (box.width != null) {
-    scale = box.width / naturalWidth;
+  if (box.boxWidth != null) {
+    scale = box.boxWidth / naturalWidth;
   }
 
-  if (box.height != null) {
-    scale = Math.min(scale, box.height / naturalHeight);
+  if (box.boxHeight != null) {
+    scale = Math.min(scale, box.boxHeight / naturalHeight);
   }
 
   if (!Number.isFinite(scale) || scale <= 0) {

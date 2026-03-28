@@ -1,3 +1,5 @@
+// @ts-check
+
 export const siteCatalog = {
   title: "wireframe-md",
   tagline: "A small, inspectable showcase for supported wireframe syntax and rendered output.",

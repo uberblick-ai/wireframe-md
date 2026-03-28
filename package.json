@@ -7,20 +7,27 @@
     "packages/*"
   ],
   "scripts": {
-    "build:site": "bun scripts/build-site.js",
+    "build:site": "bun run sync:html-styles && bun scripts/build-site.js",
     "dev:site": "bun scripts/dev-site.js",
+    "sync:html-styles": "bun scripts/sync-html-default-styles.js",
     "test": "bun run test:unit",
-    "test:unit": "vitest run",
-    "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots",
+    "test:unit": "bun run sync:html-styles && vitest run",
+    "test:visual": "bun run sync:html-styles && playwright test",
+    "test:visual:update": "bun run sync:html-styles && playwright test --update-snapshots",
     "test:visual:docker": "docker compose run --rm playwright",
-    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install -g bun@1.3.10 && bun install --frozen-lockfile && bun run test:visual:update\""
+    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install -g bun@1.3.10 && bun install --frozen-lockfile && bun run test:visual:update\"",
+    "typecheck": "bun run sync:html-styles && tsc --noEmit"
   },
   "devDependencies": {
+    "@playwright/test": "1.58.0",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^25.5.0",
     "@wireframe-md/core": "workspace:*",
     "@wireframe-md/html": "workspace:*",
+    "@wireframe-md/markdown-it": "workspace:*",
     "@wireframe-md/remark": "workspace:*",
-    "@playwright/test": "1.58.0",
+    "markdown-it": "14.1.1",
+    "typescript": "^6.0.2",
     "vitest": "4.1.2"
   }
 }

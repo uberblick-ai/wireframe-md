@@ -1,0 +1,14 @@
+{
+  "name": "@wireframe-md/markdown-it",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@wireframe-md/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "markdown-it": "^14.1.0"
+  }
+}

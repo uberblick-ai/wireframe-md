@@ -1,7 +1,14 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { renderWireframeBlockToHtml } from "@wireframe-md/html";
+import { getDefaultStyles, renderWireframeBlockToHtml } from "@wireframe-md/html";
 
 describe("html rendering", () => {
+  it("keeps the inlined default styles in sync with the stylesheet file", () => {
+    const source = readFileSync(new URL("../../packages/html/styles.css", import.meta.url), "utf8");
+
+    expect(getDefaultStyles()).toBe(source);
+  });
+
   it("renders a custom browser url into browser chrome", () => {
     const html = renderWireframeBlockToHtml([
       "screen inspect title=\"Inspect\" device=browser url=\"https://uberblick.ai/lookbook/inspect/ui/form/single_select\"",

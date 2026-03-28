@@ -1,3 +1,24 @@
+// @ts-check
+
+/**
+ * @typedef {"mobile" | "app" | "browser"} DeviceName
+ * @typedef {"screen" | "split" | "region"} WireframeNodeKind
+ * @typedef {"horizontal" | "vertical"} SplitAxis
+ * @typedef {"card" | "plain"} SurfaceStyle
+ * @typedef {string | number | boolean} WireframeAttrValue
+ * @typedef {{ name: DeviceName, label: string, frame: DeviceName, width: number, height: number }} DeviceProfile
+ * @typedef {{ boxWidth: number | null, boxHeight: number | null }} RenderBox
+ * @typedef {{ language: string, options: RenderBox }} FenceInfo
+ * @typedef {{ code: string, info: FenceInfo }} WireframeBlock
+ * @typedef {{ indent: number, marker: string, markerLength: number, info: FenceInfo }} FenceStart
+ * @typedef {{ kind: "rest" } | { kind: "fixed", value: number }} SplitSize
+ * @typedef {{ axis: SplitAxis, surface: SurfaceStyle, sizes: SplitSize[] }} SplitDefinition
+ * @typedef {{ kind: WireframeNodeKind, bare: string[], texts: string[], attrs: Record<string, WireframeAttrValue>, children: WireframeNode[] }} WireframeNode
+ * @typedef {{ kind: "root", children: WireframeNode[] }} WireframeRoot
+ * @typedef {{ indent: number, node: WireframeRoot | WireframeNode, lineNumber: number }} StackEntry
+ */
+
+/** @type {Record<DeviceName, DeviceProfile>} */
 export const DEVICE_PROFILES = {
   mobile: { name: "mobile", label: "mobile phone", frame: "mobile", width: 390, height: 844 },
   app: { name: "app", label: "desktop app", frame: "app", width: 1280, height: 800 },
@@ -6,20 +27,36 @@ export const DEVICE_PROFILES = {
 
 const INDENT_SIZE = 2;
 const SUPPORTED_NODE_KINDS = new Set(["screen", "split", "region"]);
-const FENCE_REGEX = /```([^\n]*)\n([\s\S]*?)```/g;
+const FENCE_START_REGEX = /^( {0,3})(`{3,}|~{3,})([^\n]*)$/;
+const FENCE_CLOSE_REGEX = /^( {0,3})(`{3,}|~{3,})[ \t]*$/;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
 
 export function extractWireframeBlocks(markdownSource) {
+  /** @type {WireframeBlock[]} */
   const blocks = [];
+  const lines = String(markdownSource || "").split(/\r?\n/);
 
-  for (const match of markdownSource.matchAll(FENCE_REGEX)) {
-    const info = parseFenceInfo(match[1] || "");
-    if (info.language !== "wireframe") continue;
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const opener = parseFenceStartLine(lines[lineIndex]);
+    if (!opener || opener.info.language !== "wireframe") continue;
+
+    const codeLines = [];
+    let closingLineIndex = lineIndex + 1;
+
+    while (closingLineIndex < lines.length && !isMatchingFenceCloseLine(lines[closingLineIndex], opener)) {
+      codeLines.push(lines[closingLineIndex]);
+      closingLineIndex += 1;
+    }
+
+    if (closingLineIndex >= lines.length) {
+      continue;
+    }
 
     blocks.push({
-      code: (match[2] || "").replace(/\n$/, ""),
-      info,
+      code: codeLines.join("\n"),
+      info: opener.info,
     });
+    lineIndex = closingLineIndex;
   }
 
   return blocks;
@@ -29,7 +66,7 @@ export function parseFenceInfo(rawInfo = "") {
   const info = rawInfo.trim();
 
   if (!info) {
-    return { language: "", options: {} };
+    return { language: "", options: normalizeRenderBox() };
   }
 
   const language = info.match(/^[^\s\[]+/)?.[0] || "";
@@ -37,13 +74,13 @@ export function parseFenceInfo(rawInfo = "") {
 
   return {
     language,
-    options: language === "wireframe" ? parseWireframeFenceOptions(bracketSpec) : {},
+    options: language === "wireframe" ? parseWireframeFenceOptions(bracketSpec) : normalizeRenderBox(),
   };
 }
 
 export function parseWireframeFenceOptions(rawSpec = "") {
   const spec = rawSpec.trim();
-  if (!spec) return {};
+  if (!spec) return normalizeRenderBox();
 
   const sizeMatch = spec.match(/^(\d+)?x(\d+)?$/);
   if (!sizeMatch) {
@@ -60,17 +97,60 @@ export function parseWireframeFenceOptions(rawSpec = "") {
 
 export function normalizeRenderBox(options = {}) {
   return {
-    width: options.boxWidth ?? null,
-    height: options.boxHeight ?? null,
+    boxWidth: options.boxWidth ?? options.width ?? null,
+    boxHeight: options.boxHeight ?? options.height ?? null,
   };
+}
+
+export function formatWireframeFenceInfo(options = {}) {
+  const box = normalizeRenderBox(options);
+
+  if (box.boxWidth == null && box.boxHeight == null) {
+    return "wireframe";
+  }
+
+  const width = box.boxWidth == null ? "" : Number(box.boxWidth);
+  const height = box.boxHeight == null ? "" : Number(box.boxHeight);
+
+  if ((box.boxWidth != null && !Number.isFinite(width)) || (box.boxHeight != null && !Number.isFinite(height))) {
+    throw new Error("Wireframe fence dimensions must be numbers when provided.");
+  }
+
+  return `wireframe[${width === "" ? "" : width}x${height === "" ? "" : height}]`;
+}
+
+export function parseFenceStartLine(rawLine = "") {
+  const match = String(rawLine).match(FENCE_START_REGEX);
+  if (!match) return null;
+
+  const [, indent, markerText, rawInfo] = match;
+
+  return {
+    indent: indent.length,
+    marker: markerText[0],
+    markerLength: markerText.length,
+    info: parseFenceInfo((rawInfo || "").trim()),
+  };
+}
+
+export function isMatchingFenceCloseLine(rawLine = "", opener = null) {
+  if (!opener) return false;
+
+  const match = String(rawLine).match(FENCE_CLOSE_REGEX);
+  if (!match) return false;
+
+  const markerText = match[2];
+  return markerText[0] === opener.marker && markerText.length >= opener.markerLength;
 }
 
 export function parseWireframe(source) {
   const lines = source.replace(/\t/g, "  ").split("\n");
+  /** @type {WireframeRoot} */
   const root = {
     kind: "root",
     children: [],
   };
+  /** @type {StackEntry[]} */
   const stack = [{ indent: -1, node: root, lineNumber: 0 }];
 
   lines.forEach((rawLine, lineIndex) => {
@@ -108,8 +188,9 @@ export function parseNodeLine(line, lineNumber = 1) {
   }
 
   const [kind, ...rest] = tokens;
+  /** @type {WireframeNode} */
   const node = {
-    kind,
+    kind: /** @type {WireframeNodeKind} */ (kind),
     bare: [],
     texts: [],
     attrs: {},
@@ -190,7 +271,7 @@ export function resolveSurfaceStyle(rawSurface = "card") {
 
 function resolveSplitSizes(rawSizes = "", childCount = 0) {
   if (rawSizes == null || rawSizes === "") {
-    return Array.from({ length: childCount }, () => ({ kind: "rest" }));
+    return Array.from({ length: childCount }, () => /** @type {SplitSize} */ ({ kind: "rest" }));
   }
 
   const tokens = String(rawSizes)
