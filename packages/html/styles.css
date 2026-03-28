@@ -780,6 +780,7 @@ body {
   margin: 0;
   min-width: 0;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .wf-code-block-body code {
@@ -788,12 +789,16 @@ body {
   font-family: "SFMono-Regular", ui-monospace, monospace;
   font-size: 0.82rem;
   line-height: 1.5;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .wf-code-line {
+  display: block;
   color: var(--wf-code-ink, var(--wf-ink));
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .wf-region-lines {

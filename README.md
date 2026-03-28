@@ -32,7 +32,7 @@ screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="
             item label="Tree" selected=true
       split axis=vertical sizes="rest,240"
         region label="Preview: selected wireframe example"
-        split axis=horizontal sizes="320,rest"
+        split axis=horizontal sizes="rest,rest"
           region label="Params"
             stack gap=14
               select label="Device" value="browser" options="mobile,app,browser"

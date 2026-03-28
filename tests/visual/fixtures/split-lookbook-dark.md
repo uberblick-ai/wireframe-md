@@ -16,7 +16,7 @@ screen lookbook title="Lookbook" device=browser width=1366 height=820 surface=pl
             item label="Item"
       split axis=vertical sizes="rest,220"
         region label="Preview"
-        split axis=horizontal sizes="320,rest"
+        split axis=horizontal sizes="rest,rest"
           region label="Params"
             stack gap=14
               select label="Device" value="browser" options="mobile,app,browser"

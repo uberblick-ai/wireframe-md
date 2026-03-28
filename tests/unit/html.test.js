@@ -184,4 +184,13 @@ describe("html rendering", () => {
     expect(html).toContain("<html lang=\"en\" class=\"dark\">");
     expect(html).toContain("wf-fixture-root wf-theme-dark");
   });
+
+  it("keeps code blocks clipped instead of wrapping long lines", () => {
+    const styles = getDefaultStyles();
+
+    expect(styles).toContain(".wf-code-line");
+    expect(styles).toContain("white-space: pre;");
+    expect(styles).toContain("overflow: hidden;");
+    expect(styles).toContain("text-overflow: clip;");
+  });
 });
