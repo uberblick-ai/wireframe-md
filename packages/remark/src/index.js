@@ -1,3 +1,5 @@
+// @ts-check
+
 import { parseFenceInfo } from "@wireframe-md/core";
 import { getDefaultStyles, renderWireframeBlockToHtml } from "@wireframe-md/html";
 import { visit } from "unist-util-visit";

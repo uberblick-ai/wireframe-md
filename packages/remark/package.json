@@ -6,8 +6,8 @@
     ".": "./src/index.js"
   },
   "dependencies": {
-    "@wireframe-md/core": "0.0.0",
-    "@wireframe-md/html": "0.0.0",
+    "@wireframe-md/core": "workspace:*",
+    "@wireframe-md/html": "workspace:*",
     "unist-util-visit": "5.1.0"
   }
 }

@@ -1,3 +1,5 @@
+// @ts-check
+
 import { createServer } from "node:http";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, watch } from "node:fs";
