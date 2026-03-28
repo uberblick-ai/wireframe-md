@@ -60,6 +60,63 @@ describe("html rendering", () => {
     expect(html).not.toContain("wf-region-lines");
   });
 
+  it("allows regions to hide their label chrome", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame sidebar title=\"Elements\" width=320 height=420 surface=plain",
+      "  region label=\"Sidebar\" surface=plain show_label=false",
+      "    tree",
+      "      item label=\"Tree\" selected=true",
+    ].join("\n"));
+
+    expect(html).toContain("wf-region surface-plain no-placeholder hide-label");
+    expect(html).toContain("wf-tree-item is-selected");
+    expect(html).not.toContain("wf-region-label");
+    expect(html).not.toContain("wf-region-chip");
+  });
+
+  it("renders static tree navigation inside a region", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame sidebar title=\"Elements\" width=320 height=420 surface=plain",
+      "  region label=\"Catalog\" surface=plain",
+      "    tree",
+      "      group label=\"Layout\"",
+      "        item label=\"Screen\"",
+      "        item label=\"Split\" selected=true",
+      "      group label=\"Examples\" expanded=false",
+      "        item label=\"Lookbook\"",
+    ].join("\n"));
+
+    expect(html).toContain("wf-tree");
+    expect(html).toContain("wf-tree-group");
+    expect(html).toContain("wf-tree-item is-selected");
+    expect(html).toContain("Catalog");
+    expect(html).toContain("Split");
+    expect(html).not.toContain("wf-region-lines");
+  });
+
+  it("renders stack-based props and code blocks inside a region", () => {
+    const html = renderWireframeBlockToHtml([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Inspector\"",
+      "    stack gap=16",
+      "      props",
+      "        prop key=\"device\" value=\"browser\"",
+      "        prop key=\"surface\" value=\"plain\"",
+      "      code_block language=\"wireframe\"",
+      "        code_line \"screen lookbook title=\\\"Lookbook\\\" device=browser\"",
+      "        code_line \"  region label=\\\"Preview\\\"\"",
+    ].join("\n"));
+
+    expect(html).toContain("wf-stack");
+    expect(html).toContain("--wf-stack-gap:16px");
+    expect(html).toContain("wf-props");
+    expect(html).toContain("wf-prop-key");
+    expect(html).toContain("wf-code-block");
+    expect(html).toContain("wf-code-block-language");
+    expect(html).toContain("screen lookbook title=&quot;Lookbook&quot; device=browser");
+    expect(html).not.toContain("wf-region-lines");
+  });
+
   it("supports auto-sized split tracks for content-height rows", () => {
     const html = renderWireframeBlockToHtml([
       "screen lookbook title=\"Lookbook\" device=browser surface=plain",

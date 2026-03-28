@@ -6,7 +6,7 @@ const INDENT_SIZE = 2;
 const TOKEN_REGEX = /[A-Za-z][\w-]*="(?:\\.|[^"])*"|"(?:\\.|[^"])*"|[^\s]+/g;
 
 /**
- * @typedef {"screen" | "frame" | "split" | "region"} WireframeNodeKind
+ * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line"} WireframeNodeKind
  * @typedef {"horizontal" | "vertical"} SplitAxis
  * @typedef {"card" | "plain"} SurfaceStyle
  * @typedef {string | number | boolean} WireframeAttrValue
@@ -254,7 +254,7 @@ function normalizeIndent(rawIndent, lineNumber) {
  */
 function validateParentChild(parent, node, lineNumber) {
   if (!isSupportedNodeKind(node.kind)) {
-    throw new Error(`Unsupported node "${node.kind}" on line ${lineNumber}. Expected one of: screen, frame, split, region.`);
+    throw new Error(`Unsupported node "${node.kind}" on line ${lineNumber}. Expected one of: screen, frame, split, region, tree, group, item, stack, props, prop, code_block, code_line.`);
   }
 
   if (parent.kind === "root") {
@@ -275,7 +275,7 @@ function validateParentChild(parent, node, lineNumber) {
       throw new Error(`"${parent.kind}" cannot contain nested content. Found "${node.kind}" on line ${lineNumber}.`);
     }
 
-    throw new Error(`A "${parent.kind}" can only contain ${parentDefinition.maxChildren} child layout node. Found "${node.kind}" on line ${lineNumber}.`);
+    throw new Error(`A "${parent.kind}" can only contain ${parentDefinition.maxChildren} child node. Found "${node.kind}" on line ${lineNumber}.`);
   }
 
   if (!canContainChild(parent.kind, node.kind)) {
@@ -299,4 +299,3 @@ function finalizeNode(entry) {
     throw new Error(`Split on line ${entry.lineNumber}: ${message}`);
   }
 }
-

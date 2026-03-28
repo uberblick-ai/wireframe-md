@@ -9,6 +9,8 @@ Current scope is still intentionally small, but it now covers a usable layout sk
 - fenced `wireframe` blocks
 - top-level `screen` and `frame` roots
 - nested `split` and `region` layout nodes
+- static `tree`, `group`, and `item` navigation content inside regions
+- `stack`, `props`, and `code_block` content for inspector-style panes
 - browser, app, and mobile shells
 - HTML rendering with built-in light and dark themes
 - unit and visual regression tests from Markdown fixtures
@@ -21,12 +23,24 @@ screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="
   split axis=vertical sizes="auto,rest" surface=plain
     region label="Top Bar: wireframe.md brand + theme toggle" surface=plain placeholder=false
     split axis=horizontal sizes="280,rest" surface=plain
-      region label="Sidebar: grouped element tree + example selection" surface=plain
+      region label="Sidebar" surface=plain show_label=false
+        tree
+          group label="Layout"
+            item label="Screen"
+            item label="Split"
+          group label="Navigation"
+            item label="Tree" selected=true
       split axis=vertical sizes="rest,240"
         region label="Preview: selected wireframe example"
         split axis=horizontal sizes="rest,rest"
           region label="Params"
+            props
+              prop key="device" value="browser"
+              prop key="surface" value="plain"
           region label="Markdown"
+            code_block language="wireframe"
+              code_line "screen lookbook title=\"wireframe.md Lookbook\" device=browser surface=plain"
+              code_line "  split axis=vertical sizes=\"auto,rest\" surface=plain"
 ```
 ````
 
@@ -49,7 +63,13 @@ Authoring notes:
 - `frame` renders a shell-less standalone artifact
 - `split` divides space horizontally or vertically
 - split track sizes accept fixed pixels, `auto`, and `rest`
-- `region` is the current low-fidelity leaf node
+- `region` can be a low-fidelity leaf or host one nested `split` or `tree`
+- `show_label=false` hides the region chip and label while keeping the region available as a structural container
+- `tree` renders static grouped navigation with `group` and `item`
+- `group expanded=false` collapses a branch, and `item selected=true` highlights the current example
+- `stack` composes multiple content blocks vertically inside a region
+- `props` and `prop` render static key-value inspector rows
+- `code_block` and `code_line` render read-only source snippets inside a pane
 - `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`; on `screen` it also drops the outer device stroke
 - `placeholder=false` hides the fallback placeholder bars in a `region`
 - omitting a render box keeps the block fluid within its container; explicit `wireframe[960x]` or `wireframe[x420]` sizes still work

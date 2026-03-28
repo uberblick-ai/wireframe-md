@@ -2,7 +2,7 @@
 
 /**
  * @typedef {"mobile" | "app" | "browser"} DeviceName
- * @typedef {"screen" | "frame" | "split" | "region"} WireframeNodeKind
+ * @typedef {"screen" | "frame" | "split" | "region" | "tree" | "group" | "item" | "stack" | "props" | "prop" | "code_block" | "code_line"} WireframeNodeKind
  * @typedef {"horizontal" | "vertical"} SplitAxis
  * @typedef {"card" | "plain"} SurfaceStyle
  * @typedef {{ name: DeviceName, label: string, frame: DeviceName, width: number, height: number }} DeviceProfile
@@ -18,7 +18,7 @@ export const DEVICE_PROFILES = {
 };
 
 /** @type {WireframeNodeKind[]} */
-export const SUPPORTED_NODE_KINDS = ["screen", "frame", "split", "region"];
+export const SUPPORTED_NODE_KINDS = ["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line"];
 
 /** @type {Record<WireframeNodeKind, ElementDefinition>} */
 export const ELEMENT_DEFINITIONS = {
@@ -62,12 +62,84 @@ export const ELEMENT_DEFINITIONS = {
   region: {
     kind: "region",
     placement: "layout",
-    maxChildren: 0,
-    allowedChildren: [],
+    maxChildren: 1,
+    allowedChildren: ["split", "tree", "stack", "props", "code_block"],
     attributes: {
       label: { type: "string" },
       surface: { type: "enum", defaultValue: "card", values: ["card", "plain"] },
       placeholder: { type: "boolean", defaultValue: true },
+      show_label: { type: "boolean", defaultValue: true },
+    },
+  },
+  tree: {
+    kind: "tree",
+    placement: "layout",
+    maxChildren: null,
+    allowedChildren: ["group", "item"],
+    attributes: {},
+  },
+  group: {
+    kind: "group",
+    placement: "layout",
+    maxChildren: null,
+    allowedChildren: ["group", "item"],
+    attributes: {
+      label: { type: "string" },
+      expanded: { type: "boolean", defaultValue: true },
+    },
+  },
+  item: {
+    kind: "item",
+    placement: "layout",
+    maxChildren: 0,
+    allowedChildren: [],
+    attributes: {
+      label: { type: "string" },
+      selected: { type: "boolean", defaultValue: false },
+    },
+  },
+  stack: {
+    kind: "stack",
+    placement: "layout",
+    maxChildren: null,
+    allowedChildren: ["tree", "stack", "props", "code_block"],
+    attributes: {
+      gap: { type: "number", defaultValue: 12 },
+    },
+  },
+  props: {
+    kind: "props",
+    placement: "layout",
+    maxChildren: null,
+    allowedChildren: ["prop"],
+    attributes: {},
+  },
+  prop: {
+    kind: "prop",
+    placement: "layout",
+    maxChildren: 0,
+    allowedChildren: [],
+    attributes: {
+      key: { type: "string" },
+      value: { type: "string" },
+    },
+  },
+  code_block: {
+    kind: "code_block",
+    placement: "layout",
+    maxChildren: null,
+    allowedChildren: ["code_line"],
+    attributes: {
+      language: { type: "string" },
+    },
+  },
+  code_line: {
+    kind: "code_line",
+    placement: "layout",
+    maxChildren: 0,
+    allowedChildren: [],
+    attributes: {
+      value: { type: "string" },
     },
   },
 };
@@ -96,4 +168,3 @@ export function canContainChild(parentKind, childKind) {
   const parent = getElementDefinition(parentKind);
   return parent ? parent.allowedChildren.includes(childKind) : false;
 }
-

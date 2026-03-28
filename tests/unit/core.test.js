@@ -64,9 +64,15 @@ describe("core parsing", () => {
   });
 
   it("exposes a central element registry", () => {
-    expect(Object.keys(ELEMENT_DEFINITIONS)).toEqual(["screen", "frame", "split", "region"]);
+    expect(Object.keys(ELEMENT_DEFINITIONS)).toEqual(["screen", "frame", "split", "region", "tree", "group", "item", "stack", "props", "prop", "code_block", "code_line"]);
     expect(ELEMENT_DEFINITIONS.screen.allowedChildren).toEqual(["split", "region"]);
     expect(ELEMENT_DEFINITIONS.split.attributes.sizes.defaultValue).toBeUndefined();
+    expect(ELEMENT_DEFINITIONS.region.allowedChildren).toEqual(["split", "tree", "stack", "props", "code_block"]);
+    expect(ELEMENT_DEFINITIONS.region.attributes.show_label.defaultValue).toBe(true);
+    expect(ELEMENT_DEFINITIONS.tree.allowedChildren).toEqual(["group", "item"]);
+    expect(ELEMENT_DEFINITIONS.stack.allowedChildren).toEqual(["tree", "stack", "props", "code_block"]);
+    expect(ELEMENT_DEFINITIONS.props.allowedChildren).toEqual(["prop"]);
+    expect(ELEMENT_DEFINITIONS.code_block.allowedChildren).toEqual(["code_line"]);
   });
 
   it("ignores unsupported size shorthand and uses explicit dimensions only", () => {
@@ -98,6 +104,29 @@ describe("core parsing", () => {
     expect(ast.children[1].children[0].attrs.label).toBe("Form");
   });
 
+  it("parses a static tree inside a region", () => {
+    const ast = parseWireframe([
+      "screen lookbook title=\"Lookbook\" device=browser",
+      "  split axis=horizontal sizes=\"280,rest\" surface=plain",
+      "    region label=\"Sidebar\" surface=plain",
+      "      tree",
+      "        group label=\"Layout\"",
+      "          item label=\"Screen\"",
+      "          item label=\"Frame\" selected=true",
+      "        group label=\"Examples\" expanded=false",
+      "          item label=\"Lookbook\"",
+      "    region label=\"Preview\"",
+    ].join("\n"));
+
+    const sidebar = ast.children[0].children[0].children[0];
+
+    expect(sidebar.kind).toBe("region");
+    expect(sidebar.children[0].kind).toBe("tree");
+    expect(sidebar.children[0].children[0].kind).toBe("group");
+    expect(sidebar.children[0].children[0].children[1].attrs.selected).toBe(true);
+    expect(sidebar.children[0].children[1].attrs.expanded).toBe(false);
+  });
+
   it("compiles raw nodes into a normalized model for renderers", () => {
     const ast = compileWireframe([
       "screen lookbook title=\"Lookbook\" device=browser surface=plain url=\"https://wireframe.md/lookbook\"",
@@ -125,6 +154,123 @@ describe("core parsing", () => {
     });
   });
 
+  it("compiles region label visibility as an explicit flag", () => {
+    const ast = compileWireframe([
+      "frame sidebar title=\"Elements\" width=320 height=420 surface=plain",
+      "  region label=\"Sidebar\" surface=plain show_label=false",
+      "    tree",
+      "      item label=\"Tree\" selected=true",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "frame",
+      child: {
+        kind: "region",
+        label: "Sidebar",
+        showLabel: false,
+      },
+    });
+  });
+
+  it("compiles tree/group/item content inside regions", () => {
+    const ast = compileWireframe([
+      "frame sidebar title=\"Elements\" width=320 height=420 surface=plain",
+      "  region label=\"Catalog\" surface=plain",
+      "    tree",
+      "      group label=\"Layout\"",
+      "        item label=\"Split\"",
+      "        item label=\"Tree\" selected=true",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "frame",
+      title: "Elements",
+      child: {
+        kind: "region",
+        label: "Catalog",
+        surface: "plain",
+        child: {
+          kind: "tree",
+          children: [
+            {
+              kind: "group",
+              label: "Layout",
+              children: [
+                { kind: "item", label: "Split", selected: false },
+                { kind: "item", label: "Tree", selected: true },
+              ],
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  it("parses stack, props, and code block content inside a region", () => {
+    const ast = parseWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Inspector\"",
+      "    stack gap=16",
+      "      props",
+      "        prop key=\"device\" value=\"browser\"",
+      "        prop key=\"surface\" value=\"plain\"",
+      "      code_block language=\"wireframe\"",
+      "        code_line \"screen lookbook title=\\\"Lookbook\\\" device=browser\"",
+      "        code_line \"  region label=\\\"Preview\\\"\"",
+    ].join("\n"));
+
+    const stack = ast.children[0].children[0].children[0];
+
+    expect(stack.kind).toBe("stack");
+    expect(stack.attrs.gap).toBe(16);
+    expect(stack.children[0].kind).toBe("props");
+    expect(stack.children[0].children[0].kind).toBe("prop");
+    expect(stack.children[1].kind).toBe("code_block");
+    expect(stack.children[1].children[0].kind).toBe("code_line");
+  });
+
+  it("compiles stack, props, and code blocks into normalized content nodes", () => {
+    const ast = compileWireframe([
+      "frame inspect title=\"Inspect\" width=520 height=420",
+      "  region label=\"Inspector\"",
+      "    stack gap=16",
+      "      props",
+      "        prop key=\"device\" value=\"browser\"",
+      "        prop key=\"surface\" value=\"plain\"",
+      "      code_block language=\"wireframe\"",
+      "        code_line \"screen lookbook title=\\\"Lookbook\\\" device=browser\"",
+      "        code_line \"  region label=\\\"Preview\\\"\"",
+    ].join("\n"));
+
+    expect(ast.children[0]).toMatchObject({
+      kind: "frame",
+      child: {
+        kind: "region",
+        child: {
+          kind: "stack",
+          gap: 16,
+          children: [
+            {
+              kind: "props",
+              children: [
+                { kind: "prop", key: "device", value: "browser" },
+                { kind: "prop", key: "surface", value: "plain" },
+              ],
+            },
+            {
+              kind: "code_block",
+              language: "wireframe",
+              children: [
+                { kind: "code_line", value: "screen lookbook title=\"Lookbook\" device=browser" },
+                { kind: "code_line", value: "  region label=\"Preview\"" },
+              ],
+            },
+          ],
+        },
+      },
+    });
+  });
+
   it("rejects invalid indentation", () => {
     expect(() =>
       parseWireframe([
@@ -137,6 +283,49 @@ describe("core parsing", () => {
 
   it("rejects non-screen or non-frame top-level nodes", () => {
     expect(() => parseWireframe("split axis=horizontal")).toThrow(/Only "screen" and "frame" are supported at the top level/);
+  });
+
+  it("rejects tree nodes outside regions", () => {
+    expect(() =>
+      parseWireframe([
+        "screen lookbook title=\"Lookbook\" device=browser",
+        "  tree",
+        "    item label=\"Screen\"",
+      ].join("\n")),
+    ).toThrow(/Only "split" and "region" are supported inside "screen"/);
+  });
+
+  it("rejects non-tree content inside a tree group", () => {
+    expect(() =>
+      parseWireframe([
+        "screen lookbook title=\"Lookbook\" device=browser",
+        "  region label=\"Sidebar\"",
+        "    tree",
+        "      group label=\"Layout\"",
+        "        region label=\"Invalid\"",
+      ].join("\n")),
+    ).toThrow(/Only "group" and "item" are supported inside "group"/);
+  });
+
+  it("rejects prop nodes outside props", () => {
+    expect(() =>
+      parseWireframe([
+        "frame inspect title=\"Inspect\"",
+        "  region label=\"Inspector\"",
+        "    prop key=\"device\" value=\"browser\"",
+      ].join("\n")),
+    ).toThrow(/Only "split" and "tree" and "stack" and "props" and "code_block" are supported inside "region"/);
+  });
+
+  it("rejects code lines outside code blocks", () => {
+    expect(() =>
+      parseWireframe([
+        "frame inspect title=\"Inspect\"",
+        "  region label=\"Inspector\"",
+        "    stack",
+        "      code_line \"screen lookbook\"",
+      ].join("\n")),
+    ).toThrow(/Only "tree" and "stack" and "props" and "code_block" are supported inside "stack"/);
   });
 
   it("validates split definitions", () => {

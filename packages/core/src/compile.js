@@ -10,9 +10,20 @@ const FRAME_DEFAULT_HEIGHT = 420;
  * @typedef {RawWireframeRoot["children"][number]} RawWireframeNode
  * @typedef {ReturnType<typeof resolveDeviceProfile>} DeviceProfile
  * @typedef {ReturnType<typeof resolveSplitDefinition>} SplitDefinition
- * @typedef {{ kind: "region", lineNumber: number, label: string, surface: "card" | "plain", placeholder: boolean }} CompiledRegionNode
+ * @typedef {{ kind: "item", lineNumber: number, label: string, selected: boolean }} CompiledItemNode
+ * @typedef {{ kind: "group", lineNumber: number, label: string, expanded: boolean, children: CompiledTreeChildNode[] }} CompiledGroupNode
+ * @typedef {{ kind: "tree", lineNumber: number, children: CompiledTreeChildNode[] }} CompiledTreeNode
+ * @typedef {CompiledGroupNode | CompiledItemNode} CompiledTreeChildNode
+ * @typedef {{ kind: "stack", lineNumber: number, gap: number, children: CompiledContentNode[] }} CompiledStackNode
+ * @typedef {{ kind: "prop", lineNumber: number, key: string, value: string }} CompiledPropNode
+ * @typedef {{ kind: "props", lineNumber: number, children: CompiledPropNode[] }} CompiledPropsNode
+ * @typedef {{ kind: "code_line", lineNumber: number, value: string }} CompiledCodeLineNode
+ * @typedef {{ kind: "code_block", lineNumber: number, language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
+ * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode} CompiledContentNode
+ * @typedef {{ kind: "region", lineNumber: number, label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {{ kind: "split", lineNumber: number, axis: SplitDefinition["axis"], surface: SplitDefinition["surface"], sizes: SplitDefinition["sizes"], children: CompiledLayoutNode[] }} CompiledSplitNode
  * @typedef {CompiledSplitNode | CompiledRegionNode} CompiledLayoutNode
+ * @typedef {CompiledSplitNode | CompiledContentNode} CompiledRegionChildNode
  * @typedef {{ kind: "screen", lineNumber: number, title: string, surface: "card" | "plain", device: DeviceProfile["name"], deviceProfile: DeviceProfile, width: number, height: number, url: string | null, child: CompiledLayoutNode | null }} CompiledScreenNode
  * @typedef {{ kind: "frame", lineNumber: number, title: string, surface: "card" | "plain", width: number, height: number, child: CompiledLayoutNode | null }} CompiledFrameNode
  * @typedef {CompiledScreenNode | CompiledFrameNode} CompiledTopLevelNode
@@ -135,6 +146,165 @@ function normalizeRegionNode(node) {
     label: pickNodeLabel(node, "Region"),
     surface: resolveSurfaceStyle(node.attrs.surface),
     placeholder: node.attrs.placeholder !== false,
+    showLabel: node.attrs.show_label !== false,
+    child: node.children[0] ? normalizeRegionChildNode(node.children[0]) : null,
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledRegionChildNode}
+ */
+function normalizeRegionChildNode(node) {
+  switch (node.kind) {
+    case "split":
+      return normalizeSplitNode(node);
+    case "tree":
+      return normalizeTreeNode(node);
+    case "stack":
+      return normalizeStackNode(node);
+    case "props":
+      return normalizePropsNode(node);
+    case "code_block":
+      return normalizeCodeBlockNode(node);
+    default:
+      throw new Error(`Unsupported region child "${node.kind}" on line ${node.lineNumber}.`);
+  }
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledContentNode}
+ */
+function normalizeContentNode(node) {
+  switch (node.kind) {
+    case "tree":
+      return normalizeTreeNode(node);
+    case "stack":
+      return normalizeStackNode(node);
+    case "props":
+      return normalizePropsNode(node);
+    case "code_block":
+      return normalizeCodeBlockNode(node);
+    default:
+      throw new Error(`Unsupported content node "${node.kind}" on line ${node.lineNumber}.`);
+  }
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledTreeNode}
+ */
+function normalizeTreeNode(node) {
+  return {
+    kind: "tree",
+    lineNumber: node.lineNumber,
+    children: node.children.map(normalizeTreeChildNode),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledTreeChildNode}
+ */
+function normalizeTreeChildNode(node) {
+  switch (node.kind) {
+    case "group":
+      return normalizeGroupNode(node);
+    case "item":
+      return normalizeItemNode(node);
+    default:
+      throw new Error(`Unsupported tree child "${node.kind}" on line ${node.lineNumber}.`);
+  }
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledGroupNode}
+ */
+function normalizeGroupNode(node) {
+  return {
+    kind: "group",
+    lineNumber: node.lineNumber,
+    label: pickNodeLabel(node, "Group"),
+    expanded: node.attrs.expanded !== false,
+    children: node.children.map(normalizeTreeChildNode),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledItemNode}
+ */
+function normalizeItemNode(node) {
+  return {
+    kind: "item",
+    lineNumber: node.lineNumber,
+    label: pickNodeLabel(node, "Item"),
+    selected: node.attrs.selected === true,
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledStackNode}
+ */
+function normalizeStackNode(node) {
+  return {
+    kind: "stack",
+    lineNumber: node.lineNumber,
+    gap: typeof node.attrs.gap === "number" ? node.attrs.gap : 12,
+    children: node.children.map(normalizeContentNode),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledPropsNode}
+ */
+function normalizePropsNode(node) {
+  return {
+    kind: "props",
+    lineNumber: node.lineNumber,
+    children: node.children.map(normalizePropNode),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledPropNode}
+ */
+function normalizePropNode(node) {
+  return {
+    kind: "prop",
+    lineNumber: node.lineNumber,
+    key: pickStringAttr(node.attrs.key) || pickNodeLabel(node, "Property"),
+    value: stringifyAttrValue(node.attrs.value, "Value"),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledCodeBlockNode}
+ */
+function normalizeCodeBlockNode(node) {
+  return {
+    kind: "code_block",
+    lineNumber: node.lineNumber,
+    language: pickStringAttr(node.attrs.language),
+    children: node.children.map(normalizeCodeLineNode),
+  };
+}
+
+/**
+ * @param {RawWireframeNode} node
+ * @returns {CompiledCodeLineNode}
+ */
+function normalizeCodeLineNode(node) {
+  return {
+    kind: "code_line",
+    lineNumber: node.lineNumber,
+    value: pickStringAttr(node.attrs.value) || pickNodeLabel(node, ""),
   };
 }
 
@@ -156,4 +326,15 @@ function pickNodeLabel(node, fallback) {
  */
 function pickStringAttr(value) {
   return typeof value === "string" ? value : null;
+}
+
+/**
+ * @param {unknown} value
+ * @param {string} fallback
+ * @returns {string}
+ */
+function stringifyAttrValue(value, fallback) {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return fallback;
 }

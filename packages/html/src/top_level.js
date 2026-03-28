@@ -10,9 +10,20 @@ const SHELL_HEAD_HEIGHT = 28;
 const PREVIEW_PADDING = 12;
 
 /**
- * @typedef {{ kind: "region", label: string, surface: "card" | "plain", placeholder: boolean }} CompiledRegionNode
+ * @typedef {{ kind: "item", label: string, selected: boolean }} CompiledItemNode
+ * @typedef {{ kind: "group", label: string, expanded: boolean, children: CompiledTreeChildNode[] }} CompiledGroupNode
+ * @typedef {{ kind: "tree", children: CompiledTreeChildNode[] }} CompiledTreeNode
+ * @typedef {CompiledGroupNode | CompiledItemNode} CompiledTreeChildNode
+ * @typedef {{ kind: "stack", gap: number, children: CompiledContentNode[] }} CompiledStackNode
+ * @typedef {{ kind: "prop", key: string, value: string }} CompiledPropNode
+ * @typedef {{ kind: "props", children: CompiledPropNode[] }} CompiledPropsNode
+ * @typedef {{ kind: "code_line", value: string }} CompiledCodeLineNode
+ * @typedef {{ kind: "code_block", language: string | null, children: CompiledCodeLineNode[] }} CompiledCodeBlockNode
+ * @typedef {CompiledTreeNode | CompiledStackNode | CompiledPropsNode | CompiledCodeBlockNode} CompiledContentNode
+ * @typedef {{ kind: "region", label: string, surface: "card" | "plain", placeholder: boolean, showLabel: boolean, child: CompiledRegionChildNode | null }} CompiledRegionNode
  * @typedef {{ kind: "split", axis: "horizontal" | "vertical", surface: "card" | "plain", sizes: Array<{ kind: "rest" } | { kind: "auto" } | { kind: "fixed", value: number }>, children: CompiledLayoutNode[] }} CompiledSplitNode
  * @typedef {CompiledSplitNode | CompiledRegionNode} CompiledLayoutNode
+ * @typedef {CompiledSplitNode | CompiledContentNode} CompiledRegionChildNode
  * @typedef {{ kind: "screen", title: string, surface: "card" | "plain", deviceProfile: { label: string, frame: "mobile" | "app" | "browser" }, width: number, height: number, url: string | null, child: CompiledLayoutNode | null }} CompiledScreenNode
  * @typedef {{ kind: "frame", title: string, surface: "card" | "plain", width: number, height: number, child: CompiledLayoutNode | null }} CompiledFrameNode
  * @typedef {CompiledScreenNode | CompiledFrameNode} CompiledTopLevelNode
