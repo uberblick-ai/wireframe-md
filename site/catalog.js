@@ -45,6 +45,11 @@ export const siteCatalog = {
           values: "string",
           description: "Browser-only. Replaces the default address-bar text in browser chrome.",
         },
+        {
+          name: "surface",
+          values: "`card` | `plain`",
+          description: "Controls whether the screen renders inside the outer preview card or as the bare device frame.",
+        },
       ],
       blockOptions: [
         {
@@ -252,7 +257,7 @@ export const siteCatalog = {
         {
           name: "`region label=\"...\"`",
           values: "temporary leaf placeholder",
-          description: "Use `region` as a low-fidelity leaf while the component vocabulary is still small. `surface=plain` removes the card chrome.",
+          description: "Use `region` as a low-fidelity leaf while the component vocabulary is still small. `surface=plain` removes the card chrome, and `placeholder=false` suppresses the fallback content lines.",
         },
       ],
       demos: [

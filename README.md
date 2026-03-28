@@ -2,34 +2,69 @@
 
 Low-fidelity wireframes in Markdown.
 
-Current scope is intentionally narrow:
+This project is being built using [Uberblick.ai](https://uberblick.ai) for planning, documentation, and implementation workflow.
+
+Current scope is still intentionally small, but it now covers a usable layout skeleton:
 
 - fenced `wireframe` blocks
-- screens only
-- HTML rendering
-- golden visual tests from Markdown fixtures
+- top-level `screen` and `frame` roots
+- nested `split` and `region` layout nodes
+- browser, app, and mobile shells
+- HTML rendering with built-in light and dark themes
+- unit and visual regression tests from Markdown fixtures
 
 Example:
 
 ````md
-```wireframe[980x680]
-screen dashboard title="Dashboard" device=browser
+```wireframe
+screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="https://wireframe.md/lookbook"
+  split axis=vertical sizes="64,rest" surface=plain
+    region label="Top Bar: wireframe.md brand + theme toggle" surface=plain placeholder=false
+    split axis=horizontal sizes="280,rest" surface=plain
+      region label="Sidebar: grouped element tree + example selection" surface=plain
+      split axis=vertical sizes="rest,240"
+        region label="Preview: selected wireframe example"
+        split axis=horizontal sizes="rest,rest"
+          region label="Params"
+          region label="Markdown"
 ```
 ````
 
 Packages:
 
-- `@wireframe-md/core`: parser and screen model
+- `@wireframe-md/core`: fence parsing, AST parsing, and layout model helpers
 - `@wireframe-md/html`: HTML renderer and default CSS
+- `@wireframe-md/markdown-it`: fenced-block parser and HTML element bridge for editor integrations
 - `@wireframe-md/remark`: remark plugin for fenced blocks
 
-Development:
+Authoring notes:
+
+- `screen` renders inside browser, app, or mobile chrome
+- `frame` renders a shell-less standalone artifact
+- `split` divides space horizontally or vertically
+- `region` is the current low-fidelity leaf node
+- `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`
+- `placeholder=false` hides the fallback placeholder bars in a `region`
+- omitting a render box keeps the block fluid within its container; explicit `wireframe[960x]` or `wireframe[x420]` sizes still work
+
+Local development:
 
 ```sh
-bun install
+mise install
+mise run setup
+
+# or directly with Bun
+bun install --frozen-lockfile
+bun run audit
+bun run typecheck
+bun run test
 bun run build:site
 bun run dev:site
-bun run test
+```
+
+Visual testing:
+
+```sh
 bun run test:visual:update:docker
 bun run test:visual:docker
 ```
@@ -39,3 +74,11 @@ Visual fixtures live in [`tests/visual/fixtures`](/Users/ben/Projects/Uberblick/
 The GitHub Pages showcase is built from [`site/catalog.js`](/Users/ben/Projects/Uberblick/wireframe-md/site/catalog.js) into `site-dist/` via `bun run build:site`.
 
 For local work, `bun run dev:site` rebuilds on file changes, serves `site-dist/`, and triggers live reload at `http://127.0.0.1:4173`.
+
+CI and deployment:
+
+- pull requests run `bun run audit`, `bun run typecheck`, `bun run test`, and `bun run build:site`
+- pushes to `main` run the same checks and then deploy `site-dist/` to GitHub Pages
+- GitHub Pages must be enabled once in the repository settings and configured to use GitHub Actions as the source
+
+The current Pages workflow cannot enable Pages automatically with the default `GITHUB_TOKEN`. GitHub's `actions/configure-pages` action only supports automatic enablement when you provide a separate admin-capable token, so the one-time repository setting still has to happen manually before the first successful deploy.

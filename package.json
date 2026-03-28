@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "audit": "bun audit",
     "build:site": "bun run sync:html-styles && bun scripts/build-site.js",
     "dev:site": "bun scripts/dev-site.js",
     "sync:html-styles": "bun scripts/sync-html-default-styles.js",

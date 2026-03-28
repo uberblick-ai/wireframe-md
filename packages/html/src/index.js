@@ -75,19 +75,38 @@ export function renderWireframeBlockToHtml(source, options = {}) {
   const scale = computeScale(naturalWidth, naturalHeight, box);
   const renderedWidth = round(naturalWidth * scale);
   const renderedHeight = round(naturalHeight * scale);
+  const hasFixedWidth = box.boxWidth != null;
   const themeClassName = resolveThemeClassName(normalizeThemeOption(options.theme));
-  const blockStyles = styleAttr({
-    width: px(box.boxWidth ?? renderedWidth),
-    height: px(box.boxHeight ?? renderedHeight),
-  });
-  const docStyles = styleAttr({
-    width: px(naturalWidth),
-    height: px(naturalHeight),
-    transform: `scale(${scale})`,
-  });
+  const blockStyles = styleAttr(
+    hasFixedWidth
+      ? {
+          width: px(box.boxWidth ?? renderedWidth),
+          height: px(box.boxHeight ?? renderedHeight),
+        }
+      : {
+          width: "100%",
+          maxWidth: px(renderedWidth),
+          "--wf-natural-width": naturalWidth,
+          "--wf-natural-height": naturalHeight,
+          "--wf-natural-width-px": px(naturalWidth),
+        },
+  );
+  const docStyles = styleAttr(
+    hasFixedWidth
+      ? {
+          width: px(naturalWidth),
+          height: px(naturalHeight),
+          transform: `scale(${scale})`,
+        }
+      : {
+          width: px(naturalWidth),
+          height: px(naturalHeight),
+        },
+  );
+  const blockClassName = ["wf-block-box", hasFixedWidth ? "is-fixed" : "is-fluid", themeClassName].filter(Boolean).join(" ");
 
   return [
-    `<div class="wf-block-box${themeClassName ? ` ${themeClassName}` : ""}" style="${blockStyles}">`,
+    `<div class="${blockClassName}" style="${blockStyles}">`,
     `  <div class="wf-doc" style="${docStyles}">`,
     models.map((model) => model.html).join("\n"),
     "  </div>",
@@ -128,18 +147,21 @@ function buildTopLevelModel(node) {
 
 function buildScreenModel(node) {
   const profile = resolveDeviceProfile(node.attrs.device);
+  const surface = resolveSurfaceStyle(node.attrs.surface);
   const { width, height } = resolveScreenSize(node.attrs, profile);
   const title = node.attrs.title || node.texts[0] || node.bare[0] || "Screen";
   const url = node.attrs.url || null;
   const metrics = getFrameMetrics(profile.frame, width, height);
-  const naturalWidth = metrics.outerWidth + PREVIEW_PADDING * 2 + SHELL_PADDING * 2;
-  const naturalHeight = metrics.outerHeight + PREVIEW_PADDING * 2 + SHELL_PADDING * 2 + SHELL_GAP + SHELL_HEAD_HEIGHT;
+  const naturalWidth = surface === "plain" ? metrics.outerWidth : metrics.outerWidth + PREVIEW_PADDING * 2 + SHELL_PADDING * 2;
+  const naturalHeight = surface === "plain"
+    ? metrics.outerHeight
+    : metrics.outerHeight + PREVIEW_PADDING * 2 + SHELL_PADDING * 2 + SHELL_GAP + SHELL_HEAD_HEIGHT;
   const screenContent = buildScreenContent(node, { profile, title, width, height });
 
   return {
     naturalWidth,
     naturalHeight,
-    html: renderScreenShell({ metrics, profile, title, url, width, height, ...screenContent }),
+    html: renderScreenShell({ surface, metrics, profile, title, url, width, height, ...screenContent }),
   };
 }
 
@@ -157,7 +179,27 @@ function buildFrameModel(node) {
   };
 }
 
-function renderScreenShell({ metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
+function renderScreenShell({ surface, metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
+  const screenFrameMarkup = renderScreenFrame({ metrics, profile, title, url, width, height, bodyClassName, screenContent });
+
+  if (surface === "plain") {
+    return screenFrameMarkup;
+  }
+
+  return [
+    "<section class=\"wf-screen-shell\">",
+    "  <div class=\"wf-shell-head\">",
+    `    <div class="wf-shell-title">${escapeHtml(title)}</div>`,
+    `    <div class="wf-shell-meta">${escapeHtml(profile.label)} · ${width}x${height}</div>`,
+    "  </div>",
+    "  <div class=\"wf-preview-box\">",
+    screenFrameMarkup,
+    "  </div>",
+    "</section>",
+  ].join("\n");
+}
+
+function renderScreenFrame({ metrics, profile, title, url, width, height, bodyClassName, screenContent }) {
   const { frameMarkup, viewportStyle } = renderDeviceFrameMarkup(profile.frame, metrics, title, url);
   const screenMarkup = [
     `<figure class="wf-screen in-device-frame ${escapeHtml(profile.frame)}" style="${styleAttr({ width: px(width), height: px(height) })}">`,
@@ -168,20 +210,12 @@ function renderScreenShell({ metrics, profile, title, url, width, height, bodyCl
   ].join("\n");
 
   return [
-    "<section class=\"wf-screen-shell\">",
-    "  <div class=\"wf-shell-head\">",
-    `    <div class="wf-shell-title">${escapeHtml(title)}</div>`,
-    `    <div class="wf-shell-meta">${escapeHtml(profile.label)} · ${width}x${height}</div>`,
-    "  </div>",
-    "  <div class=\"wf-preview-box\">",
     `    <div class="wf-screen-frame frame-${escapeHtml(profile.frame)}" style="${styleAttr({ width: px(metrics.outerWidth), height: px(metrics.outerHeight) })}">`,
     frameMarkup,
     `      <div class="wf-device-viewport" style="${viewportStyle}">`,
     screenMarkup,
     "      </div>",
     "    </div>",
-    "  </div>",
-    "</section>",
   ].join("\n");
 }
 
@@ -294,16 +328,23 @@ function renderSplitNode(node, depth) {
 function renderRegionNode(node, depth) {
   const surface = resolveSurfaceStyle(node.attrs.surface);
   const label = node.attrs.label || node.texts[0] || node.bare[0] || "Region";
+  const showPlaceholder = node.attrs.placeholder !== false;
 
   return [
-    `          <section class="wf-region surface-${escapeHtml(surface)} depth-${depth}">`,
+    `          <section class="wf-region surface-${escapeHtml(surface)} ${showPlaceholder ? "has-placeholder" : "no-placeholder"} depth-${depth}">`,
     "            <div class=\"wf-region-chip\">region</div>",
     `            <div class="wf-region-label">${escapeHtml(label)}</div>`,
-    "            <div class=\"wf-region-lines\" aria-hidden=\"true\">",
-    "              <span class=\"long\"></span>",
-    "              <span class=\"medium\"></span>",
-    "              <span class=\"short\"></span>",
-    "            </div>",
+    ...(
+      showPlaceholder
+        ? [
+            "            <div class=\"wf-region-lines\" aria-hidden=\"true\">",
+            "              <span class=\"long\"></span>",
+            "              <span class=\"medium\"></span>",
+            "              <span class=\"short\"></span>",
+            "            </div>",
+          ]
+        : []
+    ),
     "          </section>",
   ].join("\n");
 }

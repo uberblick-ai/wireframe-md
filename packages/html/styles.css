@@ -211,7 +211,15 @@ body {
 }
 
 .wf-block-box {
+  position: relative;
   overflow: hidden;
+  container-type: inline-size;
+}
+
+.wf-block-box.is-fluid::before {
+  content: "";
+  display: block;
+  padding-top: calc(var(--wf-natural-height) / var(--wf-natural-width) * 100%);
 }
 
 .wf-doc {
@@ -219,6 +227,12 @@ body {
   gap: 20px;
   justify-content: start;
   transform-origin: top left;
+}
+
+.wf-block-box.is-fluid > .wf-doc {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform: scale(calc(100cqw / var(--wf-natural-width-px)));
 }
 
 .wf-screen-shell {
