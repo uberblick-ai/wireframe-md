@@ -512,6 +512,13 @@ function buildSplitPaneStyles(axis, size) {
     };
   }
 
+  if (size.kind === "auto") {
+    return {
+      ...base,
+      flex: "0 0 auto",
+    };
+  }
+
   if (axis === "horizontal") {
     return {
       ...base,

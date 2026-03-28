@@ -113,6 +113,12 @@ describe("core parsing", () => {
       sizes: [{ kind: "fixed", value: 260 }, { kind: "rest" }],
     });
 
+    expect(resolveSplitDefinition({ axis: "vertical", sizes: "auto,rest" }, 2)).toEqual({
+      axis: "vertical",
+      surface: "card",
+      sizes: [{ kind: "auto" }, { kind: "rest" }],
+    });
+
     expect(() =>
       parseWireframe([
         "screen dashboard title=\"Dashboard\" device=browser",

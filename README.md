@@ -18,7 +18,7 @@ Example:
 ````md
 ```wireframe
 screen lookbook title="wireframe.md Lookbook" device=browser surface=plain url="https://wireframe.md/lookbook"
-  split axis=vertical sizes="64,rest" surface=plain
+  split axis=vertical sizes="auto,rest" surface=plain
     region label="Top Bar: wireframe.md brand + theme toggle" surface=plain placeholder=false
     split axis=horizontal sizes="280,rest" surface=plain
       region label="Sidebar: grouped element tree + example selection" surface=plain
@@ -42,6 +42,7 @@ Authoring notes:
 - `screen` renders inside browser, app, or mobile chrome
 - `frame` renders a shell-less standalone artifact
 - `split` divides space horizontally or vertically
+- split track sizes accept fixed pixels, `auto`, and `rest`
 - `region` is the current low-fidelity leaf node
 - `surface=plain` removes card chrome from `screen`, `frame`, `split`, or `region`
 - `placeholder=false` hides the fallback placeholder bars in a `region`

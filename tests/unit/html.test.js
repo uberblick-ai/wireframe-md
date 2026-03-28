@@ -59,6 +59,17 @@ describe("html rendering", () => {
     expect(html).not.toContain("wf-region-lines");
   });
 
+  it("supports auto-sized split tracks for content-height rows", () => {
+    const html = renderWireframeBlockToHtml([
+      "screen lookbook title=\"Lookbook\" device=browser surface=plain",
+      "  split axis=vertical sizes=\"auto,rest\" surface=plain",
+      "    region label=\"Top Bar\" surface=plain placeholder=false",
+      "    region label=\"Preview\"",
+    ].join("\n"));
+
+    expect(html).toContain("flex:0 0 auto");
+  });
+
   it("fits blocks to the available width when no explicit box width is provided", () => {
     const html = renderWireframeBlockToHtml("frame contact title=\"Contact Form\" width=480 height=360");
 

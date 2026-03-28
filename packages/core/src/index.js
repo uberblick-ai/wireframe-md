@@ -11,7 +11,7 @@
  * @typedef {{ language: string, options: RenderBox }} FenceInfo
  * @typedef {{ code: string, info: FenceInfo }} WireframeBlock
  * @typedef {{ indent: number, marker: string, markerLength: number, info: FenceInfo }} FenceStart
- * @typedef {{ kind: "rest" } | { kind: "fixed", value: number }} SplitSize
+ * @typedef {{ kind: "rest" } | { kind: "auto" } | { kind: "fixed", value: number }} SplitSize
  * @typedef {{ axis: SplitAxis, surface: SurfaceStyle, sizes: SplitSize[] }} SplitDefinition
  * @typedef {{ kind: WireframeNodeKind, bare: string[], texts: string[], attrs: Record<string, WireframeAttrValue>, children: WireframeNode[] }} WireframeNode
  * @typedef {{ kind: "root", children: WireframeNode[] }} WireframeRoot
@@ -288,11 +288,15 @@ function resolveSplitSizes(rawSizes = "", childCount = 0) {
       return { kind: "rest" };
     }
 
+    if (token.toLowerCase() === "auto") {
+      return { kind: "auto" };
+    }
+
     if (/^\d+$/.test(token)) {
       return { kind: "fixed", value: Number(token) };
     }
 
-    throw new Error(`Unsupported split size "${token}". Use pixels like "260" or "rest".`);
+    throw new Error(`Unsupported split size "${token}". Use pixels like "260", "auto", or "rest".`);
   });
 }
 
