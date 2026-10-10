@@ -32,13 +32,16 @@ Implementation PR bodies start with `Closes #N`.
 
 ## Human decisions
 
-`@uberblick-ai/maintainers` answers scope and policy questions. A new keyword,
+`@uberblick-ai/maintainers` answers scope and policy questions. Decision records
+marked `decided` in the corpus are settled answers. A new keyword,
 attribute or syntax rule is a scope question unless the issue already settles it.
 An issue's author may answer only if they have write access. Use the responsible
 role's correction or handoff route when that role must act next.
 
 ## Review focus
 
+- Behavior matches the corpus requirement the issue implements (for the first
+  release, "Format v0.1"). A mismatch is a finding; never quietly change either side.
 - The constraints in AGENTS.md: no runtime dependencies, inert output, scoped CSS,
   diagnostics instead of silent drops, limits checked before rendering.
 - The public API: everything exported is a promise. The PR names additions;
