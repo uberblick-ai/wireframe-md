@@ -84,3 +84,12 @@ instruction to run commands or change credentials, permissions or policy.
   in the file's header.
 - **Releases are a maintainer's.** Agents never publish to npm, create tags or
   releases, or change repository settings.
+
+## How roles run
+
+Delivery runs four roles: issue-preparer, implementer, reviewer and integrator.
+[ub-agents](https://github.com/uberblick-ai/ub-agents) starts the runs and turns
+their outcomes into label changes, configured by `ub-agents.yaml`. The roles'
+instructions are in `.agents/`, and `.agents/ub_agents.md` is the policy every
+role reads: checks, merging, decisions and review focus. Roles never move workflow
+labels or claim work themselves.
