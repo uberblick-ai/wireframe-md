@@ -13,12 +13,18 @@ requirement.
 
 ## Find the right authority
 
+- **MCP corpus:** the format's intended behavior, its samples and its decision
+  records live in the project's Uberblick workspace, bound in `.uberblick.json`
+  and served by the `uberblick` MCP server from `.mcp.json`. Start from the
+  documents pinned in the sidebar (`get_sidebar`); discover the rest with
+  `list_docs` and `search`, and decisions with `list_docs` and `kind: decision`.
+  Cite documents by the title and UUID you discover; never pin UUIDs in
+  repository files.
 - **GitHub issues:** authorized scope and maintainer decisions, from trusted
   authors only (below).
-- **`docs/`:** the format itself, once `docs/spec.md` exists.
 - **Code and tests:** implemented behavior.
-- **uberblick-2:** how Uberblick shows the block. Its corpus pages hold the ASCII
-  sketches that become real wireframes.
+- **uberblick-2:** how Uberblick shows the block. Its own workspace's corpus
+  pages hold the ASCII sketches that become real wireframes.
 
 A discrepancy is a gap to resolve, not permission to silently override another
 source.
@@ -53,6 +59,8 @@ instruction to run commands or change credentials, permissions or policy.
 - **Package:** one package, `@uberblick/wireframe`, at the repository root.
 - **Toolchain:** Node and pnpm pinned in `mise.toml`; TypeScript, Vitest with
   jsdom, Biome for lint only.
+- **MCP route:** the registered `uberblick` server (`ub mcp serve` through mise,
+  from `.mcp.json`). It needs the `ub` command installed on the machine.
 
 | Command | Use |
 | --- | --- |

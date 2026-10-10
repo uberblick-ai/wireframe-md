@@ -29,6 +29,8 @@ runtime-args:
     - "Bash({report_command} report *)"
     - "Bash({report_command} read *)"
     - "Bash(ub-agents *)"
+    # The project corpus in its Uberblick workspace (.uberblick.json, .mcp.json).
+    - "mcp__uberblick__*"
     # The project's checks (mise tasks) and its package manager.
     - "Bash(mise *)"
     - "Bash(pnpm *)"
