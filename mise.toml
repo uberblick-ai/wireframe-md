@@ -1,76 +1,20 @@
-[settings]
-experimental = true
-
 [tools]
-bun = "1.3.10"
-
-[hooks]
-enter = """
-echo ''
-echo 'wireframe-md'
-echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-echo ''
-echo '  Quick start:'
-echo '    mise install                             Install the pinned Bun runtime'
-echo '    mise run setup                           Install deps and build the showcase'
-echo '    mise run dev                             Watch files and serve http://127.0.0.1:4173'
-echo ''
-echo '  Common commands:'
-echo '    mise run build                           Rebuild site-dist/'
-echo '    mise run test                            Run unit tests'
-echo '    mise run test:visual:docker              Run visual tests in Docker'
-echo '    mise run test:visual:update:docker       Update visual snapshots in Docker'
-echo ''
-echo '  Run `mise tasks ls` for all available tasks'
-echo ''
-"""
+node = "26"
+pnpm = "10"
 
 [tasks.install]
-description = "Install Bun workspace dependencies"
-run = "bun install --frozen-lockfile"
+description = "Install dependencies (frozen lockfile)"
+# PNPM_STORE_DIR is set by CI to the store it caches; unset locally.
+run = 'pnpm install --frozen-lockfile ${PNPM_STORE_DIR:+--store-dir "$PNPM_STORE_DIR"}'
 
-[tasks.setup]
-description = "Install dependencies and build the showcase once"
-run = """
-bun install --frozen-lockfile
-bun run build:site
-"""
+[tasks.lint]
+description = "Lint with Biome (lint only, the formatter stays off)"
+run = "pnpm lint"
 
-[tasks.build]
-alias = "b"
-description = "Build the GitHub Pages showcase into site-dist/"
-run = "bun run build:site"
-
-[tasks.dev]
-alias = "d"
-description = "Watch files, rebuild the showcase, and serve locally"
-run = "bun run dev:site"
+[tasks.typecheck]
+description = "Typecheck (tsc --noEmit)"
+run = "pnpm typecheck"
 
 [tasks.test]
-alias = "t"
-description = "Run unit tests"
-run = "bun run test"
-
-[tasks."test:unit"]
-description = "Run the Vitest suite"
-run = "bun run test:unit"
-
-[tasks."test:visual"]
-alias = "tv"
-description = "Run Playwright visual tests locally"
-run = "bun run test:visual"
-
-[tasks."test:visual:update"]
-alias = "tvu"
-description = "Update Playwright snapshots locally"
-run = "bun run test:visual:update"
-
-[tasks."test:visual:docker"]
-alias = "tvd"
-description = "Run Playwright visual tests in Docker"
-run = "bun run test:visual:docker"
-
-[tasks."test:visual:update:docker"]
-alias = "tvud"
-description = "Update Playwright snapshots in Docker"
-run = "bun run test:visual:update:docker"
+description = "Run the test suite"
+run = "pnpm test"

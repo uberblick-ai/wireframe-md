@@ -1,34 +1,27 @@
 {
-  "name": "wireframe-md-workspace",
+  "name": "@uberblick/wireframe",
+  "version": "0.0.0",
   "private": true,
+  "description": "A small text format for wireframes, rendered as themed HTML. Written by agents, embedded in Uberblick documents.",
+  "license": "MIT",
   "type": "module",
-  "packageManager": "bun@1.3.10",
-  "workspaces": [
-    "packages/*"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uberblick-ai/wireframe-md.git"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
-    "audit": "bun audit",
-    "build:site": "bun run sync:html-styles && bun scripts/build-site.js",
-    "dev:site": "bun scripts/dev-site.js",
-    "sync:html-styles": "bun scripts/sync-html-default-styles.js",
-    "test": "bun run test:unit",
-    "test:unit": "bun run sync:html-styles && vitest run",
-    "test:visual": "bun run sync:html-styles && playwright test",
-    "test:visual:update": "bun run sync:html-styles && playwright test --update-snapshots",
-    "test:visual:docker": "docker compose run --rm playwright",
-    "test:visual:update:docker": "docker compose run --rm playwright sh -lc \"npm install -g bun@1.3.10 && bun install --frozen-lockfile && bun run test:visual:update\"",
-    "typecheck": "bun run sync:html-styles && tsc --noEmit"
+    "lint": "biome lint --error-on-warnings .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.0",
-    "@types/markdown-it": "^14.1.2",
-    "@types/node": "^25.5.0",
-    "@wireframe-md/core": "workspace:*",
-    "@wireframe-md/html": "workspace:*",
-    "@wireframe-md/markdown-it": "workspace:*",
-    "@wireframe-md/remark": "workspace:*",
-    "markdown-it": "14.1.1",
-    "typescript": "^6.0.2",
-    "vitest": "4.1.2"
+    "@biomejs/biome": "2.5.9",
+    "jsdom": "^30.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
   }
 }

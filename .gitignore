@@ -1,5 +1,9 @@
 node_modules
+dist
+coverage
 playwright-report
 test-results
-site-dist
 .DS_Store
+
+# Disposable ub-agents execution artifacts
+.ub-agents/
