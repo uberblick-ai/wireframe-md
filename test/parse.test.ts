@@ -260,11 +260,48 @@ describe("warnings", () => {
     expect(parseWireframe("dialog#a.b").nodes[0]?.id).toBe("a.b");
   });
 
-  it("warns about every attribute, since v0.1 defines none", () => {
+  it("warns about every unknown attribute", () => {
     expect(warnings("banner tone=warning\n  text a=1 b=2 Hi")).toEqual([
-      warning(1, 'unknown attribute "tone": v0.1 has none (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "a": v0.1 has none (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "b": v0.1 has none (quote a label that starts with word=)'),
+      warning(1, 'unknown attribute "tone": expected label on input or select (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "b": expected label on input or select (quote a label that starts with word=)'),
+    ]);
+  });
+
+  it("accepts field labels with the existing attribute grammar, alone and in rows", () => {
+    const source = 'page\n  input label="Work email" you@company.com\n  select label=Role Editor\n  row\n    input label=Name\n    select label="Team name" Engineering';
+    const result = parseWireframe(source);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.nodes[0]?.children[0]).toEqual(node(2, "input", {
+      attributes: [{ key: "label", value: "Work email" }], label: "you@company.com",
+    }));
+    expect(result.nodes[0]?.children[1]).toEqual(node(3, "select", {
+      attributes: [{ key: "label", value: "Role" }], label: "Editor",
+    }));
+  });
+
+  it("warns about label= on every other kind, including unknown kinds", () => {
+    for (const kind of KIND_LIST.replace(" or ", ", ").split(", ").filter((kind) => !["input", "select"].includes(kind)).concat("card")) {
+      expect(warnings(`\n${kind} label=Name`)).toContainEqual(
+        warning(2, 'attribute "label" is only allowed on input or select'),
+      );
+    }
+  });
+
+  it("warns about repeated labels, retaining both source values in order", () => {
+    const source = 'page\n  input label=Email label="Work email" name@company.com\n  select label= label=Role Editor';
+    expect(warnings(source)).toEqual([
+      warning(2, 'repeated attribute "label": the first value is used'),
+      warning(3, 'repeated attribute "label": the first value is used'),
+    ]);
+    expect(parseWireframe(source).nodes[0]?.children[0]?.attributes).toEqual([
+      { key: "label", value: "Email" }, { key: "label", value: "Work email" },
+    ]);
+  });
+
+  it("still warns about other attributes on a labelled field", () => {
+    expect(warnings('page\n  input label=Email size=20 name@company.com')).toEqual([
+      warning(2, 'unknown attribute "size": expected label on input or select (quote a label that starts with word=)'),
     ]);
   });
 
@@ -469,7 +506,7 @@ describe("errors", () => {
     expect(errors('dialog\n  text "Hello\n  text a="b c\n  text "end\\"')).toEqual([
       error(2, 'unterminated quote: expected a closing "'),
       error(3, 'unterminated quote: expected a closing "'),
-      warning(3, 'unknown attribute "a": v0.1 has none (quote a label that starts with word=)'),
+      warning(3, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
       error(4, 'unterminated quote: expected a closing "'),
     ]);
     expect(parseWireframe('text "Hello').nodes[0]?.label).toBe("Hello");
@@ -481,7 +518,7 @@ describe("errors", () => {
     ]);
     expect(errors('dialog\n  text a="b"c Label')).toEqual([
       error(2, "expected a space after the closing quote"),
-      warning(2, 'unknown attribute "a": v0.1 has none (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
     ]);
   });
 

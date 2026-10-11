@@ -92,6 +92,8 @@ export const vocabulary = [
   "  text.title Page title",
   "  input Placeholder",
   "  select Value",
+  '  input label="Email address" name@company.com',
+  '  select label=Role Editor',
   "  row",
   "    toggle",
   "      option.current Current",

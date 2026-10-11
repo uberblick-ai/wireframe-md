@@ -36,8 +36,12 @@ kind.variant#id key=value Label
 - **#id** is optional and comes last in the first word: `button.danger#delete`. It
   uses letters, digits, `-` and `_`, names the node for later tooling and doesn't
   change the drawing.
-- **key=value** is an attribute. v0.1 has no attributes, so every `key=value` gets a
-  warning. Don't write any.
+- **key=value** is an attribute between the first word and the line's label.
+  v0.1 defines `label` on `input` and `select`: `label=Role` or
+  `label="Work email"`. Values with spaces use quotes and the same escapes as a
+  quoted label; a quoted attribute must be followed by a space or the line's end.
+  Other attributes get a warning. A repeated `label=` warns and uses the first
+  value; `label=` on any other kind warns and doesn't change its drawing.
 - **Label** is the rest of the line, as plain text, without trailing spaces.
   Markdown isn't formatted, so `*draft*` shows its asterisks. Typographic quotes
   such as “ ” and ’ are plain text.
@@ -109,9 +113,22 @@ An `input` is an empty bordered field showing its placeholder in muted. A
 `select` is a closed select with the same border, radius, height and padding as
 an input, with no fill, its chosen value in ink and a muted stroked chevron-down
 at the end. The chevron belongs to select and is not an `icon` name. Both fields
-take the full width on their own; in a `row`, a select takes its content's width
-and an input fills the room left. A long select value stays on one line and
-widens its box; overflow scrolls inside the wireframe, never the page.
+take the full width on their own. `label=` names either field above its control,
+in ink; the line's label stays the placeholder or chosen value. In a `row`,
+labelled fields share the width equally unless a control needs a wider column,
+and their controls line up even when a label wraps. Long field labels wrap within
+their column and never widen it.
+An unlabelled select keeps its content's width and an unlabelled input fills the
+room left. A long select value stays on one line; overflow scrolls inside the
+wireframe, never the page.
+
+```wireframe
+page
+  input label="Work email" you@company.com
+  row
+    input label="First name" First
+    select label=Role Editor
+```
 
 A `toggle` draws its options on one line, separated by `·`. A `chip` is a small
 neutral tag, and `chip.more` the count of the tags that don't show.
@@ -197,7 +214,8 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=` on the wrong kind, a repeated
+  `label=` and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
@@ -348,7 +366,8 @@ dialog Publish the page?
 ### A label that starts with `word=`
 
 The parser reads `format=PDF` as an attribute, so the label is only the rest of the
-line. Wrong:
+line. Only `label=` on `input` and `select` is defined. Quote any line label that
+starts with `word=`, including a placeholder that starts with `label=`. Wrong:
 
 ```text
 dialog Export
@@ -358,7 +377,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": v0.1 has none (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select (quote a label that starts with word=)
 ```
 
 Fixed:

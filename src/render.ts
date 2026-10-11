@@ -81,6 +81,17 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   }
   // Children of any kind draw inside it, even where they are misplaced.
   for (const child of node.children) body.append(draw(document, child));
+  if (node.kind === "input" || node.kind === "select") {
+    const label = node.attributes.find((attribute) => attribute.key === "label");
+    if (label !== undefined) {
+      const field = create(document, "div", ["wf-field"]);
+      // The wrapper represents the source line; the control stays inert.
+      field.dataset.line = String(node.line);
+      delete element.dataset.line;
+      field.append(text(document, "div", ["wf-field-label"], label.value), element);
+      return field;
+    }
+  }
   return element;
 }
 

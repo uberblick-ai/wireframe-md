@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { archivedBanner, deleteConfirmation, documentList } from "../samples.js";
 import { type Host, open, type Scheme, show } from "./page.js";
@@ -22,6 +23,21 @@ const samples = [
     name: "web-ui-document-list",
     source: documentList,
     intro: "The All documents page: its controls stay quieter than the list they filter.",
+  },
+  {
+    name: "labelled-two-column-form",
+    source: readFileSync(new URL("../../examples/forms/3-complex-forms/two-column-form.wireframe", import.meta.url), "utf8"),
+    intro: "Field names sit above hints and chosen values, in aligned columns.",
+  },
+  {
+    name: "long-field-label",
+    source: readFileSync(new URL("../../examples/forms/1-basic-inputs/long-field-label.wireframe", import.meta.url), "utf8"),
+    intro: "A wrapped field label keeps the controls aligned without widening its column.",
+  },
+  {
+    name: "long-labelled-select",
+    source: 'page\n  select label=Team "Engineering, Product and Design leadership group for all regional offices and programme directors"\npage\n  row\n    select label=Team "Engineering, Product and Design leadership group"\n    input label=Name Hint',
+    intro: "Long select values stay within their fields and frames, scrolling inside the wireframe when needed.",
   },
 ];
 
