@@ -1,13 +1,14 @@
 // What an approval records and how an example compares with it. The page runs
 // this in the browser on the render a person sees; the tests run it in jsdom.
 
-/** What a person approved: the saved source, its rendered markup and the stylesheet's fingerprint. */
+/** One entry in examples/approvals.json. Only the human Approve control writes it. */
 export interface Approval {
-  source: string;
-  /** {@link formatMarkup} of the render. */
-  markup: string;
-  /** {@link fingerprint} of getEmbedStyles(). */
-  stylesheet: string;
+  approved: boolean;
+  /** Covers the saved source, stylesheet fingerprint and formatted markup. */
+  fingerprint: string;
+  /** Optional review snapshot: a digest alone cannot show the previous markup. */
+  markup?: string;
+  stylesheet?: string;
 }
 
 /**
@@ -19,7 +20,7 @@ export type Status =
   | { state: "error" }
   | { state: "unapproved" }
   | { state: "approved" }
-  | { state: "changed"; markup: boolean; stylesheet: boolean };
+  | { state: "changed" };
 
 /**
  * The rendered markup as an approval records it: one element or text per line,
@@ -60,21 +61,25 @@ function escapeMarkup(text: string): string {
   );
 }
 
-/** A stylesheet's fingerprint: `sha256:` and the hex digest of its text. */
-export async function fingerprint(stylesheet: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(stylesheet));
+/** `sha256:` and the hex digest of the text. */
+export async function fingerprint(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /**
- * Compare an example's current render with its approval. `markup` is null when
+ * Compare an example's current fingerprint with its approval. It is null when
  * the saved source has an error.
  */
-export function statusOf(markup: string | null, stylesheet: string, approval: Approval | null): Status {
-  if (markup === null) return { state: "error" };
-  if (approval === null) return { state: "unapproved" };
-  const changed = { markup: markup !== approval.markup, stylesheet: stylesheet !== approval.stylesheet };
-  return changed.markup || changed.stylesheet ? { state: "changed", ...changed } : { state: "approved" };
+export function statusOf(currentFingerprint: string | null, approval: Approval | null): Status {
+  if (currentFingerprint === null) return { state: "error" };
+  if (approval === null || !approval.approved) return { state: "unapproved" };
+  return currentFingerprint !== approval.fingerprint ? { state: "changed" } : { state: "approved" };
+}
+
+/** A length-safe encoding shared by the browser and server. */
+export function approvalFingerprint(source: string, stylesheet: string, markup: string): Promise<string> {
+  return fingerprint(JSON.stringify([source, stylesheet, markup]));
 }
 
 /** A status in a few words, for the gallery. */
@@ -86,10 +91,8 @@ export function describeStatus(status: Status): string {
       return "Not yet approved";
     case "approved":
       return "Approved";
-    case "changed": {
-      const what = [status.markup && "markup", status.stylesheet && "stylesheet"].filter(Boolean).join(" and ");
-      return `Changed since approval: ${what}`;
-    }
+    case "changed":
+      return "Changed since approval";
   }
 }
 

@@ -23,65 +23,35 @@
     <label><input type="radio" name="host" value="column">Document column, 710 px</label>
   </fieldset>
 </header>
-
 <div class="pg-layout">
 <nav class="pg-sidebar" aria-labelledby="pg-sidebar-title">
   <h2 id="pg-sidebar-title">Examples</h2>
   <div class="pg-groups" id="pg-groups"></div>
-  <form class="pg-add" id="pg-add">
-    <label for="pg-new-name">Save the editor's source as a new example, in a group as group/name</label>
-    <span class="pg-add-row">
-      <input id="pg-new-name" name="name" required maxlength="129" pattern="([a-z0-9]+(-[a-z0-9]+)*/)?[a-z0-9]+(-[a-z0-9]+)*"
-        placeholder="dialogs/settings" title="Lowercase letters and digits joined by hyphens, after a group and a slash" autocomplete="off">
-      <button type="submit">Add</button>
-    </span>
-  </form>
+  <a class="pg-item" id="pg-scratch" href="#scratch">Scratch</a>
 </nav>
-
-<main class="pg-main" id="pg-main">
-  <section class="pg-pane" aria-labelledby="pg-name">
-    <div class="pg-bar">
-      <h2 id="pg-name">Scratch</h2>
-      <span class="pg-dirty" id="pg-dirty" hidden>Unsaved edits</span>
-      <button type="button" id="pg-save" title="Save to examples/ (Ctrl+S or ⌘S)">Save</button>
+<main class="pg-page" id="pg-page" aria-labelledby="pg-page-title">
+  <h2 id="pg-page-title">Examples</h2>
+  <div id="pg-content"></div>
+  <p class="pg-notice" id="pg-notice" role="status"></p>
+  <form class="pg-add" id="pg-add" hidden>
+    <h3>Add Scratch as an example</h3>
+    <p class="pg-hint">Choose an existing family and entry, or enter new ones. The example name must be new.</p>
+    <div class="pg-add-fields">
+      <label>Family
+        <input id="pg-new-family" name="family" list="pg-families" required maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="forms" autocomplete="off">
+      </label>
+      <label>Entry
+        <input id="pg-new-entry" name="entry" list="pg-entries" required maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="2-simple-forms" autocomplete="off">
+      </label>
+      <label>Name
+        <input id="pg-new-name" name="name" list="pg-names" required maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="settings" autocomplete="off">
+      </label>
+      <button type="submit">Add</button>
     </div>
-    <div class="pg-editor">
-      <pre class="pg-gutter" id="pg-gutter" aria-hidden="true"></pre>
-      <textarea id="pg-source" aria-labelledby="pg-name" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
-    </div>
-    <p class="pg-notice" id="pg-notice" role="status"></p>
-  </section>
-
-  <section class="pg-pane" aria-labelledby="pg-render-title">
-    <div class="pg-bar">
-      <h2 id="pg-render-title">Render</h2>
-      <span class="pg-stale" id="pg-stale" hidden>Stale: the source has an error, so this is its last render without one</span>
-    </div>
-    <div class="pg-preview" id="pg-preview"></div>
-    <p class="pg-summary"><span class="pg-label">Summary</span> <span id="pg-summary"></span></p>
-
-    <h3>Diagnostics</h3>
-    <ol class="pg-diagnostics" id="pg-diagnostics"></ol>
-
-    <h3>Approval</h3>
-    <div class="pg-approval">
-      <p class="pg-approval-head">
-        <span class="pg-badge" id="pg-status"></span>
-        <button type="button" id="pg-approve">Approve</button>
-      </p>
-      <p class="pg-hint" id="pg-approve-hint"></p>
-      <div id="pg-review"></div>
-    </div>
-  </section>
-</main>
-
-<main class="pg-overview" id="pg-overview" aria-labelledby="pg-overview-title" hidden>
-  <div class="pg-bar">
-    <h2 id="pg-overview-title">Overview</h2>
-    <span class="pg-count" id="pg-overview-count"></span>
-  </div>
-  <p class="pg-hint" id="pg-overview-hint"></p>
-  <ul class="pg-tiles" id="pg-tiles"></ul>
+    <datalist id="pg-families"></datalist>
+    <datalist id="pg-entries"></datalist>
+    <datalist id="pg-names"></datalist>
+  </form>
 </main>
 </div>
 </body>

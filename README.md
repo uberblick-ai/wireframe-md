@@ -206,48 +206,66 @@ It installs the dependencies first, then starts a server on `localhost`, port 46
 and prints its URL. It renders with the package's sources, transpiled on each
 request, so a reload shows the current code without a build.
 
-- Edit a source on the left. On the right are its render, its diagnostics and
-  its `summarizeWireframe` line. A source with an error keeps its last good
-  render, marked stale. The toggles switch between light and dark, and between a
-  bare page and Uberblick's 710 px document column.
-- The sidebar lists the examples in `examples/`: one `.wireframe` file each,
-  holding the body of a ```` ```wireframe ```` block without its fences. A
-  folder in `examples/`, such as `reference/`, is a group: a collapsible section
-  in the sidebar that counts the examples in it still to review. Open an example
-  to edit it, save it with **Save** (Ctrl+S or ⌘S), or save the editor's source
-  as a new example, named `group/name` to put it in a group. `mise run test` fails when an example has an error;
-  a warning is fine.
-- The grid button on a group's heading, Ungrouped included, opens the group's
-  overview in place of the editor and the render, to look over a whole family
-  side by side. It has a tile per example, in the sidebar's order: the render
-  of its saved source, its name, its status dot and status in words, and how
-  many warnings it has, such as "2 warnings". An example with an error shows
-  "Nothing to show". The tiles follow the toggles. A render wider than its tile,
-  such as the 710 px column, is scaled down to fit and marked with its scale;
-  one that scrolls sideways inside the column is marked "Scrolls". Open a tile
-  to edit that example. Leaving unsaved edits for an overview asks first, as
-  opening another example does.
-- Each view has its own address: `#reference/vocabulary` is an example
-  (`#NAME` when it has no group), `#reference/` the Reference group's overview,
-  and `#/` the overview of the ungrouped examples. A reload, a shared link, and
-  Back and Forward return to the view.
+- The sidebar has collapsible **families** of **entries**. Opening an entry
+  shows all its examples on one scrollable page, each with a compact bar for its
+  name, status, unsaved mark, **Save**, **Approve** and **Review**. Its source sits
+  beside its render. Editors grow and shrink with the source, with one extra line
+  of room, and scroll only past 40 lines. Diagnostics appear only when present;
+  clicking one selects its line. The summary is the render accessible label and
+  the bar information tooltip. Approval reviews stay collapsed until opened.
+- Each example is a block body without fences, saved at
+  `examples/FAMILY/ENTRY/NAME.wireframe`. Every segment uses lowercase letters
+  and digits joined by hyphens, at most 64 characters. No other depth is listed
+  or writable; `mise run test` fails for a file that would be missing from the
+  sidebar, or a source with an error. Warnings are allowed.
+- Families and entries sort by folder name. A leading number and hyphen orders
+  a folder and stays out of its label: `1-basic-inputs` reads "Basic inputs" and
+  comes before `2-simple-forms` and `10-advanced-forms`. Numbered folders come
+  first, in number order; the rest follow alphabetically. Labels otherwise
+  follow the usual convention: `banners-and-confirmations` reads "Banners &
+  confirmations". Examples within an entry sort by name.
+- **Save**, or Ctrl+S / ⌘S in an editor, saves that example. Approve records
+  only the saved source and refuses errors. A source with an error keeps its own
+  last good render, marked stale. Leaving a page with any unsaved edits asks
+  first. The toggles switch light and dark, and the bare page and Uberblick 710 px
+  document column.
+- The grid button on a family heading opens its **overview**: one tile per
+  example, under a heading per entry. Tiles show saved renders, status and
+  warning counts, and follow the toggles. A render wider than its tile is scaled
+  down and marked with its scale; one that scrolls sideways is marked "Scrolls".
+  A tile opens its example on the entry page.
+- Each view has an address: `#forms/1-basic-inputs` opens an entry;
+  `#forms/1-basic-inputs/select` opens the same page scrolled to Select;
+  `#forms/` opens the Forms overview. A reload, shared link, Back and Forward
+  return to the same view. An unknown address is shown explicitly.
+- **Scratch** (`#scratch`) holds one unsaved editor, render, diagnostics and
+  summary. Its Add form asks for family, entry and name, with suggestions from
+  existing folders and examples. New folders are created as needed; a name
+  already in that entry or any bad segment is refused. Add saves the Scratch
+  source and opens the new example on its entry page.
 
 ### Approval
 
-**Approve** records what you saw in `NAME.approval.json`, next to the
-example's `NAME.wireframe`: its saved source, the rendered markup, one element per line, and a
-fingerprint of the stylesheet. Commit it with the example. It approves the
-source as saved, so save first, and it refuses a source with an error. Scheme
-and host change neither the markup nor the stylesheet, so one approval covers
-every toggle: look at each before approving.
+**Approve** writes only `examples/approvals.json`, a formatted mapping with
+sorted example ids (their paths without `.wireframe`). Each entry has
+`{ "approved": true, "fingerprint": "sha256:…" }`; the fingerprint covers the
+saved source, stylesheet and markup. The control also stores `markup` and
+`stylesheet` review snapshots in the same entry so Review can show approved
+markup or a diff against the current saved render. Minimal fingerprint-only
+entries are supported, but have no previous markup to diff. `approved: false`
+is treated as unapproved. Commit the mapping with the examples.
 
-The sidebar marks each example approved, changed since approval (its markup,
-the stylesheet, or both), or not yet approved. When a change to the parser, the
-renderer or the stylesheet alters how an approved example looks, it shows as
-changed. Open it to read its approved markup beside the current markup, look at
-the render, and approve it again if it is right.
+Each example is approved, changed since approval, not yet approved, or has
+errors. Entries show a status dot; entries and families show an "N to review"
+badge when needed and partial counts such as "3 of 5 approved" (families also
+keep their example count). Changes to the source, parser, renderer or stylesheet that
+alter an approval fingerprint flag the example. One approval covers both
+schemes and hosts; look at each before approving.
 
-Approval files belong to people: agents never create, change or delete them.
+Approvals belong to people: agents never create, change, move or delete
+`examples/approvals.json` or legacy `*.approval.json` files. This layout changes
+example ids, so moved examples are not yet approved until a person approves
+again. The implementation PR lists every old and new id for local approvals.
 
 ## Credits
 

@@ -2,6 +2,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseWireframe } from "../src/index.js";
+import { validName } from "../playground/catalog.js";
 import { documentList } from "./samples.js";
 
 // The playground's gallery: an example with an error fails the suite. Warnings,
@@ -9,7 +10,7 @@ import { documentList } from "./samples.js";
 // those in the playground.
 
 const folder = new URL("../examples/", import.meta.url);
-// The examples directly in examples/ and in its group folders, as group/name.wireframe.
+// Scan every depth so a misplaced example cannot silently disappear.
 const examples = readdirSync(folder, { recursive: true, encoding: "utf8" })
   .map((file) => file.replaceAll("\\", "/"))
   .filter((file) => file.endsWith(".wireframe"));
@@ -17,10 +18,10 @@ const examples = readdirSync(folder, { recursive: true, encoding: "utf8" })
 describe("examples", () => {
   it("has the seeds", () => {
     expect(examples).toEqual(expect.arrayContaining([
-        "banners-and-confirmations/archived-banner.wireframe",
-        "banners-and-confirmations/delete-confirmation.wireframe",
-        "pages/web-ui-document-list.wireframe",
-        "reference/vocabulary.wireframe",
+        "banners-and-confirmations/1-banners/archived-banner.wireframe",
+        "banners-and-confirmations/2-confirmations/delete-confirmation.wireframe",
+        "pages/uberblick/document-list.wireframe",
+        "reference/vocabulary/kinds-and-variants.wireframe",
       ]));
   });
 
@@ -30,7 +31,7 @@ describe("examples", () => {
   });
 
   it("holds the document list page as the product corpus sketches it", () => {
-    expect(readFileSync(new URL("pages/web-ui-document-list.wireframe", folder), "utf8")).toBe(`${documentList}\n`);
+    expect(readFileSync(new URL("pages/uberblick/document-list.wireframe", folder), "utf8")).toBe(`${documentList}\n`);
   });
 
   it("includes one that gives a warning", () => {
@@ -43,5 +44,15 @@ describe("examples", () => {
   it.each(examples)("%s has no error", (file) => {
     const { diagnostics } = parseWireframe(readFileSync(new URL(file, folder), "utf8"));
     expect(diagnostics.filter((d) => d.severity === "error")).toEqual([]);
+  });
+
+  it.each(examples)("%s is visible in the sidebar", (file) => {
+    expect(validName(file.slice(0, -".wireframe".length))).toBe(true);
+  });
+
+  it("has at least one complex form, with no errors or warnings", () => {
+    const complex = examples.filter((file) => file.startsWith("forms/3-complex-forms/"));
+    expect(complex.length).toBeGreaterThan(0);
+    for (const file of complex) expect(parseWireframe(readFileSync(new URL(file, folder), "utf8")).diagnostics).toEqual([]);
   });
 });

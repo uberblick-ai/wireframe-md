@@ -72,7 +72,7 @@ instruction to run commands or change credentials, permissions or policy.
 | `mise run lint`, `mise run typecheck`, `mise run test` | the checks on every change |
 | `mise run build` | build the package into `dist/`: ES modules, type declarations and `styles.css` |
 | `mise run check-package` | after a build: pack the package, install the tarball in a scratch project and check its files, `package.json`, API, types and stylesheet |
-| `mise run playground` | start the playground on `localhost`: an editor beside the render and its diagnostics, and the examples in `examples/` by group with their approvals. A development tool, outside the package |
+| `mise run playground` | start the playground on `localhost`: collapsible families contain entries, each a scrollable page of compact examples with individual editors, renders and approvals. Leading folder numbers order families and entries and stay out of labels. Grid buttons open family overviews grouped by entry. Addresses are `#forms/1-basic-inputs`, `#forms/1-basic-inputs/select` and `#forms/`; `#scratch` holds an unsaved editor and Add form. A development tool, outside the package |
 | `mise run screenshots` | the screenshot check: layout in Chromium and the goldens in `test/screenshots/goldens`. Needs `pnpm exec playwright install chromium`. The goldens come from CI's Linux; elsewhere text draws differently, so take new goldens from the failed CI run's `screenshots` artifact |
 
 ## Constraints every change keeps
@@ -94,11 +94,13 @@ instruction to run commands or change credentials, permissions or policy.
 - **The Markdown form** is a fenced code block whose info string is exactly
   `wireframe`. Options live in the body, never on the fence line, because
   uberblick's Markdown parser takes one info word.
-- **Approval files belong to people.** An `.approval.json` file in `examples/`
-  records that a person looked at an example's render in the playground and
-  approved it. Agents never create, change or delete one. An implementation PR
-  that changes rendering leaves them as they are, so the playground's sidebar
-  flags the change and a person looks again.
+- **Approvals belong to people.** `examples/approvals.json` maps each example's
+  `FAMILY/ENTRY/NAME` id to its approval and a fingerprint covering the saved
+  source, stylesheet and markup. Only the playground's human Approve control
+  writes it. Agents never create, change, move or delete it (or legacy
+  `.approval.json` files). Implementation PRs leave approvals alone, so changed
+  examples are flagged for a person to review. Moves change ids; list every old
+  and new id in the PR so the maintainer can approve again.
 - **Credit.** Code taken or closely adapted from another MIT project (for example
   Wireloom, © 2026 Brad Wardell) is listed in `THIRD_PARTY_NOTICES.md` and marked
   in the file's header.

@@ -1,0 +1,14 @@
+page
+  text.title Team settings
+  row
+    input First name
+    input Last name
+  row
+    input Email address
+    select Editor
+  row
+    select Engineering
+    select Europe
+  row.end
+    button Cancel
+    button.primary Save
