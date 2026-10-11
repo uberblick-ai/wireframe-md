@@ -1,0 +1,30 @@
+dialog Every kind and variant
+  icon archive
+  text Plain text
+  text.muted Muted text
+  text.strong Strong text
+  row
+    button Secondary
+    button.primary Primary
+    button.danger Danger
+    button.primary.danger Primary danger
+  row.end
+    button.link Link
+    button.link.danger Link danger
+    button.focus Focus
+banner
+  icon archive
+  text Neutral banner
+banner.info
+  icon archive
+  text Info banner
+  row.end
+    button.primary Primary
+banner.warning
+  icon archive
+  text Warning banner
+banner.danger
+  icon archive
+  text Danger banner
+  row.end
+    button.link.danger Delete…

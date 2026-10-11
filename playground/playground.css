@@ -1,0 +1,456 @@
+/* The playground's own page. Its classes start with pg-, so nothing here styles
+   a wireframe: the renderer's stylesheet and hosts.css do that. The page follows
+   the scheme toggle, which sets color-scheme on the root. */
+
+:root {
+  color-scheme: light dark;
+  --pg-ground: light-dark(oklch(0.975 0.004 75), oklch(0.17 0 0));
+  --pg-panel: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+  --pg-ink: light-dark(oklch(0.145 0 0), oklch(0.96 0 0));
+  --pg-muted: light-dark(oklch(0.5 0 0), oklch(0.7 0 0));
+  --pg-line: light-dark(oklch(0.88 0.004 75), oklch(1 0 0 / 14%));
+  --pg-accent: light-dark(oklch(0.5 0.15 250), oklch(0.75 0.12 250));
+  --pg-ok: light-dark(oklch(0.5 0.12 150), oklch(0.78 0.14 150));
+  --pg-warning: light-dark(oklch(0.55 0.12 70), oklch(0.8 0.14 75));
+  --pg-error: light-dark(oklch(0.55 0.22 27), oklch(0.72 0.18 22));
+  --pg-added: light-dark(oklch(0.93 0.06 150), oklch(0.32 0.07 150));
+  --pg-removed: light-dark(oklch(0.93 0.05 27), oklch(0.32 0.07 22));
+  --pg-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--pg-ground);
+  color: var(--pg-ink);
+  font: 14px/1.5 "Geist", system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 16px;
+}
+
+h2 {
+  font-size: 14px;
+}
+
+h3 {
+  margin: 20px 0 6px;
+  color: var(--pg-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+h4 {
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+button {
+  padding: 4px 12px;
+  border: 1px solid var(--pg-line);
+  border-radius: 6px;
+  background: var(--pg-panel);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--pg-muted);
+  cursor: default;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.pg-card:focus-visible {
+  outline: 2px solid var(--pg-accent);
+  outline-offset: 1px;
+}
+
+.pg-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--pg-line);
+  background: var(--pg-panel);
+}
+
+.pg-header h1 {
+  margin-right: auto;
+}
+
+.pg-toggle {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pg-toggle legend {
+  float: left;
+  margin-right: 6px;
+  color: var(--pg-muted);
+}
+
+.pg-toggle label {
+  padding: 2px 10px;
+  border: 1px solid var(--pg-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pg-toggle label:has(:checked) {
+  border-color: var(--pg-accent);
+  color: var(--pg-accent);
+}
+
+.pg-toggle input {
+  margin: 0 6px 0 0;
+}
+
+/* The gallery */
+
+.pg-gallery {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pg-line);
+}
+
+.pg-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 10px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.pg-card {
+  display: grid;
+  grid-template-rows: 120px auto auto;
+  gap: 4px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--pg-line);
+  border-radius: 8px;
+  background: var(--pg-panel);
+  color: inherit;
+  text-decoration: none;
+}
+
+.pg-card:hover {
+  border-color: var(--pg-muted);
+}
+
+.pg-card[aria-current="page"] {
+  border-color: var(--pg-accent);
+  box-shadow: 0 0 0 1px var(--pg-accent);
+}
+
+/* The saved render at half size, cut off at the bottom. */
+.pg-thumbnail {
+  display: block;
+  overflow: hidden;
+  zoom: 0.5;
+  height: 240px;
+  pointer-events: none;
+}
+
+.pg-card-name {
+  font-family: var(--pg-mono);
+  font-size: 13px;
+}
+
+.pg-add {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  color: var(--pg-muted);
+}
+
+.pg-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pg-add input {
+  width: 220px;
+  padding: 4px 8px;
+  border: 1px solid var(--pg-line);
+  border-radius: 6px;
+  background: var(--pg-panel);
+  color: var(--pg-ink);
+  font: 13px var(--pg-mono);
+}
+
+/* A status: approved, changed, not yet approved, or errors */
+
+.pg-badge {
+  justify-self: start;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, currentColor 12%, transparent);
+  color: var(--pg-muted);
+  font-size: 12px;
+}
+
+.pg-badge[data-state="approved"] {
+  color: var(--pg-ok);
+}
+
+.pg-badge[data-state="changed"] {
+  color: var(--pg-warning);
+}
+
+.pg-badge[data-state="error"] {
+  color: var(--pg-error);
+}
+
+/* The editor and the render */
+
+.pg-main {
+  display: grid;
+  grid-template-columns: minmax(320px, 2fr) minmax(0, 3fr);
+  gap: 24px;
+  padding: 16px 24px 48px;
+}
+
+.pg-pane {
+  min-width: 0;
+}
+
+.pg-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 30px;
+  margin-bottom: 8px;
+}
+
+.pg-bar h2 {
+  font-family: var(--pg-mono);
+}
+
+.pg-dirty {
+  color: var(--pg-warning);
+  font-size: 12px;
+}
+
+.pg-bar button {
+  margin-left: auto;
+}
+
+.pg-editor {
+  display: flex;
+  height: 60vh;
+  min-height: 320px;
+  overflow: hidden;
+  border: 1px solid var(--pg-line);
+  border-radius: 8px;
+  background: var(--pg-panel);
+  font: 13px/20px var(--pg-mono);
+}
+
+.pg-gutter {
+  margin: 0;
+  padding: 10px 8px 10px 12px;
+  overflow: hidden;
+  color: var(--pg-muted);
+  font: inherit;
+  text-align: right;
+  user-select: none;
+}
+
+.pg-gutter .pg-warning {
+  color: var(--pg-warning);
+  font-weight: 700;
+}
+
+.pg-gutter .pg-error {
+  color: var(--pg-error);
+  font-weight: 700;
+}
+
+.pg-editor textarea {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px 10px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: none;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.pg-editor textarea:focus-visible {
+  outline-offset: -2px;
+}
+
+.pg-notice {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  color: var(--pg-muted);
+}
+
+.pg-notice.pg-failed {
+  color: var(--pg-error);
+}
+
+.pg-stale {
+  color: var(--pg-warning);
+  font-size: 12px;
+}
+
+.pg-preview {
+  overflow: auto;
+  border: 1px solid var(--pg-line);
+  border-radius: 8px;
+}
+
+.pg-preview.pg-is-stale {
+  border-style: dashed;
+  border-color: var(--pg-warning);
+}
+
+.pg-preview.pg-is-stale > * {
+  opacity: 0.5;
+}
+
+.pg-empty {
+  margin: 0;
+  color: var(--pg-muted);
+  font-size: 13px;
+}
+
+.pg-summary {
+  margin: 8px 0 0;
+}
+
+.pg-label {
+  color: var(--pg-muted);
+  font-size: 12px;
+}
+
+.pg-diagnostics {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pg-diagnostic {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 2px 6px;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+}
+
+.pg-diagnostic:hover {
+  border-color: var(--pg-line);
+}
+
+.pg-line {
+  flex: none;
+  width: 4.5em;
+  color: var(--pg-muted);
+  font-family: var(--pg-mono);
+}
+
+.pg-severity {
+  flex: none;
+  width: 4.5em;
+  font-weight: 600;
+}
+
+.pg-severity.pg-warning {
+  color: var(--pg-warning);
+}
+
+.pg-severity.pg-error {
+  color: var(--pg-error);
+}
+
+.pg-none {
+  color: var(--pg-muted);
+}
+
+/* Approval */
+
+.pg-approval-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+}
+
+.pg-hint {
+  margin: 6px 0;
+  color: var(--pg-muted);
+}
+
+.pg-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pg-side {
+  min-width: 0;
+}
+
+.pg-side pre,
+.pg-markup pre {
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--pg-line);
+  border-radius: 6px;
+  background: var(--pg-panel);
+  font: 12px/18px var(--pg-mono);
+}
+
+/* Each line wraps, so the difference stays in view. */
+.pg-side pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pg-side pre > span {
+  display: block;
+  min-height: 18px;
+}
+
+.pg-markup summary {
+  margin: 6px 0;
+  color: var(--pg-muted);
+  cursor: pointer;
+}
+
+.pg-removed {
+  background: var(--pg-removed);
+}
+
+.pg-added {
+  background: var(--pg-added);
+}

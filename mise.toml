@@ -27,6 +27,10 @@ run = "pnpm build"
 description = "Pack the built package, install the tarball in a scratch project and check its contents, API, types and stylesheet"
 run = "pnpm check:package"
 
+[tasks.playground]
+description = "Start the playground on localhost: edit a wireframe beside its render and diagnostics, and approve the examples in examples/"
+run = "pnpm playground"
+
 [tasks.screenshots]
 description = "Browser checks and golden screenshots (needs `pnpm exec playwright install chromium`; goldens come from CI)"
 run = "pnpm screenshots"

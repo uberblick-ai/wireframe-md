@@ -69,6 +69,7 @@ instruction to run commands or change credentials, permissions or policy.
 | `mise run lint`, `mise run typecheck`, `mise run test` | the checks on every change |
 | `mise run build` | build the package into `dist/`: ES modules, type declarations and `styles.css` |
 | `mise run check-package` | after a build: pack the package, install the tarball in a scratch project and check its files, `package.json`, API, types and stylesheet |
+| `mise run playground` | start the playground on `localhost`: an editor beside the render and its diagnostics, and the gallery of `examples/` with their approvals. A development tool, outside the package |
 | `mise run screenshots` | the screenshot check: layout in Chromium and the goldens in `test/screenshots/goldens`. Needs `pnpm exec playwright install chromium`. The goldens come from CI's Linux; elsewhere text draws differently, so take new goldens from the failed CI run's `screenshots` artifact |
 
 ## Constraints every change keeps
@@ -90,6 +91,11 @@ instruction to run commands or change credentials, permissions or policy.
 - **The Markdown form** is a fenced code block whose info string is exactly
   `wireframe`. Options live in the body, never on the fence line, because
   uberblick's Markdown parser takes one info word.
+- **Approval files belong to people.** An `examples/*.approval.json` file
+  records that a person looked at an example's render in the playground and
+  approved it. Agents never create, change or delete one. An implementation PR
+  that changes rendering leaves them as they are, so the playground's gallery
+  flags the change and a person looks again.
 - **Credit.** Code taken or closely adapted from another MIT project (for example
   Wireloom, © 2026 Brad Wardell) is listed in `THIRD_PARTY_NOTICES.md` and marked
   in the file's header.

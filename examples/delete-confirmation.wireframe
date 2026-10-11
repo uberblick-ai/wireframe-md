@@ -1,0 +1,5 @@
+dialog Delete “Q3 launch draft”?
+  text It will be gone for everyone, with its comments and history. Links to it will show it was deleted. This can't be undone.
+  row.end
+    button.focus Cancel
+    button.danger Delete

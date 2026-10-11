@@ -50,7 +50,8 @@
     "test": "vitest run --passWithNoTests",
     "screenshots": "playwright test",
     "build": "node scripts/build.ts",
-    "check:package": "node scripts/check-package.ts"
+    "check:package": "node scripts/check-package.ts",
+    "playground": "node playground/server.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.9",
