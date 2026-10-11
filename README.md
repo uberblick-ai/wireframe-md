@@ -166,8 +166,8 @@ The sizes are the same in light and dark.
 | `--wf-focus-width` | the focus ring's width | `2px` |
 | `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
-| `--wf-text-size` | the base type size; spacing and chips scale with it | `0.875rem` |
-| `--wf-title-size` | the dialog's title; `text.title` is one and a half times it | `1rem` |
+| `--wf-text-size` | the base type size; spacing, chips and `text.small` scale with it | `0.875rem` |
+| `--wf-title-size` | the dialog's title and a card's direct `text.title`; other `text.title` is one and a half times it, unless combined with `.small` | `1rem` |
 
 ### Mapping a host's tokens
 

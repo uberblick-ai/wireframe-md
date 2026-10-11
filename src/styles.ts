@@ -30,8 +30,9 @@
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
 //   --wf-radius-lg     the dialog's card and scrim, and a page
-//   --wf-text-size     the base type size; spacing and chips scale with it
-//   --wf-title-size    the dialog's title; text.title is one and a half times it
+//   --wf-text-size     the base type size; spacing, chips and text.small scale with it
+//   --wf-title-size    the dialog's title and a card's direct text.title; other text.title is one and a half
+//                      times it, unless combined with .small
 
 const STYLES = `.wf-root {
   --_wf-ink: var(--wf-ink, light-dark(oklch(0.145 0 0), oklch(0.985 0 0)));
