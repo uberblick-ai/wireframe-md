@@ -1,28 +1,60 @@
 {
   "name": "@uberblick/wireframe",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "A small text format for wireframes, rendered as themed HTML. Written by agents, embedded in Uberblick documents.",
+  "keywords": [
+    "wireframe",
+    "markdown",
+    "uberblick"
+  ],
   "license": "MIT",
-  "type": "module",
+  "homepage": "https://github.com/uberblick-ai/wireframe-md#readme",
+  "bugs": "https://github.com/uberblick-ai/wireframe-md/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/uberblick-ai/wireframe-md.git"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "packageManager": "pnpm@10.34.5",
-  "engines": {
-    "node": ">=26"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=26",
+      "onFail": "warn"
+    }
   },
   "scripts": {
     "lint": "biome lint --error-on-warnings .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "screenshots": "playwright test"
+    "screenshots": "playwright test",
+    "build": "node scripts/build.ts",
+    "check:package": "node scripts/check-package.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.9",
     "@fontsource-variable/geist": "^5.3.0",
     "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
     "jsdom": "^30.0.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"

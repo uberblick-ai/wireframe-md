@@ -19,6 +19,14 @@ run = "pnpm typecheck"
 description = "Run the test suite"
 run = "pnpm test"
 
+[tasks.build]
+description = "Build the package into dist: ES modules, type declarations and styles.css"
+run = "pnpm build"
+
+[tasks.check-package]
+description = "Pack the built package, install the tarball in a scratch project and check its contents, API, types and stylesheet"
+run = "pnpm check:package"
+
 [tasks.screenshots]
 description = "Browser checks and golden screenshots (needs `pnpm exec playwright install chromium`; goldens come from CI)"
 run = "pnpm screenshots"

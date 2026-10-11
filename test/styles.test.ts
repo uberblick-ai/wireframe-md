@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { getEmbedStyles } from "../src/index.js";
 import { ROOT_CLASS } from "../src/render.js";
@@ -71,6 +73,33 @@ describe("getEmbedStyles", () => {
     expect(new Set(read)).toEqual(new Set(PROPERTIES));
     // Only the root reads them; every other rule uses the private copies.
     expect(css.match(/var\(--wf-/g)).toHaveLength(PROPERTIES.length);
+  });
+
+  it("lists every property in the README with its defaults", () => {
+    // A path, as jsdom's URL is not one Node's fs accepts.
+    const readme = readFileSync(join(import.meta.dirname, "../README.md"), "utf8");
+    // Rows of the theming tables: | `--wf-name` | what it controls | `light` | `dark` |, or one default for both.
+    const documented = new Map(
+      readme
+        .split("\n")
+        .filter((line) => line.startsWith("| `--wf-"))
+        .map((line) => {
+          const [name, , ...defaults] = line
+            .slice(2, -2)
+            .split(" | ")
+            .map((cell) => cell.replace(/^`|`$/g, ""));
+          return [name!, defaults];
+        }),
+    );
+    const scheme = (value: string, index: number): string =>
+      value.replace(/light-dark\((.*)\)/, (_, pair: string) => split(pair, ",")[index]!);
+    for (const [property, value] of publicDeclarations) {
+      const name = `--wf-${property.slice("--_wf-".length)}`;
+      const fallback = /^var\(--wf-[a-z-]+, (.+)\)$/.exec(value)![1]!;
+      const [light, dark = light] = documented.get(name) ?? [];
+      expect([light, dark], name).toEqual([scheme(fallback, 0), scheme(fallback, 1)]);
+    }
+    expect([...documented.keys()].sort()).toEqual([...PROPERTIES].sort());
   });
 
   it("gives every colour a light and a dark default", () => {
