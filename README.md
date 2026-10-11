@@ -63,7 +63,7 @@ figure.setAttribute("aria-label", summarizeWireframe(result));
 
 - `parseWireframe(source)` never throws. It returns the `nodes`, the
   `diagnostics` (each with `line`, `severity` and `message`, such as
-  `button must be directly inside row or cell`) and `renderable`, which is false when any
+  `button must be directly inside row, cell or frame`) and `renderable`, which is false when any
   diagnostic is an error. An unknown kind, variant or attribute, or a node in
   the wrong place, is a warning, and it still draws. Bad indentation, a broken
   quote or an exceeded limit is an error.
@@ -141,9 +141,9 @@ inherits.
 | Property | Controls | Light default | Dark default |
 | --- | --- | --- | --- |
 | `--wf-ink` | text, and the secondary button's caption | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
-| `--wf-muted` | `text.muted`, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
-| `--wf-paper` | the dialog's card, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
-| `--wf-line` | borders: the card, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
+| `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
+| `--wf-paper` | cards, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
+| `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
 | `--wf-shadow` | the dialog card's `box-shadow` | `0 6px 20px oklch(0 0 0 / 10%)` | `0 6px 20px oklch(0 0 0 / 45%)` |
 | `--wf-primary` | `button.primary`'s fill, and `button.link.primary`'s caption | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
@@ -153,7 +153,7 @@ inherits.
 | `--wf-focus` | `button.focus`'s ring | `oklch(0.72 0.16 65)` | `oklch(0.8 0.18 65)` |
 | `--wf-info` | `banner.info`'s icon and border | `oklch(0.55 0.15 250)` | `oklch(0.75 0.12 250)` |
 | `--wf-warning` | `banner.warning`'s icon and border | `oklch(0.66 0.13 70)` | `oklch(0.78 0.14 75)` |
-| `--wf-neutral-tint` | a neutral banner's fill | `oklch(0.985 0.002 75)` | `oklch(0.2 0.004 65)` |
+| `--wf-neutral-tint` | a neutral banner's and a frame's fill | `oklch(0.985 0.002 75)` | `oklch(0.2 0.004 65)` |
 | `--wf-info-tint` | `banner.info`'s fill | `oklch(0.965 0.02 250)` | `oklch(0.24 0.035 250)` |
 | `--wf-warning-tint` | `banner.warning`'s fill | `oklch(0.975 0.022 85)` | `oklch(0.24 0.035 75)` |
 | `--wf-danger-tint` | `banner.danger`'s fill | `oklch(0.96 0.025 27.325)` | `oklch(0.25 0.04 22.216)` |
@@ -162,9 +162,9 @@ The sizes are the same in light and dark.
 
 | Property | Controls | Default |
 | --- | --- | --- |
-| `--wf-stroke` | border width; icon and select chevron strokes are one and a half times it | `1px` |
+| `--wf-stroke` | border width; a frame's left bar is three times it; icon and select chevron strokes are one and a half times it | `1px` |
 | `--wf-focus-width` | the focus ring's width | `2px` |
-| `--wf-radius` | buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
+| `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
 | `--wf-text-size` | the base type size; spacing and chips scale with it | `0.875rem` |
 | `--wf-title-size` | the dialog's title; `text.title` is one and a half times it | `1rem` |

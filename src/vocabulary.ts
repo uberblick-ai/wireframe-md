@@ -12,9 +12,9 @@ export const LIMITS = {
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
  * a root, a row, a table, a table row (a row directly inside a table), a toggle
- * or a cell.
+ * or a cell. A frame is a root that also allows caption buttons; a card holds text.
  */
-export type Place = "top" | "root" | "row" | "table" | "table row" | "toggle" | "cell";
+export type Place = "top" | "root" | "frame" | "card" | "row" | "table" | "table row" | "toggle" | "cell";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -30,10 +30,12 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["banner", { place: ["top"], variants: ["neutral", "info", "warning", "danger"], label: false }],
   // Its title is a text.title line.
   ["page", { place: ["top"], variants: [], label: false }],
-  ["text", { place: ["root"], variants: ["muted", "strong", "title"], label: true }],
+  ["frame", { place: ["top"], variants: [], label: true }],
+  ["card", { place: ["root"], variants: [], label: false }],
+  ["text", { place: ["root", "card"], variants: ["muted", "strong", "title"], label: true }],
   // Inside a table, a row is a table row of cells: .head there, .end outside one.
   ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
-  ["button", { place: ["row", "cell"], variants: ["primary", "danger", "link", "focus"], label: true }],
+  ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.
   ["icon", { place: ["root"], variants: [], label: true }],
   // The label is the placeholder.

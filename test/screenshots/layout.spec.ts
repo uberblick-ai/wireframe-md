@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { archivedBanner, deleteConfirmation, documentList, PROPERTIES, vocabulary } from "../samples.js";
+import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading, PROPERTIES, vocabulary } from "../samples.js";
 import { open, show } from "./page.js";
 
 // Layout and theming in a real browser. These compare renders within one run,
@@ -57,6 +57,61 @@ function lines(page: Page, selector: string): Promise<number> {
 }
 
 test.describe("fit", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const [name, source] of [["reading", figmaReading], ["private", figmaPrivate]]) {
+      for (const host of ["column", "standalone"] as const) {
+        test(`the Figma ${name} frame fits at full size in ${scheme} on a ${host} host`, async ({ page }) => {
+          await show(page, source!, { host, scheme });
+          const geometry = await page.evaluate(() => {
+            const root = document.querySelector<HTMLElement>(".wf-root")!;
+            const frame = document.querySelector(".wf-frame")!.getBoundingClientRect();
+            const rootStyle = getComputedStyle(root);
+            const caption = document.querySelector(".wf-frame-caption")!.getBoundingClientRect();
+            const label = document.querySelector(".wf-frame-label")!.getBoundingClientRect();
+            const actions = document.querySelector(".wf-frame-actions")!.getBoundingClientRect();
+            return {
+              width: root.clientWidth, scrollWidth: root.scrollWidth,
+              frameWidth: frame.width,
+              padding: Number.parseFloat(rootStyle.paddingLeft) + Number.parseFloat(rootStyle.paddingRight),
+              labelLeft: label.left, actionsLeft: actions.left, actionsRight: actions.right, captionRight: caption.right,
+              fontSize: rootStyle.fontSize,
+              pageWidth: document.documentElement.clientWidth, pageScrollWidth: document.documentElement.scrollWidth,
+            };
+          });
+          expect(geometry.scrollWidth).toBe(geometry.width);
+          expect(geometry.frameWidth).toBeCloseTo(geometry.width - geometry.padding, 1);
+          expect(geometry.actionsLeft).toBeGreaterThan(geometry.labelLeft);
+          expect(geometry.actionsRight).toBeCloseTo(geometry.captionRight, 1);
+          expect(geometry.fontSize).toBe("14px");
+          expect(geometry.pageScrollWidth).toBe(geometry.pageWidth);
+          if (host === "column") expect((await measure(page)).escaped).toEqual([]);
+        });
+      }
+    }
+  }
+
+  for (const layout of ["block", "flex", "grid"] as const) {
+    test(`long frame labels, many actions and long action captions wrap in a ${layout} column`, async ({ page }) => {
+      const source = `frame ${"Long caption ".repeat(20)}\n${"  button.link Open in Figma\n".repeat(18)}  button.link ${"x".repeat(300)}\n  card\n    text ${"A long paragraph wraps between words. ".repeat(20)}`;
+      await show(page, source, { host: "column", layout });
+      expect(await measure(page)).toEqual({ root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [] });
+      expect(await lines(page, ".wf-frame-label")).toBeGreaterThan(1);
+      expect(await lines(page, ".wf-frame-actions > .wf-button:last-child")).toBeGreaterThan(1);
+      expect(await lines(page, ".wf-card > .wf-text")).toBeGreaterThan(1);
+      const tops = await page.locator(".wf-frame-actions > .wf-button").evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().top));
+      expect(new Set(tops).size).toBeGreaterThan(1);
+    });
+
+    test(`a frame's wide body table scrolls inside the wireframe in a ${layout} column`, async ({ page }) => {
+      await show(page, `frame Report\n  button.link Copy\n  table\n    row\n${"      cell Column\n".repeat(25)}`, { host: "column", layout });
+      const { root, column, escaped } = await measure(page);
+      expect(root.width).toBe(710);
+      expect(root.scrollWidth).toBeGreaterThan(710);
+      expect(column).toEqual({ width: 710, scrollWidth: 710 });
+      expect(escaped).toEqual([]);
+    });
+  }
+
   for (const layout of ["block", "flex", "grid"] as const) {
     test(`labelled fields share columns and align below wrapped labels in a ${layout} host`, async ({ page }) => {
       await show(page, 'page\n  input label="Email address" name@company.com\n  select label=Role Editor\n  row\n    input label="Email address for invitations and workspace notifications" name@company.com\n    select label=Role Editor\n  row\n    select label=Team Engineering\n    select label=Region Europe', { host: "column", layout });
@@ -389,6 +444,53 @@ test.describe("fit", () => {
 });
 
 test.describe("theming", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`frame and card use neutral host tokens and the base geometry in ${scheme}`, async ({ page }) => {
+      const host = await show(page, figmaReading, { scheme });
+      const appearance = () => page.evaluate(() => {
+        const frame = getComputedStyle(document.querySelector(".wf-frame")!);
+        const card = getComputedStyle(document.querySelector(".wf-card")!);
+        const label = getComputedStyle(document.querySelector(".wf-frame-label")!);
+        const muted = getComputedStyle(document.querySelector(".wf-text.wf-muted")!);
+        const button = getComputedStyle(document.querySelector(".wf-button")!);
+        return {
+          barWidth: frame.borderLeftWidth, barColour: frame.borderLeftColor,
+          otherBorders: [frame.borderTopWidth, frame.borderRightWidth, frame.borderBottomWidth],
+          corners: [frame.borderTopLeftRadius, frame.borderBottomLeftRadius, frame.borderTopRightRadius, frame.borderBottomRightRadius],
+          tint: frame.backgroundColor, labelColour: label.color, muted: muted.color, labelWeight: label.fontWeight,
+          cardBorder: card.border, cardRadius: card.borderRadius, cardFill: card.backgroundColor,
+          cardShadow: card.boxShadow, frameShadow: frame.boxShadow, paper: button.backgroundColor,
+        };
+      });
+      const defaults = await appearance();
+      expect(defaults.barWidth).toBe("3px");
+      expect(defaults.barColour).toBe(defaults.muted);
+      expect(defaults.labelColour).toBe(defaults.muted);
+      expect(defaults.labelWeight).toBe("500");
+      expect(defaults.otherBorders).toEqual(["0px", "0px", "0px"]);
+      expect(defaults.corners).toEqual(["0px", "0px", "6px", "6px"]);
+      expect(defaults.cardBorder).toMatch(/^1px solid /);
+      expect(defaults.cardRadius).toBe("6px");
+      expect([defaults.cardShadow, defaults.frameShadow]).toEqual(["none", "none"]);
+      expect(defaults.cardFill).not.toBe(defaults.tint);
+      await host.evaluate((element) => {
+        element.style.setProperty("--wf-muted", "rgb(10, 20, 30)");
+        element.style.setProperty("--wf-neutral-tint", "rgb(40, 50, 60)");
+        element.style.setProperty("--wf-paper", "rgb(70, 80, 90)");
+        element.style.setProperty("--wf-line", "rgb(100, 110, 120)");
+        element.style.setProperty("--wf-radius", "11px");
+        element.style.setProperty("--wf-stroke", "2px");
+      });
+      const changed = await appearance();
+      expect(changed).toMatchObject({
+        barWidth: "6px", barColour: "rgb(10, 20, 30)", labelColour: "rgb(10, 20, 30)",
+        tint: "rgb(40, 50, 60)", cardFill: "rgb(70, 80, 90)",
+        cardBorder: "2px solid rgb(100, 110, 120)", cardRadius: "11px",
+        corners: ["0px", "0px", "11px", "11px"],
+      });
+    });
+  }
+
   for (const scheme of ["light", "dark"] as const) {
     test(`field labels use ink above muted hints in ${scheme}`, async ({ page }) => {
       const host = await show(page, 'page\n  input label="Email address" name@company.com\n  select label=Role Editor', { scheme });

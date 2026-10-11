@@ -83,7 +83,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 
 ## Kinds
 
-`dialog`, `banner` and `page` are roots: they stand at the top level and hold the
+`dialog`, `banner`, `page` and `frame` are roots: they stand at the top level and hold the
 rest.
 
 | Kind | Where | Variants | Label |
@@ -91,9 +91,11 @@ rest.
 | `dialog` | at the top level | none | the title |
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red | none: its text goes on a `text` line |
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
-| `text` | directly inside a root | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title | the text |
+| `frame` | at the top level | none | the caption: the block's name, then its title |
+| `card` | directly inside a root | none | none: its text goes on `text` lines |
+| `text` | directly inside a root or a `card` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its buttons to the right; `.head`: a table's header row, in grey | none |
-| `button` | directly inside a `row` or a `cell` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
+| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
 | `icon` | directly inside a root | none | its name: `archive`, the only icon in v0.1 |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value |
@@ -108,6 +110,20 @@ strip with its icon, text and buttons on one line. A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
 `button.link.danger` a destructive text button.
+
+A `frame` draws the shared block frame: a neutral 3 px left bar and faint neutral
+tint, the base radius on the right-hand corners and no other border. Its caption
+row holds the label on the left, muted and medium weight, and direct `button`
+children on the right in source order. The caption and its actions wrap when
+needed. Without a label or direct buttons there is no caption row. Every other
+child stacks below at full width; buttons inside a `row` stay in the body.
+A frame's summary names its label, for example `Wireframe: frame “Figma · Payment, mobile”`;
+without a label it is `Wireframe: frame`.
+
+A `card` is a box on the paper ground with a 1 px border in the line colour, the
+base radius and no shadow. Only `text` lines belong in a card; they stack inside
+at full width. Any other child warns and still draws where it was written.
+Neither `frame` nor `card` takes variants, and a card takes no label.
 
 An `input` is an empty bordered field showing its placeholder in muted. A
 `select` is a closed select with the same border, radius, height and padding as
@@ -181,6 +197,29 @@ page
         button.link pin
 ```
 
+## Figma blocks
+
+The reading and private states from Uberblick's "Figma blocks" page. `·` separates
+the block name from its title in a single caption label.
+
+```wireframe
+frame Figma · Payment, mobile
+  button.link Expand
+  button.link Open in Figma
+  card
+    text.muted (the frame, live from Figma)
+    text Click to interact
+  text Card form after the address step. Error states are on the next frame.
+```
+
+```wireframe
+frame Figma · Checkout flow
+  button.link Open in Figma
+  text Figma can't show this file publicly. If you have access, load it to sign in.
+  row
+    button Load
+```
+
 ## Samples
 
 The two samples from the corpus page "Samples", as written there. A delete
@@ -208,7 +247,7 @@ banner.warning
 ## Errors and warnings
 
 Every problem gives a diagnostic with its line number and what was expected, such as
-`line 3: warning: button must be directly inside row or cell`.
+`line 3: warning: button must be directly inside row, cell or frame`.
 
 - **Errors stop the render.** The block draws nothing, and the host keeps its last
   good render. Bad indentation, an unterminated quote, text after a closing quote
@@ -389,6 +428,9 @@ dialog Export
 
 ### A button outside a row
 
+A button may also stand in a `cell` or directly in a `frame`'s caption. Other
+roots require a body `row` for their buttons.
+
 Wrong:
 
 ```text
@@ -401,8 +443,8 @@ dialog Leave the workspace?
 Diagnostics:
 
 ```text
-line 3: warning: button must be directly inside row or cell
-line 4: warning: button must be directly inside row or cell
+line 3: warning: button must be directly inside row, cell or frame
+line 4: warning: button must be directly inside row, cell or frame
 ```
 
 Fixed:
@@ -476,7 +518,7 @@ page
 
 ### A root inside another node
 
-`dialog`, `banner` and `page` stand only at the top level. Wrong:
+`dialog`, `banner`, `page` and `frame` stand only at the top level. Wrong:
 
 ```text
 dialog Delete “Q3 launch draft”?
@@ -519,7 +561,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "lock": expected archive
 line 3: warning: unknown variant ".small" on text: expected .muted, .strong or .title
-line 5: warning: unknown kind "link": expected dialog, banner, page, text, row, button, icon, input, select, toggle, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
 Fixed, leaving out the icon, since v0.1 has only `archive`:

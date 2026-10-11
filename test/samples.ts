@@ -56,6 +56,25 @@ export const documentList = [
   "        button.link pin",
 ].join("\n");
 
+/** The reading and private sketches on the product corpus page "Figma blocks". */
+export const figmaReading = [
+  "frame Figma · Payment, mobile",
+  "  button.link Expand",
+  "  button.link Open in Figma",
+  "  card",
+  "    text.muted (the frame, live from Figma)",
+  "    text Click to interact",
+  "  text Card form after the address step. Error states are on the next frame.",
+].join("\n");
+
+export const figmaPrivate = [
+  "frame Figma · Checkout flow",
+  "  button.link Open in Figma",
+  "  text Figma can't show this file publicly. If you have access, load it to sign in.",
+  "  row",
+  "    button Load",
+].join("\n");
+
 /** Every kind and variant in Format v0.1. */
 export const vocabulary = [
   "dialog Every kind and variant",
@@ -113,6 +132,11 @@ export const vocabulary = [
   "        chip Chip",
   "        chip.more +1",
   "        button.link Link",
+  "frame Figma · Payment, mobile",
+  "  button.link Expand",
+  "  card",
+  "    text.muted The live view",
+  "    text Click to interact",
 ].join("\n");
 
 /** The public custom properties, which a host sets on any ancestor. */

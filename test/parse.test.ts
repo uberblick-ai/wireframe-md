@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, type WireframeDiagnostic, type WireframeNode } from "../src/index.js";
+import { KINDS } from "../src/vocabulary.js";
 import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
 
 const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): WireframeNode => ({
@@ -13,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, text, row, button, icon, input, select, toggle, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -210,15 +211,59 @@ describe("line grammar", () => {
 });
 
 describe("warnings", () => {
+  it("accepts frame captions and text-only cards directly inside every root", () => {
+    for (const kind of ["dialog", "banner", "page", "frame"]) {
+      expect(warnings(`${kind}\n  card\n    text.muted Preview\n    text Body`)).toEqual([]);
+    }
+    expect(warnings("frame Caption\n  button.link Open\n  row\n    button Load\n  table\n    row\n      cell Body")).toEqual([]);
+  });
+
+  it("warns about a nested frame, cards outside roots and caption buttons in other roots", () => {
+    expect(warnings("frame Outer\n  frame Inner\n  row\n    card\ncard")).toEqual([
+      warning(2, "frame must be at the top level"),
+      warning(4, "card must be directly inside dialog, banner, page or frame"),
+      warning(5, "card must be directly inside dialog, banner, page or frame"),
+    ]);
+    for (const kind of ["dialog", "banner", "page"]) {
+      expect(warnings(`${kind}\n  button Open`)).toEqual([
+        warning(2, "button must be directly inside row, cell or frame"),
+      ]);
+    }
+  });
+
+  it("warns about every known kind except text directly inside a card", () => {
+    for (const kind of KINDS.keys()) {
+      if (kind === "text") continue;
+      const source = `frame\n  card\n    ${kind}${kind === "icon" ? " archive" : ""}`;
+      const diagnostics = warnings(source);
+      expect(diagnostics).toHaveLength(1);
+      expect(diagnostics[0]).toMatchObject({ line: 3, severity: "warning" });
+      expect(diagnostics[0]!.message).toContain(kind);
+      expect(diagnostics[0]!.message).toMatch(/must be (at the top level|directly inside)/);
+    }
+    expect(warnings("frame\n  card\n    row")).toEqual([
+      warning(3, "row must be directly inside dialog, banner, page, frame or table"),
+    ]);
+  });
+
+  it("warns about frame and card variants, a card label and an unknown icon", () => {
+    expect(warnings("frame.teal Caption\n  card.large Label\n    text Body\n  icon figma")).toEqual([
+      warning(1, 'unknown variant ".teal": frame takes no variants'),
+      warning(2, 'unknown variant ".large": card takes no variants'),
+      warning(2, "card takes no label"),
+      warning(4, 'unknown icon "figma": expected archive'),
+    ]);
+  });
+
   it("keeps an unknown kind with its label and children", () => {
-    const result = parseWireframe("dialog\n  card.big#c Hello\n    text Hi");
+    const result = parseWireframe("dialog\n  box.big#c Hello\n    text Hi");
     expect(result.renderable).toBe(true);
     expect(result.nodes[0]?.children).toEqual([
-      node(2, "card", { variants: ["big"], id: "c", label: "Hello", children: [node(3, "text", { label: "Hi" })] }),
+      node(2, "box", { variants: ["big"], id: "c", label: "Hello", children: [node(3, "text", { label: "Hi" })] }),
     ]);
     expect(result.diagnostics).toEqual([
-      warning(2, `unknown kind "card": expected ${KIND_LIST}`),
-      warning(3, "text must be directly inside dialog, banner or page"),
+      warning(2, `unknown kind "box": expected ${KIND_LIST}`),
+      warning(3, "text must be directly inside dialog, banner, page, frame or card"),
     ]);
   });
 
@@ -281,7 +326,7 @@ describe("warnings", () => {
   });
 
   it("warns about label= on every other kind, including unknown kinds", () => {
-    for (const kind of KIND_LIST.replace(" or ", ", ").split(", ").filter((kind) => !["input", "select"].includes(kind)).concat("card")) {
+    for (const kind of KIND_LIST.replace(" or ", ", ").split(", ").filter((kind) => !["input", "select"].includes(kind)).concat("box")) {
       expect(warnings(`\n${kind} label=Name`)).toContainEqual(
         warning(2, 'attribute "label" is only allowed on input or select'),
       );
@@ -330,22 +375,22 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog, banner or page"),
-      warning(2, "row must be directly inside dialog, banner, page or table"),
-      warning(3, "icon must be directly inside dialog, banner or page"),
+      warning(1, "text must be directly inside dialog, banner, page, frame or card"),
+      warning(2, "row must be directly inside dialog, banner, page, frame or table"),
+      warning(3, "icon must be directly inside dialog, banner, page or frame"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(3, "text must be directly inside dialog, banner or page"),
-      warning(4, "row must be directly inside dialog, banner, page or table"),
-      warning(5, "icon must be directly inside dialog, banner or page"),
+      warning(3, "text must be directly inside dialog, banner, page, frame or card"),
+      warning(4, "row must be directly inside dialog, banner, page, frame or table"),
+      warning(5, "icon must be directly inside dialog, banner, page or frame"),
     ]);
   });
 
   it("warns about a button outside a row or a cell", () => {
     expect(warnings("button Top\ndialog\n  button Inside\n  text Hi\n    button Under")).toEqual([
-      warning(1, "button must be directly inside row or cell"),
-      warning(3, "button must be directly inside row or cell"),
-      warning(5, "button must be directly inside row or cell"),
+      warning(1, "button must be directly inside row, cell or frame"),
+      warning(3, "button must be directly inside row, cell or frame"),
+      warning(5, "button must be directly inside row, cell or frame"),
     ]);
   });
 
@@ -358,14 +403,14 @@ describe("warnings", () => {
 
   it("warns about an input, select or toggle outside a root or a row", () => {
     expect(warnings("input Search\nselect Any\ntoggle")).toEqual([
-      warning(1, "input must be directly inside dialog, banner, page or row"),
-      warning(2, "select must be directly inside dialog, banner, page or row"),
-      warning(3, "toggle must be directly inside dialog, banner, page or row"),
+      warning(1, "input must be directly inside dialog, banner, page, frame or row"),
+      warning(2, "select must be directly inside dialog, banner, page, frame or row"),
+      warning(3, "toggle must be directly inside dialog, banner, page, frame or row"),
     ]);
     expect(warnings("page\n  table\n    input Search\n    row\n      cell\n        select Any\n        toggle")).toEqual([
-      warning(3, "input must be directly inside dialog, banner, page or row"),
-      warning(6, "select must be directly inside dialog, banner, page or row"),
-      warning(7, "toggle must be directly inside dialog, banner, page or row"),
+      warning(3, "input must be directly inside dialog, banner, page, frame or row"),
+      warning(6, "select must be directly inside dialog, banner, page, frame or row"),
+      warning(7, "toggle must be directly inside dialog, banner, page, frame or row"),
     ]);
     expect(warnings("page\n  input Search\n  select Any\n  toggle\n  row\n    input A\n    select B\n    toggle")).toEqual([]);
   });
@@ -380,8 +425,8 @@ describe("warnings", () => {
 
   it("warns about a table outside a root, and a label on a table", () => {
     expect(warnings("table\npage\n  row\n    table\n  table Documents")).toEqual([
-      warning(1, "table must be directly inside dialog, banner or page"),
-      warning(4, "table must be directly inside dialog, banner or page"),
+      warning(1, "table must be directly inside dialog, banner, page or frame"),
+      warning(4, "table must be directly inside dialog, banner, page or frame"),
       warning(5, "table takes no label"),
     ]);
   });
@@ -406,21 +451,21 @@ describe("warnings", () => {
       "      chip web",
       "      text Hi",
       "      row",
-      "      card",
+      "      box",
     ].join("\n");
     expect(warnings(source)).toEqual([
       warning(5, "button in a table row: expected cell"),
       warning(6, "chip in a table row: expected cell"),
       warning(7, "text in a table row: expected cell"),
       warning(8, "row in a table row: expected cell"),
-      warning(9, `unknown kind "card": expected ${KIND_LIST}`),
+      warning(9, `unknown kind "box": expected ${KIND_LIST}`),
     ]);
   });
 
   it("warns about row.head outside a table and row.end inside one", () => {
     expect(warnings("page\n  row.head\n  table\n    row.end\n      cell A\n    row.head\n      cell B")).toEqual([
       warning(2, "row.head must be directly inside table"),
-      warning(4, "row.end must be directly inside dialog, banner or page"),
+      warning(4, "row.end must be directly inside dialog, banner, page or frame"),
     ]);
   });
 
@@ -483,7 +528,7 @@ describe("errors", () => {
       error(2, "indentation must be a multiple of two spaces, found 3"),
       error(3, "indentation must be a multiple of two spaces, found 1"),
       // Recovered at depth 0, a row is out of place too.
-      warning(3, "row must be directly inside dialog, banner, page or table"),
+      warning(3, "row must be directly inside dialog, banner, page, frame or table"),
     ]);
   });
 

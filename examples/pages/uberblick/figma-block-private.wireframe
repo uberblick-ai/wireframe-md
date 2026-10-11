@@ -1,0 +1,5 @@
+frame Figma · Checkout flow
+  button.link Open in Figma
+  text Figma can't show this file publicly. If you have access, load it to sign in.
+  row
+    button Load

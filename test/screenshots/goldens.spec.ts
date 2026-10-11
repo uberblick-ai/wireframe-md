@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { archivedBanner, deleteConfirmation, documentList } from "../samples.js";
+import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "../samples.js";
 import { type Host, open, type Scheme, show } from "./page.js";
 
 // The goldens: both samples from "Samples", and the document list page from the
@@ -9,6 +9,16 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  {
+    name: "figma-block-reading",
+    source: figmaReading,
+    intro: "A Figma frame shows its caption actions, live-view placeholder and optional caption.",
+  },
+  {
+    name: "figma-block-private",
+    source: figmaPrivate,
+    intro: "A private Figma file shows the access message and a separate Load action in the body.",
+  },
   {
     name: "delete-confirmation",
     source: deleteConfirmation,

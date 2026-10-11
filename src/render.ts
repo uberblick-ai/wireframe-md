@@ -57,6 +57,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   element.dataset.line = String(node.line);
 
   let body: HTMLElement = element;
+  let actions: HTMLElement | undefined;
   switch (node.kind) {
     case "dialog":
       // The node's element is the scrim; the card inside it holds the title and children.
@@ -64,6 +65,18 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       element.append(body);
       if (node.label !== "") body.append(text(document, "div", ["wf-dialog-title"], node.label));
       break;
+    case "frame": {
+      if (node.label !== "" || node.children.some((child) => child.kind === "button")) {
+        const caption = create(document, "div", ["wf-frame-caption"]);
+        if (node.label !== "") caption.append(text(document, "div", ["wf-frame-label"], node.label));
+        if (node.children.some((child) => child.kind === "button")) {
+          actions = create(document, "div", ["wf-frame-actions"]);
+          caption.append(actions);
+        }
+        element.append(caption);
+      }
+      break;
+    }
     case "icon":
       element.append(icon(document, node.label));
       break;
@@ -73,14 +86,16 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       element.append(glyph(document, "wf-select-caret", CHEVRON_PATH));
       break;
     default:
-      // A banner, page, row, toggle or table takes no label. One written anyway has a warning and draws as text.
+      // A banner, page, card, row, toggle or table takes no label. One written anyway warns and draws as text.
       if (node.label !== "") {
         if (rule.label) element.textContent = node.label;
         else element.append(text(document, "span", ["wf-text"], node.label));
       }
   }
   // Children of any kind draw inside it, even where they are misplaced.
-  for (const child of node.children) body.append(draw(document, child));
+  for (const child of node.children) {
+    (child.kind === "button" && actions !== undefined ? actions : body).append(draw(document, child));
+  }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
     if (label !== undefined) {

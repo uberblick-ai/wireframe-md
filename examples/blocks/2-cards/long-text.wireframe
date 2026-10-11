@@ -1,0 +1,4 @@
+frame Notes
+  card
+    text This card holds a paragraph that is deliberately long enough to wrap over several lines in a document column. Its text stays inside the paper box and takes the full available width, with no shadow or additional label. The next paragraph is a separate text line.
+    text.muted A secondary paragraph follows at full width.

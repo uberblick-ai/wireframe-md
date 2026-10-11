@@ -29,7 +29,7 @@ export interface WireframeDiagnostic {
   line: number;
   /** A warning still renders; an error means the source must not be rendered. */
   severity: "error" | "warning";
-  /** What was wrong and what was expected, e.g. `button must be directly inside row or cell`. */
+  /** What was wrong and what was expected, e.g. `button must be directly inside row, cell or frame`. */
   message: string;
 }
 

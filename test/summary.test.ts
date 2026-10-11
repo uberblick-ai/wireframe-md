@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, summarizeWireframe } from "../src/index.js";
-import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
+import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "./samples.js";
 
 const summary = (source: string): string => summarizeWireframe(parseWireframe(source));
 
@@ -15,6 +15,12 @@ describe("summarizeWireframe", () => {
   it("names a page by its title, its first text", () => {
     expect(summary(documentList)).toBe("Wireframe: page “All documents”");
     expect(summary("page\n  input Search titles")).toBe("Wireframe: page");
+  });
+
+  it("names a frame by its caption label, without falling back to body text", () => {
+    expect(summary(figmaReading)).toBe("Wireframe: frame “Figma · Payment, mobile”");
+    expect(summary(figmaPrivate)).toBe("Wireframe: frame “Figma · Checkout flow”");
+    expect(summary("frame\n  text Body")).toBe("Wireframe: frame");
   });
 
   it("names each root in order", () => {
