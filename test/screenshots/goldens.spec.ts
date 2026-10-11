@@ -49,6 +49,11 @@ const samples = [
     source: documentList,
     intro: "The All documents page: its controls stay quieter than the list they filter.",
   },
+  ...["success-banner", "banner-with-actions", "wrapping-text", "stacked-above-page"].map((name) => ({
+    name: `banners-${name}`,
+    source: readFileSync(new URL(`../../examples/badges-and-banners/2-banners/${name}.wireframe`, import.meta.url), "utf8"),
+    intro: "Page banners show an outcome, offer actions or explain a state above the content.",
+  })),
   {
     name: "labelled-two-column-form",
     source: readFileSync(new URL("../../examples/forms/3-complex-forms/two-column-form.wireframe", import.meta.url), "utf8"),

@@ -70,4 +70,9 @@ describe("examples", () => {
     expect(complex.length).toBeGreaterThan(0);
     for (const file of complex) expect(parseWireframe(readFileSync(new URL(file, folder), "utf8")).diagnostics).toEqual([]);
   });
+
+  it("holds the banner examples without diagnostics", () => {
+    const banners = examples.filter((file) => file.startsWith("badges-and-banners/2-banners/"));
+    for (const file of banners) expect(parseWireframe(readFileSync(new URL(file, folder), "utf8")).diagnostics).toEqual([]);
+  });
 });

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading, PROPERTIES, vocabulary } from "../samples.js";
 import { open, show } from "./page.js";
@@ -519,6 +520,41 @@ test.describe("fit", () => {
 });
 
 test.describe("theming", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`success banners use a green tone and tint, with host overrides in ${scheme}`, async ({ page }) => {
+      const host = await show(page, "banner.success\n  icon archive\n  text Restored", { scheme });
+      const appearance = () => page.evaluate(() => {
+        const banner = getComputedStyle(document.querySelector(".wf-banner")!);
+        return {
+          icon: getComputedStyle(document.querySelector(".wf-icon")!).color,
+          tint: banner.backgroundColor, border: banner.borderTopColor,
+          text: getComputedStyle(document.querySelector(".wf-text")!).color,
+          ink: getComputedStyle(document.querySelector(".wf-root")!).color,
+        };
+      });
+      const defaults = await appearance();
+      expect(defaults.icon).toBe(scheme === "light" ? "oklch(0.55 0.15 150)" : "oklch(0.75 0.14 150)");
+      expect(defaults.tint).toBe(scheme === "light" ? "oklch(0.965 0.025 150)" : "oklch(0.24 0.035 150)");
+      expect(defaults.text).toBe(defaults.ink);
+      await host.evaluate((element) => element.style.setProperty("--wf-success", "rgb(10, 20, 30)"));
+      const toned = await appearance();
+      expect(toned.icon).toBe("rgb(10, 20, 30)");
+      expect(toned.border).not.toBe(defaults.border);
+      expect(toned.tint).toBe(defaults.tint);
+      await host.evaluate((element) => element.style.setProperty("--wf-success-tint", "rgb(40, 50, 60)"));
+      expect(await appearance()).toEqual({ ...toned, tint: "rgb(40, 50, 60)" });
+    });
+
+    test(`the long banner example wraps without widening a ${scheme} document column`, async ({ page }) => {
+      const source = readFileSync(new URL("../../examples/badges-and-banners/2-banners/wrapping-text.wireframe", import.meta.url), "utf8");
+      await show(page, source, { scheme, host: "column" });
+      expect(await lines(page, ".wf-banner > .wf-text")).toBeGreaterThan(1);
+      expect(await measure(page)).toEqual({
+        root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+      });
+    });
+  }
+
   for (const scheme of ["light", "dark"] as const) {
     test(`frame and card use neutral host tokens and the base geometry in ${scheme}`, async ({ page }) => {
       const host = await show(page, figmaReading, { scheme });

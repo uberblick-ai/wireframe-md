@@ -23,6 +23,9 @@ banner.info
 banner.warning
   icon archive
   text Warning banner
+banner.success
+  icon archive
+  text Restored from the archive. Back in the document list.
 banner.danger
   icon archive
   text Danger banner

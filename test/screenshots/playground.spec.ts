@@ -39,6 +39,25 @@ test.afterEach(async () => {
   rmSync(scratch, { recursive: true, force: true });
 });
 
+test("the Banners entry shows every saved example without diagnostics", async ({ page }) => {
+  const sources = new URL("../../examples/badges-and-banners/2-banners/", import.meta.url);
+  const destination = join(folder, "badges-and-banners/2-banners");
+  mkdirSync(destination, { recursive: true });
+  for (const file of readdirSync(sources)) {
+    if (file.endsWith(".wireframe")) writeFileSync(join(destination, file), readFileSync(new URL(file, sources)));
+  }
+  await page.goto(`${url}#badges-and-banners/2-banners`);
+  await expect(page.locator("#pg-page-title")).toHaveText("Badges & banners / Banners");
+  await expect(page.locator(".pg-example h3")).toHaveText([
+    "archived-banner", "banner-with-actions", "danger-banner", "info-banner", "neutral-banner",
+    "stacked-above-page", "success-banner", "warning-banner", "wrapping-text",
+  ]);
+  await expect(page.locator(".pg-diagnostics:visible")).toHaveCount(0);
+  await expect(page.locator(".pg-example .wf-root")).toHaveCount(9);
+  await expect(page.locator('.pg-example[id$="/success-banner"] .wf-banner')).toHaveClass("wf-banner wf-success");
+  await expect(page.locator('.pg-example[id$="/success-banner"] .wf-icon')).toHaveCount(1);
+});
+
 test("entry pages have ordered independent compact editors and collapsed reviews", async ({ page }) => {
   await expect(page.locator(".pg-example h3")).toHaveText(["input", "long-labels", "select"]);
   await expect(page.locator(".pg-items .pg-item-name")).toHaveText(["Basic inputs", "Simple forms", "Basic tables"]);

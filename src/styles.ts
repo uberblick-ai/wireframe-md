@@ -22,10 +22,11 @@
 //   --wf-danger        the destructive colour: button.danger and banner.danger's icon
 //   --wf-danger-ink    the caption on a filled button.primary.danger
 //   --wf-focus         button.focus's ring
-//   --wf-info, --wf-warning                     a banner's icon, also mixed into its border
+//   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   --wf-neutral-tint  a neutral banner's and a frame's fill; --wf-muted is the frame's left bar and caption
 //   --wf-info-tint,
-//   --wf-warning-tint, --wf-danger-tint         a banner's fill
+//   --wf-warning-tint, --wf-danger-tint,
+//   --wf-success-tint                          a banner's fill
 //   --wf-stroke        border width; icon and select chevron strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
@@ -48,10 +49,12 @@ const STYLES = `.wf-root {
   --_wf-focus: var(--wf-focus, light-dark(oklch(0.72 0.16 65), oklch(0.8 0.18 65)));
   --_wf-info: var(--wf-info, light-dark(oklch(0.55 0.15 250), oklch(0.75 0.12 250)));
   --_wf-warning: var(--wf-warning, light-dark(oklch(0.66 0.13 70), oklch(0.78 0.14 75)));
+  --_wf-success: var(--wf-success, light-dark(oklch(0.55 0.15 150), oklch(0.75 0.14 150)));
   --_wf-neutral-tint: var(--wf-neutral-tint, light-dark(oklch(0.985 0.002 75), oklch(0.2 0.004 65)));
   --_wf-info-tint: var(--wf-info-tint, light-dark(oklch(0.965 0.02 250), oklch(0.24 0.035 250)));
   --_wf-warning-tint: var(--wf-warning-tint, light-dark(oklch(0.975 0.022 85), oklch(0.24 0.035 75)));
   --_wf-danger-tint: var(--wf-danger-tint, light-dark(oklch(0.96 0.025 27.325), oklch(0.25 0.04 22.216)));
+  --_wf-success-tint: var(--wf-success-tint, light-dark(oklch(0.965 0.025 150), oklch(0.24 0.035 150)));
   --_wf-stroke: var(--wf-stroke, 1px);
   --_wf-focus-width: var(--wf-focus-width, 2px);
   --_wf-radius: var(--wf-radius, 6px);
@@ -166,6 +169,11 @@ const STYLES = `.wf-root {
   border: var(--_wf-stroke) solid color-mix(in oklab, var(--_wf-tone) 30%, var(--_wf-line));
   border-radius: var(--_wf-radius);
   background: var(--_wf-tint);
+}
+
+.wf-root .wf-banner.wf-success {
+  --_wf-tone: var(--_wf-success);
+  --_wf-tint: var(--_wf-success-tint);
 }
 
 .wf-root .wf-banner.wf-info {
