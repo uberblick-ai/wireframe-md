@@ -206,7 +206,11 @@ It installs the dependencies first, then starts a server on `localhost`, port 46
 and prints its URL. It renders with the package's sources, transpiled on each
 request, so a reload shows the current code without a build.
 
-- The sidebar has collapsible **families** of **entries**. Opening an entry
+- The sidebar has collapsible **families** of **entries**, with one line per
+  row. Families start collapsed except those you opened by hand and the one
+  holding the current page. Hand openings are remembered across reloads; the
+  current family's opening is temporary. A hand collapse holds until another
+  page is shown. Long names truncate; approval counts stay whole. Opening an entry
   shows all its examples on one scrollable page, each with a compact bar for its
   name, status, unsaved mark, **Save**, **Approve** and **Review**. Its source sits
   beside its render. Editors grow and shrink with the source, with one extra line
@@ -256,9 +260,12 @@ entries are supported, but have no previous markup to diff. `approved: false`
 is treated as unapproved. Commit the mapping with the examples.
 
 Each example is approved, changed since approval, not yet approved, or has
-errors. Entries show a status dot; entries and families show an "N to review"
-badge when needed and partial counts such as "3 of 5 approved" (families also
-keep their example count). Changes to the source, parser, renderer or stylesheet that
+errors. Sidebar entries and families show a dot and a count such as "3 of 5
+approved" on one line: full green when all are approved, half green when some
+are, and an empty outline when none are. Changed examples count as not approved;
+any example with an error makes its entry and family dots the error colour.
+The full name, dot meaning and count are also in each row's title and accessible
+name. Changes to the source, parser, renderer or stylesheet that
 alter an approval fingerprint flag the example. One approval covers both
 schemes and hosts; look at each before approving.
 

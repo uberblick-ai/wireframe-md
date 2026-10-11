@@ -5,7 +5,7 @@ import { element, type Example, ExampleEditor, type Host, refreshFingerprint, re
 
 // Families contain entries; each entry is a page of independent editors.
 type Route = { page: string; kind: "scratch" | "entry" | "family" | "missing"; key: string; example?: string };
-const COLLAPSED = "wireframe-playground-collapsed";
+const OPENED = "wireframe-playground-opened";
 const SVG = "http://www.w3.org/2000/svg";
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -36,6 +36,9 @@ let historyIndex = 0;
 let acceptedHash = "";
 let returning = false;
 let adding = false;
+// Navigation opens the current family without remembering it. A hand collapse
+// clears this until another page is shown; status refreshes leave it alone.
+let currentFamily: string | undefined;
 
 const membersOf = (key: string): Example[] => examples.filter((example) => entryOf(example.name) === key);
 const familyMembers = (key: string): Example[] => examples.filter((example) => familyOf(example.name) === key);
@@ -47,59 +50,60 @@ function say(message: string, failed = false): void {
   notice.classList.toggle("pg-failed", failed);
 }
 
-function collapsedFamilies(): Set<string> {
+function openedFamilies(): Set<string> {
   try {
-    const stored: unknown = JSON.parse(localStorage.getItem(COLLAPSED) ?? "[]");
+    const stored: unknown = JSON.parse(localStorage.getItem(OPENED) ?? "[]");
     return new Set(Array.isArray(stored) ? stored.filter((key) => typeof key === "string") : []);
   } catch {
     return new Set();
   }
 }
 
-function reviewCounts(members: Example[], target: HTMLElement): Status["state"] {
+function reviewCounts(members: Example[], target: HTMLElement, name: string): void {
   const states = members.map((example) => statusOfExample(example).state);
   const approved = states.filter((state) => state === "approved").length;
-  const state = states.includes("error") ? "error" : states.includes("changed") ? "changed" : approved === members.length ? "approved" : "unapproved";
-  target.append(element("span", "pg-approved-count", `${approved} of ${members.length} approved`));
-  if (approved < members.length) {
-    const badge = element("span", "pg-badge", `${members.length - approved} to review`);
-    badge.dataset.state = state;
-    target.append(badge);
-  }
-  return state;
+  const state = states.includes("error") ? "error" : approved === members.length ? "approved" : approved > 0 ? "partial" : "unapproved";
+  const words = state === "error" ? "Has errors" : state === "approved" ? "All approved" : state === "partial" ? "Partly approved" : "None approved";
+  const count = `${approved} of ${members.length} approved`;
+  const dot = element("span", "pg-dot");
+  dot.dataset.state = state;
+  dot.setAttribute("aria-hidden", "true");
+  target.prepend(dot);
+  target.append(element("span", "pg-approved-count", count));
+  target.title = `${name}: ${words}; ${count}`;
+  target.setAttribute("aria-label", target.title);
 }
 
 function showSidebar(): void {
   const keys = [...new Set(examples.map((example) => familyOf(example.name)))].sort(compareFolders);
-  const collapsed = collapsedFamilies();
+  const opened = openedFamilies();
   groupList.replaceChildren(...keys.map((key) => {
     const members = familyMembers(key);
     const details = element("details", "pg-group");
-    details.open = !collapsed.has(key);
+    details.open = opened.has(key) || currentFamily === key;
     const heading = element("summary", "pg-group-head");
-    heading.append(element("span", "pg-group-name", folderLabel(key)), element("span", "pg-count", String(members.length)));
-    reviewCounts(members, heading);
+    heading.append(element("span", "pg-group-name", folderLabel(key)));
+    reviewCounts(members, heading, folderLabel(key));
     // Persist in the activation itself: the native toggle event is deferred,
-    // so an immediate reload could otherwise lose the last collapse.
+    // so an immediate reload could otherwise lose the last opening.
     heading.addEventListener("click", (event) => {
       event.preventDefault();
       details.open = !details.open;
-      const stored = collapsedFamilies();
-      if (details.open) stored.delete(key);
-      else stored.add(key);
-      localStorage.setItem(COLLAPSED, JSON.stringify([...stored]));
+      const stored = openedFamilies();
+      if (details.open) stored.add(key);
+      else {
+        stored.delete(key);
+        if (currentFamily === key) currentFamily = undefined;
+      }
+      localStorage.setItem(OPENED, JSON.stringify([...stored]));
     });
     const list = element("ul", "pg-items");
     list.append(...entryKeys(members).map((entry) => {
       const link = element("a", "pg-item");
       link.href = `#${entry}`;
       if (active.page === `entry:${entry}`) link.setAttribute("aria-current", "page");
-      const dot = element("span", "pg-dot");
-      dot.setAttribute("aria-hidden", "true");
-      link.append(dot, element("span", "pg-item-name", folderLabel(leafOf(entry))));
-      const state = reviewCounts(membersOf(entry), link);
-      dot.dataset.state = state;
-      link.title = `${folderLabel(leafOf(entry))}: ${describeStatus({ state })}`;
+      link.append(element("span", "pg-item-name", folderLabel(leafOf(entry))));
+      reviewCounts(membersOf(entry), link, folderLabel(leafOf(entry)));
       const item = element("li"); item.append(link); return item;
     }));
     details.append(heading, list);
@@ -193,6 +197,9 @@ function addressed(): string {
 }
 
 function show(next: Route): void {
+  if (next.page !== active.page || next.example !== active.example) {
+    currentFamily = next.kind === "family" ? next.key : next.kind === "entry" ? familyOf(next.key) : undefined;
+  }
   if (next.page !== active.page) {
     editors = []; content.replaceChildren(); say("");
     addForm.hidden = next.kind !== "scratch";

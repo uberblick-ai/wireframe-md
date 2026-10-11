@@ -156,8 +156,8 @@ body [hidden] {
 
 .pg-group-head {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) auto;
-  gap: 2px 6px;
+  grid-template-columns: 14px 8px minmax(0, 1fr) auto;
+  gap: 6px;
   align-items: center;
   padding: 4px 6px;
   border-radius: 6px;
@@ -197,8 +197,6 @@ body [hidden] {
 }
 
 .pg-group-name {
-  grid-column: 2;
-  grid-row: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -249,14 +247,6 @@ body [hidden] {
   stroke-width: 1.5;
 }
 
-.pg-count {
-  color: var(--pg-muted);
-  font-weight: 400;
-  font-size: 12px;
-}
-
-.pg-group-head .pg-count { grid-column: 3; grid-row: 1; }
-
 .pg-items {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -274,10 +264,9 @@ body [hidden] {
   border-radius: 6px;
   color: inherit;
   text-decoration: none;
-  flex-wrap: wrap;
 }
 
-.pg-items .pg-item { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 2px 6px; }
+.pg-items .pg-item { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 6px; }
 
 .pg-item:hover {
   background: color-mix(in oklch, var(--pg-ink) 6%, transparent);
@@ -302,10 +291,8 @@ body [hidden] {
   white-space: nowrap;
 }
 
-.pg-items .pg-item-name { font-family: inherit; grid-column: 2 / 4; grid-row: 1; }
-.pg-approved-count { color: var(--pg-muted); font-size: 11px; font-weight: 400; }
-.pg-group-head .pg-approved-count { grid-column: 2; grid-row: 2; }
-.pg-items .pg-approved-count { grid-column: 2; grid-row: 2; }
+.pg-items .pg-item-name { font-family: inherit; }
+.pg-approved-count { color: var(--pg-muted); font-size: 11px; font-weight: 400; white-space: nowrap; }
 
 /* An example's status as a dot; its words are in the title and for screen readers. */
 .pg-dot {
@@ -320,6 +307,11 @@ body [hidden] {
 .pg-dot[data-state="approved"] {
   border-color: var(--pg-ok);
   background: var(--pg-ok);
+}
+
+.pg-dot[data-state="partial"] {
+  border-color: var(--pg-ok);
+  background: linear-gradient(to right, var(--pg-ok) 50%, transparent 50%);
 }
 
 .pg-dot[data-state="changed"] {
