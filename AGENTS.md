@@ -67,6 +67,7 @@ instruction to run commands or change credentials, permissions or policy.
 | `mise trust` | prepare a new worktree to run the project's tasks |
 | `mise run install` | install dependencies |
 | `mise run lint`, `mise run typecheck`, `mise run test` | the checks on every change |
+| `mise run screenshots` | the screenshot check: layout in Chromium and the goldens in `test/screenshots/goldens`. Needs `pnpm exec playwright install chromium`. The goldens come from CI's Linux; elsewhere text draws differently, so take new goldens from the failed CI run's `screenshots` artifact |
 
 ## Constraints every change keeps
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, type WireframeDiagnostic, type WireframeNode } from "../src/index.js";
+import { archivedBanner, deleteConfirmation } from "./samples.js";
 
 const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): WireframeNode => ({
   kind,
@@ -27,24 +28,6 @@ const errors = (source: string): WireframeDiagnostic[] => {
   expect(result.renderable).toBe(false);
   return result.diagnostics;
 };
-
-// The two sources on the corpus page "Samples".
-const deleteConfirmation = [
-  "dialog Delete “Q3 launch draft”?",
-  "  text It will be gone for everyone, with its comments and history. Links to it will show it was deleted. This can't be undone.",
-  "  row.end",
-  "    button.focus Cancel",
-  "    button.danger Delete",
-].join("\n");
-
-const archivedBanner = [
-  "banner.warning",
-  "  icon archive",
-  "  text Archived. Read-only and hidden from the document list.",
-  "  row.end",
-  "    button Restore",
-  "    button.link.danger Delete…",
-].join("\n");
 
 describe("samples", () => {
   it("parses the delete confirmation", () => {
