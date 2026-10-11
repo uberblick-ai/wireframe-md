@@ -55,16 +55,19 @@ const STYLES = `.wf-root {
   --_wf-title-size: var(--wf-title-size, 1rem);
 
   /* Roots stack one after another. Content wider than the host's box scrolls
-     inside the root, never the page. */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+     inside the root, never the page. A minmax(0, 1fr) column gives the root no
+     min-content width of its own, so a host that sizes to content, such as a
+     flex item or an auto grid column, doesn't grow to the widest row. The
+     padding keeps room for a focus ring at the edge, which the scroller clips. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
   gap: 0.75em;
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
   margin: 0;
-  padding: 0;
+  padding: calc(2 * var(--_wf-focus-width));
   border: 0;
   overflow: auto hidden;
   overscroll-behavior-x: contain;
@@ -86,6 +89,8 @@ const STYLES = `.wf-root {
   text-transform: none;
   text-shadow: none;
   white-space: normal;
+  text-wrap: wrap;
+  line-break: auto;
   overflow-wrap: normal;
   word-break: normal;
   hyphens: manual;
@@ -97,6 +102,7 @@ const STYLES = `.wf-root {
    root scrolls. */
 .wf-root > :is(.wf-dialog, .wf-banner, .wf-text, .wf-row, .wf-unknown),
 .wf-root :is(.wf-dialog-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-text, .wf-row, .wf-unknown) {
+  justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
 }

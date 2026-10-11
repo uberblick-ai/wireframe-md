@@ -116,6 +116,8 @@ describe("getEmbedStyles", () => {
       "text-indent": "0",
       "text-transform": "none",
       "white-space": "normal",
+      "text-wrap": "wrap",
+      "line-break": "auto",
       "overflow-wrap": "normal",
       "word-break": "normal",
     });
@@ -123,6 +125,9 @@ describe("getEmbedStyles", () => {
 
   it("keeps the root inside its container and scrolls what doesn't fit", () => {
     expect(Object.fromEntries(root.declarations)).toMatchObject({
+      // No min-content width of its own, so a host that sizes to content doesn't grow.
+      display: "grid",
+      "grid-template-columns": "minmax(0, 1fr)",
       "min-width": "0",
       "max-width": "100%",
       overflow: "auto hidden",

@@ -22,7 +22,7 @@ interface Fit {
 function measure(page: Page): Promise<Fit> {
   return page.evaluate(() => {
     const root = document.querySelector<HTMLElement>(".wf-root")!;
-    const column = root.parentElement!;
+    const column = root.closest<HTMLElement>(".column")!;
     const inside = (inner: Element, outer: Element): boolean => {
       const a = inner.getBoundingClientRect();
       const b = outer.getBoundingClientRect();
@@ -90,15 +90,51 @@ test.describe("fit", () => {
     "a row of buttons at the top level": `row\n${"  button Option\n".repeat(25)}`,
   };
   for (const [name, source] of Object.entries(wide)) {
-    test(`${name} scrolls inside the wireframe, never the page`, async ({ page }) => {
-      await show(page, source, { host: "column" });
-      const { root, column, escaped } = await measure(page);
-      expect(root.width).toBe(710);
-      expect(root.scrollWidth).toBeGreaterThan(710);
-      expect(column).toEqual({ width: 710, scrollWidth: 710 });
-      expect(escaped).toEqual([]);
-    });
+    for (const layout of ["block", "flex", "grid"] as const) {
+      test(`${name} scrolls inside the wireframe, never the page, in a ${layout} column`, async ({ page }) => {
+        await show(page, source, { host: "column", layout });
+        const { root, column, escaped } = await measure(page);
+        expect(root.width).toBe(710);
+        expect(root.scrollWidth).toBeGreaterThan(710);
+        expect(column).toEqual({ width: 710, scrollWidth: 710 });
+        expect(escaped).toEqual([]);
+      });
+    }
   }
+
+  test("in a host that shrinks to fit, a wireframe takes the width it needs, up to the column", async ({ page }) => {
+    const fitContent = async (source: string): Promise<Fit> => {
+      await show(page, source, { host: "column" });
+      await page.evaluate(() => {
+        const root = document.querySelector<HTMLElement>(".wf-root")!;
+        const item = document.createElement("div");
+        item.style.width = "fit-content";
+        root.replaceWith(item);
+        item.append(root);
+      });
+      return measure(page);
+    };
+    const banner = await fitContent(archivedBanner);
+    expect(banner.root.width).toBeGreaterThan(400);
+    expect(banner.root.width).toBeLessThan(710);
+    expect(banner.root.scrollWidth).toBeLessThanOrEqual(Math.ceil(banner.root.width));
+    const row = await fitContent(wide["a row of many buttons"]);
+    expect(row.root.width).toBe(710);
+    expect(row.column).toEqual({ width: 710, scrollWidth: 710 });
+  });
+
+  test("a focus ring at the wireframe's edge isn't cut off", async ({ page }) => {
+    await show(page, "row\n  button.focus Go", { host: "column" });
+    const room = await page.evaluate(() => {
+      const button = document.querySelector(".wf-button")!;
+      const root = document.querySelector(".wf-root")!.getBoundingClientRect();
+      const { outlineWidth, outlineOffset } = getComputedStyle(button);
+      const ring = Number.parseFloat(outlineWidth) + Number.parseFloat(outlineOffset);
+      const box = button.getBoundingClientRect();
+      return { left: box.left - ring - root.left, top: box.top - ring - root.top, bottom: root.bottom - box.bottom - ring };
+    });
+    expect(room).toEqual({ left: 0, top: 0, bottom: 0 });
+  });
 
   test("the dialog's scrim stays inside the wireframe's box", async ({ page }) => {
     await show(page, `text Before\n${deleteConfirmation}\ntext After`, { host: "column" });
@@ -177,33 +213,40 @@ test.describe("theming", () => {
     expect((await root.screenshot()).equals(before)).toBe(true);
   });
 
-  test("text styles a host passes down change nothing", async ({ page }) => {
-    const host = await show(page, vocabulary);
-    const root = page.locator(".wf-root");
-    const before = await root.screenshot();
-    await host.evaluate((element) => {
-      Object.assign(element.style, {
-        color: "red",
-        fontSize: "30px",
-        fontStyle: "italic",
-        fontWeight: "700",
-        fontVariant: "small-caps",
-        fontFeatureSettings: '"smcp"',
-        lineHeight: "3",
-        letterSpacing: "2px",
-        wordSpacing: "8px",
-        textAlign: "center",
-        textIndent: "40px",
-        textTransform: "uppercase",
-        textShadow: "1px 1px red",
-        whiteSpace: "pre-wrap",
-        overflowWrap: "anywhere",
-        wordBreak: "break-all",
-        hyphens: "auto",
+  for (const [name, source, width] of [
+    ["every kind and variant", vocabulary, 710],
+    ["the delete confirmation in a narrow column", deleteConfirmation, 320],
+  ] as const) {
+    test(`text styles a host passes down change nothing: ${name}`, async ({ page }) => {
+      await show(page, source, { host: "column", width });
+      const root = page.locator(".wf-root");
+      const before = await root.screenshot();
+      await root.evaluate((element) => {
+        Object.assign(element.parentElement!.style, {
+          color: "red",
+          fontSize: "30px",
+          fontStyle: "italic",
+          fontWeight: "700",
+          fontVariant: "small-caps",
+          fontFeatureSettings: '"smcp"',
+          lineHeight: "3",
+          letterSpacing: "2px",
+          wordSpacing: "8px",
+          textAlign: "center",
+          textIndent: "40px",
+          textTransform: "uppercase",
+          textShadow: "1px 1px red",
+          whiteSpace: "pre-wrap",
+          textWrap: "balance",
+          lineBreak: "anywhere",
+          overflowWrap: "anywhere",
+          wordBreak: "break-all",
+          hyphens: "auto",
+        });
       });
+      expect((await root.screenshot()).equals(before)).toBe(true);
     });
-    expect((await root.screenshot()).equals(before)).toBe(true);
-  });
+  }
 
   const same = {
     "a banner is neutral by default": ["banner\n  text Hi", "banner.neutral\n  text Hi"],
@@ -224,13 +267,15 @@ test.describe("theming", () => {
   }
 });
 
-test("nothing in a wireframe takes focus", async ({ page }) => {
-  await show(page, vocabulary, { host: "column" });
+/** The classes of the elements in a wireframe that take focus, by Tab or by focus(). */
+async function focusable(page: Page): Promise<string[]> {
+  const found = new Set<string>();
   for (let press = 0; press < 5; press += 1) {
     await page.keyboard.press("Tab");
-    expect(await page.evaluate(() => document.activeElement?.closest(".wf-root") ?? null)).toBeNull();
+    const focused = await page.evaluate(() => document.activeElement?.closest(".wf-root") && document.activeElement);
+    if (focused) found.add(await page.evaluate(() => document.activeElement!.getAttribute("class") ?? ""));
   }
-  const focused = await page.evaluate(() =>
+  const programmatic = await page.evaluate(() =>
     [document.querySelector(".wf-root")!, ...document.querySelectorAll(".wf-root *")]
       .filter((element) => {
         (element as HTMLElement).focus();
@@ -238,5 +283,16 @@ test("nothing in a wireframe takes focus", async ({ page }) => {
       })
       .map((element) => element.getAttribute("class") ?? element.localName),
   );
-  expect(focused).toEqual([]);
+  for (const name of programmatic) found.add(name);
+  return [...found];
+}
+
+test("nothing in a wireframe takes focus", async ({ page }) => {
+  await show(page, vocabulary, { host: "column" });
+  expect(await focusable(page)).toEqual([]);
+});
+
+test("a wireframe that scrolls takes focus only as a whole, so the keyboard can scroll it", async ({ page }) => {
+  await show(page, `dialog Pick one\n  row.end\n${"    button.focus Option\n".repeat(25)}`, { host: "column" });
+  expect(await focusable(page)).toEqual(["wf-root"]);
 });

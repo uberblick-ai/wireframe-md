@@ -47,6 +47,11 @@ export interface Options {
   intro?: string;
   /** The column's width in pixels, 710 unless given. */
   width?: number;
+  /**
+   * How the column lays out the wireframe: as a block, or as a flex row or a
+   * `1fr` grid whose item is a wrapper around it, which sizes to its content.
+   */
+  layout?: "block" | "flex" | "grid";
 }
 
 /** Open the test page. Call once per test before {@link show}. */
@@ -72,9 +77,9 @@ export async function open(page: Page): Promise<void> {
  * wait for the font. Returns the host, which a golden screenshots.
  */
 export async function show(page: Page, source: string, options: Options = {}): Promise<Locator> {
-  const { scheme = "light", host = "standalone", intro = "", width = 710 } = options;
+  const { scheme = "light", host = "standalone", intro = "", width = 710, layout = "block" } = options;
   await page.evaluate(
-    async ({ source, scheme, host, intro, width }) => {
+    async ({ source, scheme, host, intro, width, layout }) => {
       const url = "/src/index.js";
       const wireframe = await import(url);
       document.documentElement.style.colorScheme = scheme;
@@ -95,6 +100,14 @@ export async function show(page: Page, source: string, options: Options = {}): P
         parent.style.width = `${width}px`;
         if (intro !== "") parent.append(Object.assign(document.createElement("p"), { textContent: intro }));
         main.append(parent);
+        if (layout !== "block") {
+          parent.style.display = layout;
+          if (layout === "grid") parent.style.gridTemplateColumns = "1fr";
+          const item = document.createElement("div");
+          if (layout === "flex") item.style.flex = "1";
+          parent.append(item);
+          parent = item;
+        }
       }
       const rendered = wireframe.renderWireframe(wireframe.parseWireframe(source));
       if (rendered !== null) parent.append(rendered);
@@ -102,7 +115,7 @@ export async function show(page: Page, source: string, options: Options = {}): P
       document.body.append(main);
       await document.fonts.ready;
     },
-    { source, scheme, host, intro, width },
+    { source, scheme, host, intro, width, layout },
   );
   return page.locator("#host");
 }
