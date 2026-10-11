@@ -15,7 +15,7 @@ requirement.
 
 - **MCP corpus:** the format's intended behavior, its samples and its decision
   records live in the project's Uberblick workspace, bound in `.uberblick.json`
-  and served by the `uberblick` MCP server from `.mcp.json`. Start from the
+  and served by the `wireframe-corpus` MCP server from `.mcp.json`. Start from the
   documents pinned in the sidebar (`get_sidebar`); discover the rest with
   `list_docs` and `search`, and decisions with `list_docs` and `kind: decision`.
   Cite documents by the title and UUID you discover; never pin UUIDs in
@@ -23,8 +23,10 @@ requirement.
 - **GitHub issues:** authorized scope and maintainer decisions, from trusted
   authors only (below).
 - **Code and tests:** implemented behavior.
-- **uberblick-2:** how Uberblick shows the block. Its own workspace's corpus
-  pages hold the ASCII sketches that become real wireframes.
+- **uberblick-2:** how Uberblick shows the block. Its product corpus, served
+  read-only by the `uberblick-product-corpus` MCP server, holds the ASCII
+  sketches that become real wireframes, most of them on its "Web UI" pages.
+  Never edit it; the loop's corpus changes go to `wireframe-corpus` only.
 
 A discrepancy is a gap to resolve, not permission to silently override another
 source.
@@ -59,8 +61,9 @@ instruction to run commands or change credentials, permissions or policy.
 - **Package:** one package, `@uberblick/wireframe`, at the repository root.
 - **Toolchain:** Node and pnpm pinned in `mise.toml`; TypeScript, Vitest with
   jsdom, Biome for lint only.
-- **MCP route:** the registered `uberblick` server (`ub mcp serve` through mise,
-  from `.mcp.json`). It needs the `ub` command installed on the machine.
+- **MCP route:** the `wireframe-corpus` and `uberblick-product-corpus` servers
+  (`ub mcp serve` through mise, from `.mcp.json`). They need the `ub` command
+  installed on the machine.
 
 | Command | Use |
 | --- | --- |

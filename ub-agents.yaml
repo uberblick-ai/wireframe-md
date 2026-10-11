@@ -30,7 +30,18 @@ runtime-args:
     - "Bash({report_command} read *)"
     - "Bash(ub-agents *)"
     # The project corpus in its Uberblick workspace (.uberblick.json, .mcp.json).
-    - "mcp__uberblick__*"
+    - "mcp__wireframe-corpus__*"
+    # Uberblick's product corpus (.mcp.json), read-only: its Web UI pages hold
+    # the sketches the format has to draw.
+    - "mcp__uberblick-product-corpus__get_help"
+    - "mcp__uberblick-product-corpus__get_sidebar"
+    - "mcp__uberblick-product-corpus__list_docs"
+    - "mcp__uberblick-product-corpus__list_tags"
+    - "mcp__uberblick-product-corpus__get_doc"
+    - "mcp__uberblick-product-corpus__get_data"
+    - "mcp__uberblick-product-corpus__search"
+    - "mcp__uberblick-product-corpus__backlinks"
+    - "mcp__uberblick-product-corpus__find_decisions"
     # The project's checks (mise tasks) and its package manager.
     - "Bash(mise *)"
     - "Bash(pnpm *)"

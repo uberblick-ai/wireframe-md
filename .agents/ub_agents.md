@@ -36,7 +36,7 @@ The corpus is live: an edit reaches every reader and run at once, merged or not.
 Only the integrator edits it, and only after a merge. A PR that changes what a
 corpus page says puts the change in its body under `## Corpus changes`: each page
 by title, the section, and the new text in full. The reviewer checks that text
-against the code. After merging, the integrator applies it with the Uberblick MCP
+against the code. After merging, the integrator applies it with the `wireframe-corpus` MCP
 tools, re-reads each page to confirm, and names the changed pages in its merge
 report. For a maintainer merge, the handoff names the corpus changes the
 maintainer applies after merging. A PR that closes unmerged changes nothing.

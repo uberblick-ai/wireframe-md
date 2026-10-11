@@ -13,8 +13,11 @@
     },
     "uberblick-product-corpus": {
       "type": "stdio",
-      "command": "ub",
+      "command": "mise",
       "args": [
+        "exec",
+        "--",
+        "ub",
         "mcp",
         "serve"
       ],
@@ -23,6 +26,5 @@
         "UB_WORKSPACE_ID": "uberblick-722007fa-8921-45ee-a580-e20311030fef"
       }
     }
-
   }
 }
