@@ -20,7 +20,8 @@ permissions:
 jobs:
   checks:
     name: lint, typecheck and tests
-    runs-on: ubuntu-latest
+    # A fixed image, so the goldens don't change when ubuntu-latest moves on.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       # Test the pull request's head itself, not GitHub's merge with main.
