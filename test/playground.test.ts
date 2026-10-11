@@ -111,7 +111,7 @@ describe("the playground's server", () => {
     expect((await call("PUT", "/api/examples/missing", { body: { source: "dialog" } })).status).toBe(404);
   });
 
-  it.each(["../escape", "..", "a/b", "a\\b", ".hidden", "Upper", "trailing-", "x.wireframe", "", "a".repeat(65)])(
+  it.each(["../escape", "..", "a/b/c", "/a", "a/", "../a", "a/../b", "a\\b", ".hidden", "Upper", "trailing-", "x.wireframe", "", "a".repeat(65)])(
     "refuses the name %j",
     async (name) => {
       expect((await call("POST", "/api/examples", { body: { name, source: "dialog" } })).status).toBe(400);
@@ -165,6 +165,22 @@ describe("the playground's server", () => {
     expect(listed).toEqual({ name: "banner", source: BANNER, approval: { source: BANNER, stylesheet: FINGERPRINT, markup } });
   });
 
+  it("adds an example to a group, making its folder, and lists it by group/name", async () => {
+    const response = await call("POST", "/api/examples", { body: { name: "dialogs/settings", source: "dialog Settings" } });
+    expect(response.status).toBe(201);
+    expect(read("dialogs/settings.wireframe")).toBe("dialog Settings");
+    expect((await call("PUT", "/api/examples/dialogs/settings", { body: { source: "dialog Prefs" } })).status).toBe(200);
+    const markup = '<div class="wf-root"></div>';
+    const approved = await call("PUT", "/api/approvals/dialogs/settings", { body: { source: "dialog Prefs", markup, stylesheet: FINGERPRINT } });
+    expect(approved.status).toBe(200);
+    const listed = (await call("GET", "/api/examples")).json<Listed>().examples;
+    expect(listed.find((example) => example.name === "dialogs/settings")).toEqual({
+      name: "dialogs/settings",
+      source: "dialog Prefs",
+      approval: { source: "dialog Prefs", stylesheet: FINGERPRINT, markup },
+    });
+  });
+
   it("lists an unreadable approval as none", async () => {
     writeFileSync(join(folder, "new-dialog-2.approval.json"), "{");
     const listed = (await call("GET", "/api/examples")).json<Listed>().examples;
@@ -175,14 +191,16 @@ describe("the playground's server", () => {
     });
   });
 
-  it("has written only example and approval files, directly in its folder", () => {
+  it("has written only example and approval files, in its folder and a group folder", () => {
     expect(readdirSync(scratch)).toEqual(["examples"]);
     expect(readdirSync(folder).sort()).toEqual([
       "banner.approval.json",
       "banner.wireframe",
+      "dialogs",
       "new-dialog-2.approval.json",
       "new-dialog-2.wireframe",
     ]);
+    expect(readdirSync(join(folder, "dialogs")).sort()).toEqual(["settings.approval.json", "settings.wireframe"]);
   });
 
   it("listens on another port when its own is taken", async () => {

@@ -7,7 +7,7 @@ import {
 } from "../src/index.js";
 import { type Approval, describeStatus, diffLines, fingerprint, formatMarkup, type Status, statusOf } from "./approval.js";
 
-// The playground's page: the gallery of examples, the editor, and the render,
+// The playground's page: the sidebar of examples by group, the editor, and the render,
 // diagnostics, summary and approval of what the editor holds. The server
 // transpiles the package's sources per request, so a reload renders with the
 // current code.
@@ -52,7 +52,7 @@ const statusBadge = byId("pg-status");
 const approveButton = byId<HTMLButtonElement>("pg-approve");
 const approveHint = byId("pg-approve-hint");
 const review = byId("pg-review");
-const cards = byId("pg-cards");
+const groupList = byId("pg-groups");
 const addForm = byId<HTMLFormElement>("pg-add");
 const newName = byId<HTMLInputElement>("pg-new-name");
 
@@ -197,7 +197,7 @@ function showControls(): void {
     : dirty
       ? "Save before approving: an approval records the source as saved."
       : status.state === "approved"
-        ? "Approved. A change to the parser, renderer or stylesheet that alters this render flags it here and in the gallery."
+        ? "Approved. A change to the parser, renderer or stylesheet that alters this render flags it here and in the sidebar."
         : "";
   approveButton.disabled = refusal !== "";
   approveHint.textContent =
@@ -247,33 +247,93 @@ function markupColumn(heading: string, lines: readonly { text: string; changed: 
   return column;
 }
 
-// The gallery: every example's saved render and status.
+// The sidebar: the examples by group, each with its status. A group is a folder
+// in examples/; the examples directly in it are ungrouped.
 
-function showGallery(): void {
-  cards.replaceChildren(
-    ...examples.map((example) => {
-      const rendered = renderSaved(example);
-      const status = statusOf(rendered?.markup ?? null, stylesheet, example.approval);
-      const link = element("a", "pg-card") as HTMLAnchorElement;
-      link.href = `#${example.name}`;
-      if (example === current) link.setAttribute("aria-current", "page");
-      const thumbnail = element("span", "pg-thumbnail");
-      thumbnail.append(rendered?.element ?? element("span", "pg-empty", "Nothing to show: the source has an error."));
-      const badge = element("span", "pg-badge", describeStatus(status));
-      badge.dataset.state = status.state;
-      link.append(thumbnail, element("span", "pg-card-name", example.name), badge);
-      const item = element("li");
-      item.append(link);
-      return item;
+const COLLAPSED = "wireframe-playground-collapsed";
+
+/** The groups a person collapsed, remembered between visits. */
+function collapsedGroups(): Set<string> {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(COLLAPSED) ?? "[]");
+    return new Set(Array.isArray(stored) ? stored.filter((key) => typeof key === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberCollapsed(key: string, collapsed: boolean): void {
+  const keys = collapsedGroups();
+  if (collapsed) keys.add(key);
+  else keys.delete(key);
+  localStorage.setItem(COLLAPSED, JSON.stringify([...keys]));
+}
+
+const groupOf = (name: string): string => (name.includes("/") ? name.slice(0, name.indexOf("/")) : "");
+const leafOf = (name: string): string => name.slice(name.indexOf("/") + 1);
+
+/** A group folder's name as a heading: samples-and-dialogs reads Samples and dialogs. */
+function groupLabel(key: string): string {
+  if (key === "") return "Ungrouped";
+  const words = key.replace(/-/g, " ");
+  return `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
+}
+
+function showSidebar(): void {
+  const groups = new Map<string, Example[]>();
+  for (const example of examples) {
+    const key = groupOf(example.name);
+    groups.set(key, [...(groups.get(key) ?? []), example]);
+  }
+  // Groups by name, the ungrouped examples last.
+  const keys = [...groups.keys()].sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a < b ? -1 : 1));
+  const collapsed = collapsedGroups();
+  groupList.replaceChildren(
+    ...keys.map((key) => {
+      const members = groups.get(key) ?? [];
+      const states = members.map((example) => statusOfExample(example).state);
+      const details = element("details", "pg-group") as HTMLDetailsElement;
+      // The open example's group stays open.
+      details.open = !collapsed.has(key) || members.includes(current as Example);
+      details.addEventListener("toggle", () => rememberCollapsed(key, !details.open));
+
+      const heading = element("summary", "pg-group-head");
+      heading.append(element("span", "pg-group-name", groupLabel(key)), element("span", "pg-count", String(members.length)));
+      const open = states.filter((state) => state !== "approved").length;
+      if (open > 0) {
+        const badge = element("span", "pg-badge", `${open} to review`);
+        badge.dataset.state = states.includes("error") ? "error" : states.includes("changed") ? "changed" : "unapproved";
+        badge.title = "Examples with errors, changed since approval, or not yet approved";
+        heading.append(badge);
+      }
+
+      const list = element("ul", "pg-items");
+      list.append(
+        ...members.map((example) => {
+          const status = statusOfExample(example);
+          const link = element("a", "pg-item") as HTMLAnchorElement;
+          link.href = `#${example.name}`;
+          link.title = `${example.name}: ${describeStatus(status)}`;
+          if (example === current) link.setAttribute("aria-current", "page");
+          const dot = element("span", "pg-dot");
+          dot.dataset.state = status.state;
+          link.append(dot, element("span", "pg-item-name", leafOf(example.name)), element("span", "pg-hidden", describeStatus(status)));
+          const item = element("li");
+          item.append(link);
+          return item;
+        }),
+      );
+      details.append(heading, list);
+      return details;
     }),
   );
-  if (examples.length === 0) cards.append(element("li", "pg-none", "No examples yet."));
+  if (examples.length === 0) groupList.append(element("p", "pg-none", "No examples yet."));
 }
 
 function refresh(): void {
   update();
   showReview();
-  showGallery();
+  showSidebar();
 }
 
 // Opening, saving, adding and approving.

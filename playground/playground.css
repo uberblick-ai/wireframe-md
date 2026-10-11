@@ -71,8 +71,7 @@ button:disabled {
 
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible,
-.pg-card:focus-visible {
+textarea:focus-visible {
   outline: 2px solid var(--pg-accent);
   outline-offset: 1px;
 }
@@ -122,73 +121,182 @@ textarea:focus-visible,
   margin: 0 6px 0 0;
 }
 
-/* The gallery */
+/* The sidebar: the examples by group */
 
-.pg-gallery {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--pg-line);
+.pg-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
 }
 
-.pg-cards {
+.pg-sidebar {
+  position: sticky;
+  top: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
-  margin: 10px 0 12px;
-  padding: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 16px 12px 24px 16px;
+  overflow: hidden auto;
+  border-right: 1px solid var(--pg-line);
+}
+
+.pg-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.pg-group-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
   list-style: none;
 }
 
-.pg-card {
+.pg-group-head::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron that turns when the group opens. */
+.pg-group-head::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin: 0 4px 0 2px;
+  border-right: 1.5px solid var(--pg-muted);
+  border-bottom: 1.5px solid var(--pg-muted);
+  transform: rotate(-45deg);
+  transition: transform 120ms;
+}
+
+.pg-group[open] > .pg-group-head::before {
+  transform: rotate(45deg);
+}
+
+.pg-group-head:hover {
+  background: color-mix(in oklch, var(--pg-ink) 6%, transparent);
+}
+
+.pg-group-head:focus-visible {
+  outline: 2px solid var(--pg-accent);
+  outline-offset: -2px;
+}
+
+.pg-group-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pg-count {
+  color: var(--pg-muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.pg-items {
   display: grid;
-  grid-template-rows: 120px auto auto;
-  gap: 4px;
-  height: 100%;
-  box-sizing: border-box;
-  padding: 8px;
-  border: 1px solid var(--pg-line);
-  border-radius: 8px;
-  background: var(--pg-panel);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  margin: 2px 0 6px;
+  padding: 0 0 0 14px;
+  list-style: none;
+}
+
+.pg-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
   color: inherit;
   text-decoration: none;
 }
 
-.pg-card:hover {
-  border-color: var(--pg-muted);
+.pg-item:hover {
+  background: color-mix(in oklch, var(--pg-ink) 6%, transparent);
 }
 
-.pg-card[aria-current="page"] {
-  border-color: var(--pg-accent);
-  box-shadow: 0 0 0 1px var(--pg-accent);
+.pg-item:focus-visible {
+  outline: 2px solid var(--pg-accent);
+  outline-offset: -2px;
 }
 
-/* The saved render at half size, cut off at the bottom. */
-.pg-thumbnail {
-  display: block;
+.pg-item[aria-current="page"] {
+  background: color-mix(in oklch, var(--pg-accent) 14%, transparent);
+  color: var(--pg-accent);
+}
+
+.pg-item-name {
+  min-width: 0;
   overflow: hidden;
-  zoom: 0.5;
-  height: 240px;
-  pointer-events: none;
-}
-
-.pg-card-name {
   font-family: var(--pg-mono);
   font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* An example's status as a dot; its words are in the title and for screen readers. */
+.pg-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--pg-muted);
+  border-radius: 50%;
+}
+
+.pg-dot[data-state="approved"] {
+  border-color: var(--pg-ok);
+  background: var(--pg-ok);
+}
+
+.pg-dot[data-state="changed"] {
+  border-color: var(--pg-warning);
+  background: var(--pg-warning);
+}
+
+.pg-dot[data-state="error"] {
+  border-color: var(--pg-error);
+  background: var(--pg-error);
+}
+
+.pg-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .pg-add {
   display: grid;
   gap: 4px;
-  justify-items: start;
+  padding-top: 12px;
+  border-top: 1px solid var(--pg-line);
   color: var(--pg-muted);
+  font-size: 12px;
 }
 
 .pg-add-row {
   display: flex;
   gap: 8px;
+  align-self: stretch;
 }
 
 .pg-add input {
-  width: 220px;
+  flex: 1;
+  min-width: 0;
   padding: 4px 8px;
   border: 1px solid var(--pg-line);
   border-radius: 6px;
@@ -220,11 +328,17 @@ textarea:focus-visible,
   color: var(--pg-error);
 }
 
+.pg-group-head .pg-badge {
+  margin-left: auto;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 /* The editor and the render */
 
 .pg-main {
   display: grid;
-  grid-template-columns: minmax(320px, 2fr) minmax(0, 3fr);
+  grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
   gap: 24px;
   padding: 16px 24px 48px;
 }
@@ -453,4 +567,19 @@ textarea:focus-visible,
 
 .pg-added {
   background: var(--pg-added);
+}
+
+/* A narrow window stacks the sidebar above the editor. */
+@media (max-width: 900px) {
+  .pg-layout,
+  .pg-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pg-sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--pg-line);
+  }
 }

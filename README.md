@@ -194,7 +194,7 @@ Uberblick. It is a development tool in `playground/`, outside the package.
 mise run playground
 ```
 
-It starts a server on `localhost`, port 4610 or a free one when that is taken,
+It installs the dependencies first, then starts a server on `localhost`, port 4610 or a free one when that is taken,
 and prints its URL. It renders with the package's sources, transpiled on each
 request, so a reload shows the current code without a build.
 
@@ -202,22 +202,24 @@ request, so a reload shows the current code without a build.
   its `summarizeWireframe` line. A source with an error keeps its last good
   render, marked stale. The toggles switch between light and dark, and between a
   bare page and Uberblick's 710 px document column.
-- The gallery shows the examples in `examples/`: one `.wireframe` file each,
-  holding the body of a ```` ```wireframe ```` block without its fences. Open
-  one to edit it, save it with **Save** (Ctrl+S or ⌘S), or save the editor's
-  source as a new example. `mise run test` fails when an example has an error;
+- The sidebar lists the examples in `examples/`: one `.wireframe` file each,
+  holding the body of a ```` ```wireframe ```` block without its fences. A
+  folder in `examples/`, such as `samples/`, is a group: a collapsible section
+  in the sidebar that counts the examples in it still to review. Open an example
+  to edit it, save it with **Save** (Ctrl+S or ⌘S), or save the editor's source
+  as a new example, named `group/name` to put it in a group. `mise run test` fails when an example has an error;
   a warning is fine.
 
 ### Approval
 
-**Approve** records what you saw in `examples/NAME.approval.json`, next to the
-example: its saved source, the rendered markup, one element per line, and a
+**Approve** records what you saw in `NAME.approval.json`, next to the
+example's `NAME.wireframe`: its saved source, the rendered markup, one element per line, and a
 fingerprint of the stylesheet. Commit it with the example. It approves the
 source as saved, so save first, and it refuses a source with an error. Scheme
 and host change neither the markup nor the stylesheet, so one approval covers
 every toggle: look at each before approving.
 
-The gallery marks each example approved, changed since approval (its markup,
+The sidebar marks each example approved, changed since approval (its markup,
 the stylesheet, or both), or not yet approved. When a change to the parser, the
 renderer or the stylesheet alters how an approved example looks, it shows as
 changed. Open it to read its approved markup beside the current markup, look at

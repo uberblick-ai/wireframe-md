@@ -29,6 +29,7 @@ run = "pnpm check:package"
 
 [tasks.playground]
 description = "Start the playground on localhost: edit a wireframe beside its render and diagnostics, and approve the examples in examples/"
+depends = ["install"]
 run = "pnpm playground"
 
 [tasks.screenshots]

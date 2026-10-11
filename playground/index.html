@@ -24,18 +24,19 @@
   </fieldset>
 </header>
 
-<section class="pg-gallery" aria-labelledby="pg-gallery-title">
-  <h2 id="pg-gallery-title">Examples</h2>
-  <ul class="pg-cards" id="pg-cards"></ul>
+<div class="pg-layout">
+<nav class="pg-sidebar" aria-labelledby="pg-sidebar-title">
+  <h2 id="pg-sidebar-title">Examples</h2>
+  <div class="pg-groups" id="pg-groups"></div>
   <form class="pg-add" id="pg-add">
-    <label for="pg-new-name">Save the editor's source as a new example</label>
+    <label for="pg-new-name">Save the editor's source as a new example, in a group as group/name</label>
     <span class="pg-add-row">
-      <input id="pg-new-name" name="name" required maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*"
-        placeholder="settings-dialog" title="Lowercase letters and digits joined by hyphens" autocomplete="off">
+      <input id="pg-new-name" name="name" required maxlength="129" pattern="([a-z0-9]+(-[a-z0-9]+)*/)?[a-z0-9]+(-[a-z0-9]+)*"
+        placeholder="dialogs/settings" title="Lowercase letters and digits joined by hyphens, after a group and a slash" autocomplete="off">
       <button type="submit">Add</button>
     </span>
   </form>
-</section>
+</nav>
 
 <main class="pg-main">
   <section class="pg-pane" aria-labelledby="pg-name">
@@ -73,5 +74,6 @@
     </div>
   </section>
 </main>
+</div>
 </body>
 </html>
