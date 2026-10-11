@@ -444,8 +444,8 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=` on the wrong kind, a repeated
-  `label=` and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=` or `width=` on the wrong
+  kind, a repeated `label=` or `width=`, an invalid width and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
