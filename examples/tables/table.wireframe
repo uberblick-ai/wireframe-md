@@ -1,0 +1,18 @@
+page
+  table
+    row.head
+      cell Name
+      cell Role
+      cell Joined
+    row
+      cell Ada Lovelace
+      cell Admin
+      cell March 2026
+    row
+      cell Grace Hopper
+      cell Editor
+      cell May 2026
+    row
+      cell Alan Turing
+      cell Reader
+      cell June 2026

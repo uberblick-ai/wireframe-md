@@ -10,9 +10,12 @@
 //
 // Public properties:
 //   --wf-ink           text, and the secondary button's caption
-//   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name
-//   --wf-paper         the dialog card and the secondary button's fill
-//   --wf-line          borders: the card, buttons, the banner's base and unknown boxes
+//   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
+//                      an input's placeholder, a select's caret, options but the current one, a table's
+//                      header row and chip.more
+//   --wf-paper         the dialog card, a page and the secondary button's fill
+//   --wf-line          borders: the card, a page, buttons, inputs, the banner's base and unknown boxes;
+//                      a table's rules; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
@@ -24,10 +27,10 @@
 //   --wf-warning-tint, --wf-danger-tint         a banner's fill
 //   --wf-stroke        border width; icon strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
-//   --wf-radius        buttons, banners and unknown boxes
-//   --wf-radius-lg     the dialog's card and scrim
-//   --wf-text-size     the base type size; spacing scales with it
-//   --wf-title-size    the dialog's title
+//   --wf-radius        buttons, banners, inputs, chips and unknown boxes
+//   --wf-radius-lg     the dialog's card and scrim, and a page
+//   --wf-text-size     the base type size; spacing and chips scale with it
+//   --wf-title-size    the dialog's title; text.title is one and a half times it
 
 const STYLES = `.wf-root {
   --_wf-ink: var(--wf-ink, light-dark(oklch(0.145 0 0), oklch(0.985 0 0)));
@@ -103,10 +106,10 @@ const STYLES = `.wf-root {
 }
 
 /* In a column, block kinds take the full width, but never less than their
-   content needs: a row of many buttons or a long word widens its box, and the
-   root scrolls. */
-.wf-root > :is(.wf-dialog, .wf-banner, .wf-text, .wf-row, .wf-unknown),
-.wf-root :is(.wf-dialog-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-text, .wf-row, .wf-unknown) {
+   content needs: a row of many buttons, a wide table or a long word widens its
+   box, and the root scrolls. */
+.wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-table, .wf-unknown),
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-table, .wf-unknown) {
   justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
@@ -186,6 +189,20 @@ const STYLES = `.wf-root {
   margin-inline-start: auto;
 }
 
+/* A screen in a frame. Its title is a text.title line. */
+.wf-root .wf-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.875em;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1.5em 1.75em 1.75em;
+  border: var(--_wf-stroke) solid var(--_wf-line);
+  border-radius: var(--_wf-radius-lg);
+  background: var(--_wf-paper);
+}
+
 .wf-root .wf-text {
   margin: 0;
 }
@@ -196,6 +213,13 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-text.wf-strong {
   font-weight: 600;
+}
+
+/* A page's title, larger than a dialog's. */
+.wf-root .wf-text.wf-title {
+  font-size: calc(1.5 * var(--_wf-title-size));
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .wf-root .wf-row {
@@ -265,6 +289,148 @@ const STYLES = `.wf-root {
 .wf-root .wf-button:where(.wf-focus) {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: var(--_wf-focus-width);
+}
+
+/* A field with no fill, showing its placeholder. It holds the line height of
+   text even when empty, and takes the room a row leaves. */
+.wf-root .wf-input {
+  box-sizing: border-box;
+  min-height: calc(2.15em + 2 * var(--_wf-stroke));
+  margin: 0;
+  padding: 0.375em 0.625em;
+  border: var(--_wf-stroke) solid var(--_wf-line);
+  border-radius: var(--_wf-radius);
+  background: transparent;
+  color: var(--_wf-muted);
+}
+
+.wf-root .wf-row > .wf-input {
+  flex: 1 1 12em;
+}
+
+/* The chosen value and a caret, with no box. */
+.wf-root .wf-select {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25em;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Filters in a row keep apart, as they have no box. */
+.wf-root .wf-row > :is(.wf-select, .wf-toggle):not(:last-child) {
+  margin-inline-end: 0.75em;
+}
+
+.wf-root .wf-select-caret {
+  display: block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  color: var(--_wf-muted);
+}
+
+/* Options on one line, a middle dot between each two, wrapping only where the
+   line doesn't fit. The current one stands out in ink. */
+.wf-root .wf-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em 0.5em;
+  margin: 0;
+}
+
+.wf-root .wf-option {
+  color: var(--_wf-muted);
+  white-space: nowrap;
+}
+
+.wf-root .wf-option.wf-current {
+  color: var(--_wf-ink);
+  font-weight: 500;
+}
+
+.wf-root .wf-toggle > .wf-option + .wf-option::before {
+  content: "\\b7";
+  margin-inline-end: 0.5em;
+  color: var(--_wf-muted);
+  font-weight: 400;
+}
+
+/* Rows of cells with a rule under each row but the last: no vertical lines and
+   no outer box. Columns take the width their content needs, and text in a cell
+   wraps between words. */
+.wf-root .wf-table {
+  display: table;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  empty-cells: show;
+}
+
+.wf-root .wf-table > .wf-row {
+  display: table-row;
+}
+
+.wf-root .wf-table > .wf-row.wf-head {
+  color: var(--_wf-muted);
+}
+
+.wf-root .wf-table > .wf-row > .wf-cell {
+  display: table-cell;
+  padding: 0.5em 0.75em;
+  vertical-align: baseline;
+}
+
+.wf-root .wf-table > .wf-row > .wf-cell:first-child {
+  padding-inline-start: 0;
+}
+
+.wf-root .wf-table > .wf-row > .wf-cell:last-child {
+  padding-inline-end: 0;
+}
+
+.wf-root .wf-table > .wf-row:not(:first-child) > .wf-cell {
+  border-top: var(--_wf-stroke) solid var(--_wf-line);
+}
+
+.wf-root .wf-cell {
+  margin: 0;
+}
+
+/* Times and figures: they line up on the right and keep to one line. */
+.wf-root .wf-cell.wf-end {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wf-root .wf-cell > :is(.wf-chip, .wf-button):not(:last-child) {
+  margin-inline-end: 0.375em;
+}
+
+/* A small neutral tag. .more, the count of the rest, is text with no box. */
+.wf-root .wf-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.0625em 0.5em;
+  border-radius: var(--_wf-radius);
+  background: color-mix(in oklab, var(--_wf-line) 50%, transparent);
+  font-size: calc(0.85 * var(--_wf-text-size));
+  white-space: nowrap;
+}
+
+.wf-root .wf-chip.wf-more {
+  padding-inline: 0;
+  background: transparent;
+  color: var(--_wf-muted);
 }
 
 .wf-root .wf-icon {

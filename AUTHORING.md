@@ -79,21 +79,84 @@ one too deep. A block over a limit gets an error and doesn't render.
 
 ## Kinds
 
-`dialog` and `banner` are roots: they stand at the top level and hold the rest.
+`dialog`, `banner` and `page` are roots: they stand at the top level and hold the
+rest.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
 | `dialog` | at the top level | none | the title |
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red | none: its text goes on a `text` line |
-| `text` | directly inside a root | `.muted`: secondary text, in grey; `.strong`: bold | the text |
-| `row` | directly inside a root | `.end`: aligns its buttons to the right | none |
-| `button` | directly inside a `row` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
+| `page` | at the top level | none | none: its title goes on a `text.title` line |
+| `text` | directly inside a root | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title | the text |
+| `row` | directly inside a root or a `table` | `.end`: aligns its buttons to the right; `.head`: a table's header row, in grey | none |
+| `button` | directly inside a `row` or a `cell` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
 | `icon` | directly inside a root | none | its name: `archive`, the only icon in v0.1 |
+| `input` | directly inside a root or a `row` | none | the placeholder |
+| `select` | directly inside a root or a `row` | none | the chosen value |
+| `toggle` | directly inside a root or a `row` | none | none: its choices are `option` lines |
+| `option` | directly inside a `toggle` | `.current`: the chosen one | the caption |
+| `table` | directly inside a root | none | none: it holds rows |
+| `cell` | directly inside a table `row` | `.end`: right-aligned, for times and figures | its text, or none for an empty cell |
+| `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
 
 A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-width
-strip with its icon, text and buttons on one line. A `button` with no variant is a
+strip with its icon, text and buttons on one line. A `page` draws as a framed
+screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
 `button.link.danger` a destructive text button.
+
+An `input` is an empty field showing its placeholder. A `select` is its value and
+a ▾ caret, with no box; the caret comes with it, so don't add an `icon`. A
+`toggle` draws its options on one line, separated by `·`. A `chip` is a small
+neutral tag, and `chip.more` the count of the tags that don't show.
+
+A `row` directly inside a `table` is a table row: it holds only `cell` lines, and
+each `cell` holds its text, `chip` lines or `button` lines. A table draws with
+rules under the header and between rows, and no other lines. Give every row the
+same number of cells, an empty `cell` where a column has nothing. `.head` is for
+a table row and `.end` for a row anywhere else.
+
+## A page
+
+The document list from Uberblick's web UI: a title and a count, a search field, a
+filter row and a table.
+
+```wireframe
+page
+  text.title All documents
+  text.muted 24 documents
+  input Search titles
+  row
+    toggle
+      option.current Documents
+      option Decisions
+    select Any tag
+  table
+    row.head
+      cell Title
+      cell Group
+      cell Tags
+      cell.end Changed
+      cell
+    row
+      cell Web UI system
+      cell Getting started
+      cell
+        chip web
+        chip spec
+        chip.more +2
+      cell.end 2 hours ago
+      cell
+        button.link pin
+    row
+      cell Card blocks
+      cell
+      cell
+        chip markdown
+      cell.end 3 days ago
+      cell
+        button.link pin
+```
 
 ## Samples
 
@@ -122,7 +185,7 @@ banner.warning
 ## Errors and warnings
 
 Every problem gives a diagnostic with its line number and what was expected, such as
-`line 3: warning: button must be inside row`.
+`line 3: warning: button must be directly inside row or cell`.
 
 - **Errors stop the render.** The block draws nothing, and the host keeps its last
   good render. Bad indentation, an unterminated quote, text after a closing quote
@@ -313,8 +376,8 @@ dialog Leave the workspace?
 Diagnostics:
 
 ```text
-line 3: warning: button must be inside row
-line 4: warning: button must be inside row
+line 3: warning: button must be directly inside row or cell
+line 4: warning: button must be directly inside row or cell
 ```
 
 Fixed:
@@ -353,9 +416,42 @@ banner.warning
     button Restore
 ```
 
+### Anything but a cell in a table row
+
+A row directly inside a `table` holds only cells. Wrong:
+
+```text
+page
+  table
+    row
+      cell Web UI system
+      chip web
+      button.link pin
+```
+
+Diagnostics:
+
+```text
+line 5: warning: chip in a table row: expected cell
+line 6: warning: button in a table row: expected cell
+```
+
+Fixed, with each in a cell of its own:
+
+```wireframe
+page
+  table
+    row
+      cell Web UI system
+      cell
+        chip web
+      cell
+        button.link pin
+```
+
 ### A root inside another node
 
-`dialog` and `banner` stand only at the top level. Wrong:
+`dialog`, `banner` and `page` stand only at the top level. Wrong:
 
 ```text
 dialog Delete “Q3 launch draft”?
@@ -397,8 +493,8 @@ Diagnostics:
 
 ```text
 line 2: warning: unknown icon "lock": expected archive
-line 3: warning: unknown variant ".small" on text: expected .muted or .strong
-line 5: warning: unknown kind "link": expected dialog, banner, text, row, button or icon
+line 3: warning: unknown variant ".small" on text: expected .muted, .strong or .title
+line 5: warning: unknown kind "link": expected dialog, banner, page, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
 Fixed, leaving out the icon, since v0.1 has only `archive`:

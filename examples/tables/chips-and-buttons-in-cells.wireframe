@@ -1,0 +1,20 @@
+page
+  table
+    row.head
+      cell Document
+      cell Tags
+      cell
+    row
+      cell Web UI system
+      cell
+        chip web
+        chip spec
+      cell.end
+        button.link pin
+        button.link.danger Remove
+    row
+      cell Card blocks
+      cell
+        chip markdown
+      cell.end
+        button pin

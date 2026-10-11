@@ -1,0 +1,7 @@
+page
+  row
+    toggle
+      option.current Documents
+      option Decisions
+    select Any tag
+    select Any state

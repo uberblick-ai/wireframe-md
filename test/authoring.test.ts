@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseWireframe } from "../src/index.js";
-import { ICONS, KINDS, type KindRule } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation } from "./samples.js";
+import { ICONS, KINDS, type KindRule, type Place } from "../src/vocabulary.js";
+import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
 
 // AUTHORING.md is the primer agents read before writing a block, and the
 // package ships it. These tests read the file itself, so its examples, its
@@ -73,6 +73,10 @@ describe("AUTHORING.md", () => {
     expect(bodies).toEqual([deleteConfirmation, archivedBanner]);
   });
 
+  it("shows the document list page exactly as written", () => {
+    expect(blocks(section("A page")).map((block) => block.body)).toEqual([documentList]);
+  });
+
   describe("common mistakes", () => {
     // The blocks under each mistake's heading.
     const mistakes = new Map<string, Block[]>();
@@ -91,6 +95,7 @@ describe("AUTHORING.md", () => {
         "A label that starts with `word=`",
         "A button outside a row",
         "A label on a banner or a row",
+        "Anything but a cell in a table row",
         "A root inside another node",
         "An unknown kind, variant or icon",
       ]);
@@ -109,11 +114,17 @@ describe("AUTHORING.md", () => {
   });
 
   describe("kinds", () => {
-    const PLACES: Record<KindRule["place"], string> = {
-      top: "at the top level",
-      root: "directly inside a root",
-      row: "directly inside a `row`",
+    const PLACES: Record<Place, string> = {
+      top: "",
+      root: "a root",
+      row: "a `row`",
+      table: "a `table`",
+      "table row": "a table `row`",
+      toggle: "a `toggle`",
+      cell: "a `cell`",
     };
+    const where = (rule: KindRule): string =>
+      rule.place.includes("top") ? "at the top level" : `directly inside ${rule.place.map((place) => PLACES[place]).join(" or ")}`;
     // `| kind | where | variants | label |` rows of the table under "Kinds".
     const rows = new Map(
       section("Kinds")
@@ -132,7 +143,7 @@ describe("AUTHORING.md", () => {
       it(`says where ${kind} stands, its variants and its label`, () => {
         const row = rows.get(kind);
         expect(row).toBeDefined();
-        expect(row!.where).toBe(PLACES[rule.place]);
+        expect(row!.where).toBe(where(rule));
         expect(backticked(row!.variants, /`\.([a-z-]+)`/g)).toEqual(rule.variants);
         if (rule.variants.length === 0) expect(row!.variants).toBe("none");
         expect(row!.label.startsWith("none")).toBe(!rule.label);

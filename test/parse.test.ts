@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, type WireframeDiagnostic, type WireframeNode } from "../src/index.js";
-import { archivedBanner, deleteConfirmation } from "./samples.js";
+import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
 
 const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): WireframeNode => ({
   kind,
@@ -11,6 +11,9 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
   children: [],
   ...fields,
 });
+
+/** Every kind, as an unknown kind's warning lists them. */
+const KIND_LIST = "dialog, banner, page, text, row, button, icon, input, select, toggle, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -78,12 +81,30 @@ describe("samples", () => {
     });
   });
 
+  it("parses the document list page, with its table rows of cells", () => {
+    const result = parseWireframe(documentList);
+    expect(result.diagnostics).toEqual([]);
+    const outline = (nodes: WireframeNode[], depth = 0): string[] =>
+      nodes.flatMap((n) => [
+        `${"  ".repeat(depth)}${[n.kind, ...n.variants].join(".")}${n.label === "" ? "" : ` ${n.label}`}`,
+        ...outline(n.children, depth + 1),
+      ]);
+    // The source, line for line.
+    expect(outline(result.nodes)).toEqual(documentList.split("\n"));
+    const table = result.nodes[0]?.children.find((child) => child.kind === "table");
+    expect(table?.children.map((row) => [row.line, row.variants, row.children.map((cell) => cell.kind)])).toEqual([
+      [11, ["head"], ["cell", "cell", "cell", "cell", "cell"]],
+      [17, [], ["cell", "cell", "cell", "cell", "cell"]],
+      [27, [], ["cell", "cell", "cell", "cell", "cell"]],
+    ]);
+  });
+
   it("gives the same result with a final line break, as Markdown parsers pass the body", () => {
     expect(parseWireframe(`${archivedBanner}\n`)).toEqual(parseWireframe(archivedBanner));
   });
 
   it("returns plain data that survives JSON", () => {
-    for (const source of [deleteConfirmation, archivedBanner, "card#a.b x=1 Hi\n\tbutton"]) {
+    for (const source of [deleteConfirmation, archivedBanner, documentList, "card#a.b x=1 Hi\n\tbutton"]) {
       const result = parseWireframe(source);
       expect(JSON.parse(JSON.stringify(result))).toEqual(result);
     }
@@ -182,8 +203,8 @@ describe("line grammar", () => {
 
   it("finds no Object.prototype member when given a kind such as constructor", () => {
     expect(warnings("constructor\ntoString")).toEqual([
-      warning(1, 'unknown kind "constructor": expected dialog, banner, text, row, button or icon'),
-      warning(2, 'unknown kind "toString": expected dialog, banner, text, row, button or icon'),
+      warning(1, `unknown kind "constructor": expected ${KIND_LIST}`),
+      warning(2, `unknown kind "toString": expected ${KIND_LIST}`),
     ]);
   });
 });
@@ -196,15 +217,15 @@ describe("warnings", () => {
       node(2, "card", { variants: ["big"], id: "c", label: "Hello", children: [node(3, "text", { label: "Hi" })] }),
     ]);
     expect(result.diagnostics).toEqual([
-      warning(2, 'unknown kind "card": expected dialog, banner, text, row, button or icon'),
-      warning(3, "text must be directly inside dialog or banner"),
+      warning(2, `unknown kind "card": expected ${KIND_LIST}`),
+      warning(3, "text must be directly inside dialog, banner or page"),
     ]);
   });
 
   it("warns when a line has no kind", () => {
     expect(warnings("dialog\n  .muted Hi\n  #x")).toEqual([
-      warning(2, "missing kind: expected dialog, banner, text, row, button or icon"),
-      warning(3, "missing kind: expected dialog, banner, text, row, button or icon"),
+      warning(2, `missing kind: expected ${KIND_LIST}`),
+      warning(3, `missing kind: expected ${KIND_LIST}`),
     ]);
     expect(parseWireframe("dialog\n  .muted Hi").nodes[0]?.children[0]).toEqual(
       node(2, "", { variants: ["muted"], label: "Hi" }),
@@ -214,8 +235,8 @@ describe("warnings", () => {
   it("warns about unknown variants", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning or .danger'),
-      warning(2, 'unknown variant ".big" on text: expected .muted or .strong'),
-      warning(3, 'unknown variant ".start" on row: expected .end'),
+      warning(2, 'unknown variant ".big" on text: expected .muted, .strong or .title'),
+      warning(3, 'unknown variant ".start" on row: expected .end or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
@@ -272,22 +293,130 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog or banner"),
-      warning(2, "row must be directly inside dialog or banner"),
-      warning(3, "icon must be directly inside dialog or banner"),
+      warning(1, "text must be directly inside dialog, banner or page"),
+      warning(2, "row must be directly inside dialog, banner, page or table"),
+      warning(3, "icon must be directly inside dialog, banner or page"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(3, "text must be directly inside dialog or banner"),
-      warning(4, "row must be directly inside dialog or banner"),
-      warning(5, "icon must be directly inside dialog or banner"),
+      warning(3, "text must be directly inside dialog, banner or page"),
+      warning(4, "row must be directly inside dialog, banner, page or table"),
+      warning(5, "icon must be directly inside dialog, banner or page"),
     ]);
   });
 
-  it("warns about a button outside a row", () => {
+  it("warns about a button outside a row or a cell", () => {
     expect(warnings("button Top\ndialog\n  button Inside\n  text Hi\n    button Under")).toEqual([
-      warning(1, "button must be inside row"),
-      warning(3, "button must be inside row"),
-      warning(5, "button must be inside row"),
+      warning(1, "button must be directly inside row or cell"),
+      warning(3, "button must be directly inside row or cell"),
+      warning(5, "button must be directly inside row or cell"),
+    ]);
+  });
+
+  it("warns about a page that is not at the top level, and a label on it", () => {
+    expect(warnings("dialog\n  page\npage Title\n  text.title Title")).toEqual([
+      warning(2, "page must be at the top level"),
+      warning(3, "page takes no label"),
+    ]);
+  });
+
+  it("warns about an input, select or toggle outside a root or a row", () => {
+    expect(warnings("input Search\nselect Any\ntoggle")).toEqual([
+      warning(1, "input must be directly inside dialog, banner, page or row"),
+      warning(2, "select must be directly inside dialog, banner, page or row"),
+      warning(3, "toggle must be directly inside dialog, banner, page or row"),
+    ]);
+    expect(warnings("page\n  table\n    input Search\n    row\n      cell\n        select Any\n        toggle")).toEqual([
+      warning(3, "input must be directly inside dialog, banner, page or row"),
+      warning(6, "select must be directly inside dialog, banner, page or row"),
+      warning(7, "toggle must be directly inside dialog, banner, page or row"),
+    ]);
+    expect(warnings("page\n  input Search\n  select Any\n  toggle\n  row\n    input A\n    select B\n    toggle")).toEqual([]);
+  });
+
+  it("warns about an option outside a toggle, and a toggle's label", () => {
+    expect(warnings("page\n  option Day\n  row\n    option Week\n  toggle Period\n    option.current Day")).toEqual([
+      warning(2, "option must be directly inside toggle"),
+      warning(4, "option must be directly inside toggle"),
+      warning(5, "toggle takes no label"),
+    ]);
+  });
+
+  it("warns about a table outside a root, and a label on a table", () => {
+    expect(warnings("table\npage\n  row\n    table\n  table Documents")).toEqual([
+      warning(1, "table must be directly inside dialog, banner or page"),
+      warning(4, "table must be directly inside dialog, banner or page"),
+      warning(5, "table takes no label"),
+    ]);
+  });
+
+  it("warns about a cell anywhere but directly inside a table row", () => {
+    expect(warnings("cell A\npage\n  cell B\n  row\n    cell C\n  table\n    cell D\n    row\n      cell\n        cell E")).toEqual([
+      warning(1, "cell must be directly inside a table row"),
+      warning(3, "cell must be directly inside a table row"),
+      warning(5, "cell must be directly inside a table row"),
+      warning(7, "cell must be directly inside a table row"),
+      warning(10, "cell must be directly inside a table row"),
+    ]);
+  });
+
+  it("warns about any kind but cell in a table row", () => {
+    const source = [
+      "page",
+      "  table",
+      "    row",
+      "      cell A",
+      "      button Go",
+      "      chip web",
+      "      text Hi",
+      "      row",
+      "      card",
+    ].join("\n");
+    expect(warnings(source)).toEqual([
+      warning(5, "button in a table row: expected cell"),
+      warning(6, "chip in a table row: expected cell"),
+      warning(7, "text in a table row: expected cell"),
+      warning(8, "row in a table row: expected cell"),
+      warning(9, `unknown kind "card": expected ${KIND_LIST}`),
+    ]);
+  });
+
+  it("warns about row.head outside a table and row.end inside one", () => {
+    expect(warnings("page\n  row.head\n  table\n    row.end\n      cell A\n    row.head\n      cell B")).toEqual([
+      warning(2, "row.head must be directly inside table"),
+      warning(4, "row.end must be directly inside dialog, banner or page"),
+    ]);
+  });
+
+  it("warns about a chip outside a row or a cell", () => {
+    expect(warnings("chip web\npage\n  chip spec\n  row\n    chip ok\n  table\n    row\n      cell\n        chip ok")).toEqual([
+      warning(1, "chip must be directly inside row or cell"),
+      warning(3, "chip must be directly inside row or cell"),
+    ]);
+  });
+
+  it("warns about unknown variants on the new kinds", () => {
+    const source = [
+      "page.wide",
+      "  input.large Search",
+      "  select.open Any",
+      "  toggle.small",
+      "    option.selected Day",
+      "  table.striped",
+      "    row.head",
+      "      cell.start A",
+      "    row",
+      "      cell",
+      "        chip.danger web",
+    ].join("\n");
+    expect(warnings(source)).toEqual([
+      warning(1, 'unknown variant ".wide": page takes no variants'),
+      warning(2, 'unknown variant ".large": input takes no variants'),
+      warning(3, 'unknown variant ".open": select takes no variants'),
+      warning(4, 'unknown variant ".small": toggle takes no variants'),
+      warning(5, 'unknown variant ".selected" on option: expected .current'),
+      warning(6, 'unknown variant ".striped": table takes no variants'),
+      warning(8, 'unknown variant ".start" on cell: expected .end'),
+      warning(11, 'unknown variant ".danger" on chip: expected .more'),
     ]);
   });
 
@@ -299,7 +428,7 @@ describe("warnings", () => {
 
   it("cuts long source text short inside a message", () => {
     expect(warnings(`${"x".repeat(100)} label`)).toEqual([
-      warning(1, `unknown kind "${"x".repeat(40)}…": expected dialog, banner, text, row, button or icon`),
+      warning(1, `unknown kind "${"x".repeat(40)}…": expected ${KIND_LIST}`),
     ]);
   });
 });
@@ -317,7 +446,7 @@ describe("errors", () => {
       error(2, "indentation must be a multiple of two spaces, found 3"),
       error(3, "indentation must be a multiple of two spaces, found 1"),
       // Recovered at depth 0, a row is out of place too.
-      warning(3, "row must be directly inside dialog or banner"),
+      warning(3, "row must be directly inside dialog, banner, page or table"),
     ]);
   });
 
@@ -445,6 +574,7 @@ describe("robustness", () => {
   const pieces = [
     "dialog", "banner", "text", "row", "button", "icon", "card", ".", "#", "=", "a=", '"', "\\", " ", "  ",
     "\t", "\n", "\r\n", "\r", "x", "é", "“", "end", "focus", "archive", "😀",
+    "page", "table", "cell", "chip", "toggle", "option", "input", "select", "head", "\n  ", "\n    ",
   ];
 
   it("never throws, keeps one node per non-blank line and returns plain data", () => {

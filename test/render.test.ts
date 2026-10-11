@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, renderWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
 import { ICONS } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation, vocabulary } from "./samples.js";
+import { archivedBanner, deleteConfirmation, documentList, vocabulary } from "./samples.js";
 
 /** Render a source that must render, with or without warnings. */
 const render = (source: string): HTMLElement => {
@@ -56,6 +56,47 @@ describe("samples", () => {
       "  div.wf-row.wf-end",
       "    span.wf-button Restore",
       "    span.wf-button.wf-link.wf-danger Delete…",
+    ]);
+  });
+
+  it("draws the document list as a framed page: title, count, search, filters and a table of cells", () => {
+    expect(drawn(documentList)).toEqual([
+      "div.wf-page",
+      "  div.wf-text.wf-title All documents",
+      "  div.wf-text.wf-muted 24 documents",
+      "  div.wf-input Search titles",
+      "  div.wf-row",
+      "    div.wf-toggle",
+      "      span.wf-option.wf-current Documents",
+      "      span.wf-option Decisions",
+      "    span.wf-select Any tag",
+      "      svg.wf-select-caret",
+      "        path",
+      "  div.wf-table",
+      "    div.wf-row.wf-head",
+      "      div.wf-cell Title",
+      "      div.wf-cell Group",
+      "      div.wf-cell Tags",
+      "      div.wf-cell.wf-end Changed",
+      "      div.wf-cell",
+      "    div.wf-row",
+      "      div.wf-cell Web UI system",
+      "      div.wf-cell Getting started",
+      "      div.wf-cell",
+      "        span.wf-chip web",
+      "        span.wf-chip spec",
+      "        span.wf-chip.wf-more +2",
+      "      div.wf-cell.wf-end 2 hours ago",
+      "      div.wf-cell",
+      "        span.wf-button.wf-link pin",
+      "    div.wf-row",
+      "      div.wf-cell Card blocks",
+      "      div.wf-cell",
+      "      div.wf-cell",
+      "        span.wf-chip markdown",
+      "      div.wf-cell.wf-end 3 days ago",
+      "      div.wf-cell",
+      "        span.wf-button.wf-link pin",
     ]);
   });
 
@@ -139,6 +180,80 @@ describe("kinds and variants", () => {
     }
   });
 
+  it("draws a page as a frame holding its children, with text.title as its title", () => {
+    expect(drawn("page\n  text.title All documents\n  text Body")).toEqual([
+      "div.wf-page",
+      "  div.wf-text.wf-title All documents",
+      "  div.wf-text Body",
+    ]);
+    expect(drawn("page")).toEqual(["div.wf-page"]);
+  });
+
+  it("draws an input with its placeholder, or empty", () => {
+    expect(drawn("page\n  input Search titles\n  input\n  row\n    input Name")).toEqual([
+      "div.wf-page",
+      "  div.wf-input Search titles",
+      "  div.wf-input",
+      "  div.wf-row",
+      "    div.wf-input Name",
+    ]);
+  });
+
+  it("draws a select as its value and a caret that is no icon", () => {
+    expect(drawn("page\n  select Any tag\n  select")).toEqual([
+      "div.wf-page",
+      "  span.wf-select Any tag",
+      "    svg.wf-select-caret",
+      "      path",
+      "  span.wf-select",
+      "    svg.wf-select-caret",
+      "      path",
+    ]);
+    const svg = render("page\n  select Any tag").querySelector(".wf-select > svg")!;
+    expect(svg.namespaceURI).toBe("http://www.w3.org/2000/svg");
+    expect(svg.getAttribute("viewBox")).toBe("0 0 16 16");
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
+    expect(svg.querySelector("path")?.getAttribute("d")).toBe("M3.5 6h9L8 11z");
+    expect(render("page\n  select Any tag").querySelector(".wf-icon")).toBeNull();
+  });
+
+  it("draws a toggle's options, the current one marked", () => {
+    expect(drawn("page\n  toggle\n    option Day\n    option.current Week\n    option Month")).toEqual([
+      "div.wf-page",
+      "  div.wf-toggle",
+      "    span.wf-option Day",
+      "    span.wf-option.wf-current Week",
+      "    span.wf-option Month",
+    ]);
+  });
+
+  it("draws a table's rows of cells, a header row, end cells and empty ones", () => {
+    expect(drawn("page\n  table\n    row.head\n      cell Name\n      cell.end Size\n    row\n      cell\n      cell.end 18 KB")).toEqual([
+      "div.wf-page",
+      "  div.wf-table",
+      "    div.wf-row.wf-head",
+      "      div.wf-cell Name",
+      "      div.wf-cell.wf-end Size",
+      "    div.wf-row",
+      "      div.wf-cell",
+      "      div.wf-cell.wf-end 18 KB",
+    ]);
+  });
+
+  it("draws chips, .more and buttons in a cell, and chips in a row", () => {
+    expect(drawn("page\n  row\n    chip web\n    chip.more +1\n  table\n    row\n      cell Tags\n        chip spec\n        button.link pin")).toEqual([
+      "div.wf-page",
+      "  div.wf-row",
+      "    span.wf-chip web",
+      "    span.wf-chip.wf-more +1",
+      "  div.wf-table",
+      "    div.wf-row",
+      "      div.wf-cell Tags",
+      "        span.wf-chip spec",
+      "        span.wf-button.wf-link pin",
+    ]);
+  });
+
   it("draws several roots one after another", () => {
     const root = render(`${deleteConfirmation}\n\n${archivedBanner}`);
     expect([...root.children].map((child) => child.className)).toEqual(["wf-dialog", "wf-banner wf-warning"]);
@@ -213,6 +328,31 @@ describe("warnings", () => {
     ]);
   });
 
+  it("draws misplaced table kinds as their kind, where they were written", () => {
+    const source = "page\n  cell Loose\n  row.head\n    option Day\n  table\n    row.end\n      button Go\n      cell A";
+    expect(drawn(source)).toEqual([
+      "div.wf-page",
+      "  div.wf-cell Loose",
+      "  div.wf-row.wf-head",
+      "    span.wf-option Day",
+      "  div.wf-table",
+      "    div.wf-row.wf-end",
+      "      span.wf-button Go",
+      "      div.wf-cell A",
+    ]);
+  });
+
+  it("draws a label on a page, toggle or table as text", () => {
+    expect(drawn("page Home\n  toggle Period\n  table Files")).toEqual([
+      "div.wf-page",
+      "  span.wf-text Home",
+      "  div.wf-toggle",
+      "    span.wf-text Period",
+      "  div.wf-table",
+      "    span.wf-text Files",
+    ]);
+  });
+
   it("draws the children of a kind that takes none inside it", () => {
     expect(drawn("dialog\n  row\n    button Go\n      text Inside")).toEqual([
       "div.wf-dialog",
@@ -278,6 +418,16 @@ describe("inert output", () => {
     '  text "javascript:alert(1)"',
     "banner.warning style=position:fixed",
     "  text <%= x %> {{x}} </div><div>",
+    "page",
+    "  select <img src=x onerror=alert(1)>",
+    "  input javascript:alert(1)",
+    "  toggle",
+    "    option.onclick <b>Day</b>",
+    "  table",
+    "    row.head",
+    "      cell <script>alert(1)</script>",
+    "      cell",
+    "        chip.more <i>+2</i>",
   ].join("\n");
 
   it("shows labels exactly as written, as text", () => {
@@ -289,6 +439,11 @@ describe("inert output", () => {
     expect(root.querySelector(".wf-button.wf-primary")?.textContent).toBe("<b>Go</b>");
     expect(root.querySelector(".wf-icon-unknown")?.textContent).toBe("<svg onload=alert(1)>");
     expect(root.querySelector(".wf-banner > .wf-text")?.textContent).toBe("<%= x %> {{x}} </div><div>");
+    expect(root.querySelector(".wf-select")?.textContent).toBe("<img src=x onerror=alert(1)>");
+    expect(root.querySelector(".wf-input")?.textContent).toBe("javascript:alert(1)");
+    expect(root.querySelector(".wf-option")?.textContent).toBe("<b>Day</b>");
+    expect(root.querySelector(".wf-cell")?.textContent).toBe("<script>alert(1)</script>");
+    expect(root.querySelector(".wf-chip.wf-more")?.textContent).toBe("<i>+2</i>");
   });
 
   it("emits only its own elements and attributes", () => {
@@ -326,6 +481,7 @@ describe("robustness", () => {
   const pieces = [
     "dialog", "banner", "text", "row", "button", "icon", "card", ".", "#", "=", "a=", '"', "\\", " ", "  ",
     "\t", "\n", "\r\n", "\n  ", "\n    ", "x", "<b>", "end", "focus", "danger", "link", "archive", "😀",
+    "page", "table", "cell", "chip", "toggle", "option", "input", "select", "head", "title", "\n      ",
   ];
 
   it("never throws, and draws every node of a renderable result", () => {

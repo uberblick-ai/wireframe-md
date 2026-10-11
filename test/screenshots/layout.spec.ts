@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { archivedBanner, deleteConfirmation, PROPERTIES, vocabulary } from "../samples.js";
+import { archivedBanner, deleteConfirmation, documentList, PROPERTIES, vocabulary } from "../samples.js";
 import { open, show } from "./page.js";
 
 // Layout and theming in a real browser. These compare renders within one run,
@@ -82,12 +82,129 @@ test.describe("fit", () => {
     expect(banner!.x + banner!.width - boxes.at(-1)!.right).toBeLessThan(16);
   });
 
+  test("the document list fits a 710 px column at full size", async ({ page }) => {
+    await show(page, documentList, { host: "column" });
+    expect(await measure(page)).toEqual({
+      root: { width: 710, scrollWidth: 710 },
+      column: { width: 710, scrollWidth: 710 },
+      escaped: [],
+    });
+    // Nothing wraps: the title, the count, the filter row, the field and every cell are one line each.
+    for (const selector of [".wf-title", ".wf-page > .wf-muted", ".wf-page > .wf-row", ".wf-input"]) {
+      expect(await lines(page, selector), selector).toBe(1);
+    }
+    // A cell's content is on one line when all its boxes overlap vertically; an empty cell has none.
+    const cells = await page.evaluate(() =>
+      [...document.querySelectorAll(".wf-cell")].map((cell) => {
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const rects = [...range.getClientRects()].filter((rect) => rect.height > 0);
+        if (rects.length === 0) return 0;
+        return Math.max(...rects.map((rect) => rect.top)) < Math.min(...rects.map((rect) => rect.bottom)) ? 1 : 2;
+      }),
+    );
+    expect(cells).toEqual([1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1]);
+  });
+
+  test("the document list's table has rules under the header and between rows, and no other lines", async ({ page }) => {
+    await show(page, documentList, { host: "column" });
+    const borders = await page.evaluate(() => {
+      const width = (element: Element, side: string): number =>
+        Number.parseFloat(getComputedStyle(element).getPropertyValue(`border-${side}-width`));
+      const table = document.querySelector(".wf-table")!;
+      const rows = [...table.children];
+      return {
+        table: ["top", "right", "bottom", "left"].map((side) => width(table, side)),
+        rows: rows.map((row) => ["top", "right", "bottom", "left"].map((side) => width(row, side))),
+        // The top border of each row's cells, and whether any cell has a side or bottom border.
+        cells: rows.map((row) => [...row.children].map((cell) => width(cell, "top"))),
+        sides: [...table.querySelectorAll(".wf-cell")].some((cell) =>
+          ["right", "bottom", "left"].some((side) => width(cell, side) > 0),
+        ),
+      };
+    });
+    expect(borders).toEqual({
+      table: [0, 0, 0, 0],
+      rows: [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+      cells: [
+        [0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+      ],
+      sides: false,
+    });
+  });
+
+  test("the document list's columns line up, Changed on the right in tabular figures", async ({ page }) => {
+    await show(page, documentList, { host: "column" });
+    const columns = await page.evaluate(() =>
+      [...document.querySelectorAll(".wf-table > .wf-row")].map((row) =>
+        [...row.children].map((cell) => {
+          const { left, right } = cell.getBoundingClientRect();
+          return { left: Math.round(left), right: Math.round(right) };
+        }),
+      ),
+    );
+    expect(columns[1]).toEqual(columns[0]);
+    expect(columns[2]).toEqual(columns[0]);
+    const changed = await page.evaluate(() =>
+      [...document.querySelectorAll(".wf-cell.wf-end")].map((cell) => {
+        const style = getComputedStyle(cell);
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        // The space between the text's right edge and the cell's padding box.
+        const gap = cell.getBoundingClientRect().right - Number.parseFloat(style.paddingRight) - range.getBoundingClientRect().right;
+        return { textAlign: style.textAlign, numeric: style.fontVariantNumeric, gap: Math.round(gap) };
+      }),
+    );
+    expect(changed).toEqual(Array(3).fill({ textAlign: "end", numeric: "tabular-nums", gap: 0 }));
+  });
+
+  test("an empty input is as tall as one with a placeholder, and an input in a row takes the room left", async ({ page }) => {
+    await show(page, "page\n  input Search titles\n  input\n  row\n    input Search\n    button Go", { host: "column" });
+    const [full, empty, inRow] = await Promise.all(
+      [0, 1, 2].map((index) => page.locator(".wf-input").nth(index).boundingBox()),
+    );
+    expect(empty!.height).toBe(full!.height);
+    expect(empty!.width).toBe(full!.width);
+    const button = await page.locator(".wf-button").boundingBox();
+    // The row's input and button fill the page's width between them.
+    expect(Math.round(button!.x + button!.width - inRow!.x)).toBe(Math.round(full!.width));
+  });
+
+  test("a toggle's options and a select share one line, the caret after the value", async ({ page }) => {
+    await show(page, documentList, { host: "column" });
+    const boxes = await page.evaluate(() =>
+      [...document.querySelectorAll(".wf-option, .wf-select, .wf-select-caret")].map((element) => {
+        const { left, right, top, bottom } = element.getBoundingClientRect();
+        return { left, right, top, bottom };
+      }),
+    );
+    expect(Math.max(...boxes.map((box) => box.top))).toBeLessThan(Math.min(...boxes.map((box) => box.bottom)));
+    const [, , select, caret] = boxes;
+    expect(caret!.left).toBeGreaterThan(select!.left);
+    expect(caret!.right).toBeLessThanOrEqual(select!.right);
+    const separator = await page.evaluate(
+      () => getComputedStyle(document.querySelectorAll(".wf-option")[1]!, "::before").content,
+    );
+    expect(separator).toBe('"·"');
+  });
+
   const wide = {
     "a row of many buttons": `dialog Pick one\n  row.end\n${"    button Option\n".repeat(25)}`,
     "a long word in a dialog": `dialog Title\n  text ${"x".repeat(300)}`,
     "a long word in a banner": `banner\n  text ${"x".repeat(300)}\n  row.end\n    button Restore`,
     "a long button caption": `banner\n  row\n    button ${"x".repeat(300)}`,
     "a row of buttons at the top level": `row\n${"  button Option\n".repeat(25)}`,
+    "a table of many columns": `page\n  table\n    row\n${"      cell Column\n".repeat(25)}`,
+    "a long word in a table cell": `page\n  table\n    row\n      cell ${"x".repeat(300)}\n      cell.end 2 hours ago`,
+    "a long word in a page's title": `page\n  text.title ${"x".repeat(100)}`,
+    "a long word in an input": `page\n  row\n    input ${"x".repeat(300)}\n    select Any tag`,
+    "a row of many chips": `page\n  row\n${"    chip release\n".repeat(25)}`,
   };
   for (const [name, source] of Object.entries(wide)) {
     for (const layout of ["block", "flex", "grid"] as const) {
@@ -261,6 +378,10 @@ test.describe("theming", () => {
       "dialog T\n  row\n    button.huge.end Go",
     ],
     "an unknown variant on a banner adds no styling": ["banner\n  text Hi", "banner.purple\n  text Hi"],
+    "an unknown variant on a page, a table, a cell or a chip adds no styling": [
+      "page\n  table\n    row\n      cell Hi\n      cell\n        chip web",
+      "page.wide\n  table.striped\n    row\n      cell.big Hi\n      cell\n        chip.red web",
+    ],
   };
   for (const [name, [plain, varied]] of Object.entries(same)) {
     test(name, async ({ page }) => {

@@ -1,0 +1,5 @@
+page
+  input Search the titles, tags and groups of every document in this workspace, archived ones included
+  row
+    input Search the titles, tags and groups of every document
+    select Infrastructure and operations

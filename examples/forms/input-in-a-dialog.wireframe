@@ -1,0 +1,5 @@
+dialog Rename “Q3 launch draft”
+  input Q3 launch draft
+  row.end
+    button Cancel
+    button.primary Rename

@@ -1,0 +1,11 @@
+page
+  toggle
+    option.current Documents
+    option Decisions
+  toggle
+    option All
+    option.current Open
+    option Closed
+  toggle
+    option Day
+    option Week
