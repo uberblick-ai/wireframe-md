@@ -17,8 +17,8 @@ const SVG = "http://www.w3.org/2000/svg";
 // 16×16 stroke paths, keyed by the names the vocabulary allows.
 const ICON_PATHS: ReadonlyMap<string, string> = new Map([["archive", "M2 3h12v3H2zM3 6v7h10V6M6.5 9h3"]]);
 
-// The select's ▾, a filled 16×16 triangle. It belongs to select and is no icon name.
-const CARET_PATH = "M3.5 6h9L8 11z";
+// The select's stroked 16×16 chevron-down. It belongs to select and is no icon name.
+const CHEVRON_PATH = "M4 6l4 4 4-4";
 
 // Kinds that sit in a line of text or a row; the rest are blocks.
 const INLINE: readonly string[] = ["button", "icon", "select", "option", "chip"];
@@ -68,9 +68,9 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       element.append(icon(document, node.label));
       break;
     case "select":
-      // The chosen value, then the caret.
+      // The chosen value, then the chevron-down.
       element.textContent = node.label;
-      element.append(glyph(document, "wf-select-caret", CARET_PATH));
+      element.append(glyph(document, "wf-select-caret", CHEVRON_PATH));
       break;
     default:
       // A banner, page, row, toggle or table takes no label. One written anyway has a warning and draws as text.

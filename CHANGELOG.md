@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `select` draws as a bordered closed form control with the input's geometry,
+  its chosen value in ink and a muted stroked chevron-down. It stretches on its
+  own, keeps its content's width in a row, and scrolls long values inside the
+  wireframe.
 - `AUTHORING.md`, a primer for agents writing ```` ```wireframe ```` blocks,
   ships in the package as `@uberblick/wireframe/AUTHORING.md`: the grammar,
   every kind, both samples and the common mistakes, each with the diagnostic it

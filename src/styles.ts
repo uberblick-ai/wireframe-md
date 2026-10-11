@@ -11,10 +11,10 @@
 // Public properties:
 //   --wf-ink           text, and the secondary button's caption
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
-//                      an input's placeholder, a select's caret, options but the current one, a table's
+//                      an input's placeholder, a select's chevron-down, options but the current one, a table's
 //                      header row and chip.more
 //   --wf-paper         the dialog card, a page and the secondary button's fill
-//   --wf-line          borders: the card, a page, buttons, inputs, the banner's base and unknown boxes;
+//   --wf-line          borders: the card, a page, buttons, inputs, selects, the banner's base and unknown boxes;
 //                      a table's rules; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
@@ -25,9 +25,9 @@
 //   --wf-info, --wf-warning                     a banner's icon, also mixed into its border
 //   --wf-neutral-tint, --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint         a banner's fill
-//   --wf-stroke        border width; icon strokes are one and a half times it
+//   --wf-stroke        border width; icon and select chevron strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
-//   --wf-radius        buttons, banners, inputs, chips and unknown boxes
+//   --wf-radius        buttons, banners, inputs, selects, chips and unknown boxes
 //   --wf-radius-lg     the dialog's card and scrim, and a page
 //   --wf-text-size     the base type size; spacing and chips scale with it
 //   --wf-title-size    the dialog's title; text.title is one and a half times it
@@ -108,8 +108,8 @@ const STYLES = `.wf-root {
 /* In a column, block kinds take the full width, but never less than their
    content needs: a row of many buttons, a wide table or a long word widens its
    box, and the root scrolls. */
-.wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-table, .wf-unknown),
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-table, .wf-unknown) {
+.wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown),
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
   justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
@@ -291,9 +291,10 @@ const STYLES = `.wf-root {
   outline-offset: var(--_wf-focus-width);
 }
 
-/* A field with no fill, showing its placeholder. It holds the line height of
-   text even when empty, and takes the room a row leaves. */
-.wf-root .wf-input {
+/* Fields share their border, radius, padding and height, with no fill. They
+   hold the line height of text even when empty. */
+.wf-root .wf-input,
+.wf-root .wf-select {
   box-sizing: border-box;
   min-height: calc(2.15em + 2 * var(--_wf-stroke));
   margin: 0;
@@ -301,6 +302,10 @@ const STYLES = `.wf-root {
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius);
   background: transparent;
+}
+
+/* An input shows its placeholder and takes the room a row leaves. */
+.wf-root .wf-input {
   color: var(--_wf-muted);
 }
 
@@ -308,18 +313,19 @@ const STYLES = `.wf-root {
   flex: 1 1 12em;
 }
 
-/* The chosen value and a caret, with no box. */
+/* A closed select: its value in ink and a chevron at the far end. It takes its
+   content's width in a row; a long value stays on one line and widens the box. */
 .wf-root .wf-select {
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 0.25em;
-  margin: 0;
+  gap: 0.5em;
+  color: var(--_wf-ink);
   white-space: nowrap;
 }
 
-/* Filters in a row keep apart, as they have no box. */
-.wf-root .wf-row > :is(.wf-select, .wf-toggle):not(:last-child) {
+/* A borderless toggle keeps apart from the next control. */
+.wf-root .wf-row > .wf-toggle:not(:last-child) {
   margin-inline-end: 0.75em;
 }
 
@@ -328,7 +334,7 @@ const STYLES = `.wf-root {
   flex: none;
   width: 1em;
   height: 1em;
-  fill: currentColor;
+  margin-inline-start: auto;
   color: var(--_wf-muted);
 }
 
@@ -445,6 +451,10 @@ const STYLES = `.wf-root {
   display: block;
   width: 1.15em;
   height: 1.15em;
+}
+
+.wf-root .wf-icon-glyph,
+.wf-root .wf-select-caret {
   fill: none;
   stroke: currentColor;
   stroke-width: calc(1.5 * var(--_wf-stroke));

@@ -105,9 +105,15 @@ screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
 `button.link.danger` a destructive text button.
 
-An `input` is an empty field showing its placeholder. A `select` is its value and
-a ▾ caret, with no box; the caret comes with it, so don't add an `icon`. A
-`toggle` draws its options on one line, separated by `·`. A `chip` is a small
+An `input` is an empty bordered field showing its placeholder in muted. A
+`select` is a closed select with the same border, radius, height and padding as
+an input, with no fill, its chosen value in ink and a muted stroked chevron-down
+at the end. The chevron belongs to select and is not an `icon` name. Both fields
+take the full width on their own; in a `row`, a select takes its content's width
+and an input fills the room left. A long select value stays on one line and
+widens its box; overflow scrolls inside the wireframe, never the page.
+
+A `toggle` draws its options on one line, separated by `·`. A `chip` is a small
 neutral tag, and `chip.more` the count of the tags that don't show.
 
 A `row` directly inside a `table` is a table row: it holds only `cell` lines, and

@@ -199,7 +199,7 @@ describe("kinds and variants", () => {
     ]);
   });
 
-  it("draws a select as its value and a caret that is no icon", () => {
+  it("draws a select as its value and a chevron-down that is no icon", () => {
     expect(drawn("page\n  select Any tag\n  select")).toEqual([
       "div.wf-page",
       "  span.wf-select Any tag",
@@ -213,7 +213,7 @@ describe("kinds and variants", () => {
     expect(svg.namespaceURI).toBe("http://www.w3.org/2000/svg");
     expect(svg.getAttribute("viewBox")).toBe("0 0 16 16");
     expect(svg.getAttribute("aria-hidden")).toBe("true");
-    expect(svg.querySelector("path")?.getAttribute("d")).toBe("M3.5 6h9L8 11z");
+    expect(svg.querySelector("path")?.getAttribute("d")).toBe("M4 6l4 4 4-4");
     expect(render("page\n  select Any tag").querySelector(".wf-icon")).toBeNull();
   });
 

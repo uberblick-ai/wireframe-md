@@ -110,12 +110,19 @@ host can resolve it from the installed package, for example with
 | `button` | directly inside a `row` or a `cell` | `.primary`, `.danger`, `.link`, `.focus` | the caption |
 | `icon` | directly inside a root | none | its name: `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
-| `select` | directly inside a root or a `row` | none | the chosen value |
+| `select` | directly inside a root or a `row` | none | the chosen value, in a bordered closed select with a chevron-down |
 | `toggle` | directly inside a root or a `row` | none | none; its options are `option` lines |
 | `option` | directly inside a `toggle` | `.current` | the caption |
 | `table` | directly inside a root | none | none |
 | `cell` | directly inside a table row | `.end` right-aligns, with tabular figures | its text, or none |
 | `chip` | directly inside a `row` or a `cell` | `.more` is the count of the rest | the tag, or the count |
+
+A `select` shares the input's border, radius, height and padding, with no fill,
+its value in ink and a muted stroked chevron-down at the end. The chevron belongs
+to select and is not an icon name. Like an input, a select on its own takes the
+full width. In a row it takes its content's width while an input fills the room
+left. A long value stays on one line and widens its box; overflow scrolls inside
+the wireframe, never the page.
 
 ## Theming
 
@@ -128,9 +135,9 @@ inherits.
 | Property | Controls | Light default | Dark default |
 | --- | --- | --- | --- |
 | `--wf-ink` | text, and the secondary button's caption | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
-| `--wf-muted` | `text.muted`, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's caret, options but the current one, a table's header row, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
+| `--wf-muted` | `text.muted`, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
 | `--wf-paper` | the dialog's card, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
-| `--wf-line` | borders: the card, a page, buttons, inputs, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
+| `--wf-line` | borders: the card, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
 | `--wf-shadow` | the dialog card's `box-shadow` | `0 6px 20px oklch(0 0 0 / 10%)` | `0 6px 20px oklch(0 0 0 / 45%)` |
 | `--wf-primary` | `button.primary`'s fill, and `button.link.primary`'s caption | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
@@ -149,9 +156,9 @@ The sizes are the same in light and dark.
 
 | Property | Controls | Default |
 | --- | --- | --- |
-| `--wf-stroke` | border width; icon strokes are one and a half times it | `1px` |
+| `--wf-stroke` | border width; icon and select chevron strokes are one and a half times it | `1px` |
 | `--wf-focus-width` | the focus ring's width | `2px` |
-| `--wf-radius` | buttons, banners, inputs, chips and unknown boxes | `6px` |
+| `--wf-radius` | buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
 | `--wf-text-size` | the base type size; spacing and chips scale with it | `0.875rem` |
 | `--wf-title-size` | the dialog's title; `text.title` is one and a half times it | `1rem` |
