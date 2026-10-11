@@ -16,10 +16,13 @@
   "scripts": {
     "lint": "biome lint --error-on-warnings .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "screenshots": "playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.9",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@playwright/test": "^1.64.0",
     "jsdom": "^30.0.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"

@@ -18,3 +18,7 @@ run = "pnpm typecheck"
 [tasks.test]
 description = "Run the test suite"
 run = "pnpm test"
+
+[tasks.screenshots]
+description = "Browser checks and golden screenshots (needs `pnpm exec playwright install chromium`; goldens come from CI)"
+run = "pnpm screenshots"
