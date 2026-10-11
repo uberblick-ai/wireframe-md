@@ -16,6 +16,6 @@ describe("the playground catalog", () => {
   });
   it("hides ordering numbers and retains the existing label convention", () => {
     expect(folderLabel("1-basic-inputs")).toBe("Basic inputs");
-    expect(folderLabel("banners-and-confirmations")).toBe("Banners & confirmations");
+    expect(folderLabel("badges-and-banners")).toBe("Badges & banners");
   });
 });

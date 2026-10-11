@@ -233,8 +233,8 @@ request, so a reload shows the current code without a build.
   a folder and stays out of its label: `1-basic-inputs` reads "Basic inputs" and
   comes before `2-simple-forms` and `10-advanced-forms`. Numbered folders come
   first, in number order; the rest follow alphabetically. Labels otherwise
-  follow the usual convention: `banners-and-confirmations` reads "Banners &
-  confirmations". Examples within an entry sort by name.
+  follow the usual convention: `badges-and-banners` reads "Badges & banners".
+  Examples within an entry sort by name.
 - **Save**, or Ctrl+S / ⌘S in an editor, saves that example. Approve records
   only the saved source and refuses errors. A source with an error keeps its own
   last good render, marked stale. Leaving a page with any unsaved edits asks
