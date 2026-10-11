@@ -204,7 +204,7 @@ request, so a reload shows the current code without a build.
   bare page and Uberblick's 710 px document column.
 - The sidebar lists the examples in `examples/`: one `.wireframe` file each,
   holding the body of a ```` ```wireframe ```` block without its fences. A
-  folder in `examples/`, such as `samples/`, is a group: a collapsible section
+  folder in `examples/`, such as `reference/`, is a group: a collapsible section
   in the sidebar that counts the examples in it still to review. Open an example
   to edit it, save it with **Save** (Ctrl+S or ⌘S), or save the editor's source
   as a new example, named `group/name` to put it in a group. `mise run test` fails when an example has an error;

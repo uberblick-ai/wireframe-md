@@ -16,8 +16,8 @@ const examples = readdirSync(folder, { recursive: true, encoding: "utf8" })
 describe("examples", () => {
   it("has the seeds", () => {
     expect(examples).toEqual(expect.arrayContaining([
-        "samples/archived-banner.wireframe",
-        "samples/delete-confirmation.wireframe",
+        "banners-and-confirmations/archived-banner.wireframe",
+        "banners-and-confirmations/delete-confirmation.wireframe",
         "reference/vocabulary.wireframe",
       ]));
   });

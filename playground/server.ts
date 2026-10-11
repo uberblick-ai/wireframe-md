@@ -24,7 +24,7 @@ const FONT = join(ROOT, "node_modules/@fontsource-variable/geist/files/geist-lat
 const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SEGMENT = 64;
 // An example's name: its file name, after its group's folder when it has one,
-// such as samples/delete-confirmation.
+// such as reference/vocabulary.
 const NAME = /^(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Generous for a source within the parser's 64,000 characters, its markup and fingerprint.
 const MAX_BODY = 1_000_000;

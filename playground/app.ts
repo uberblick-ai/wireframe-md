@@ -272,10 +272,10 @@ function rememberCollapsed(key: string, collapsed: boolean): void {
 const groupOf = (name: string): string => (name.includes("/") ? name.slice(0, name.indexOf("/")) : "");
 const leafOf = (name: string): string => name.slice(name.indexOf("/") + 1);
 
-/** A group folder's name as a heading: samples-and-dialogs reads Samples and dialogs. */
+/** A group folder's name as a heading: banners-and-confirmations reads Banners & confirmations. */
 function groupLabel(key: string): string {
   if (key === "") return "Ungrouped";
-  const words = key.replace(/-/g, " ");
+  const words = key.replace(/-and-/g, " & ").replace(/-/g, " ");
   return `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
 }
 
