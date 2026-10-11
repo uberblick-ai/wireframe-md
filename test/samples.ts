@@ -45,7 +45,8 @@ export const documentList = [
   "        chip.more +2",
   "      cell.end 2 hours ago",
   "      cell",
-  "        button.link pin",
+  "        button.link",
+  "          icon pin",
   "    row",
   "      cell Card blocks",
   "      cell",
@@ -53,7 +54,8 @@ export const documentList = [
   "        chip markdown",
   "      cell.end 3 days ago",
   "      cell",
-  "        button.link pin",
+  "        button.link",
+  "          icon pin",
 ].join("\n");
 
 /** The reading and private sketches on the product corpus page "Figma blocks". */
@@ -88,6 +90,7 @@ export const cardBlock = [
 export const vocabulary = [
   "dialog Every kind and variant",
   "  icon archive",
+  "  icon.filled pin",
   "  text Plain text",
   "  text.muted Muted text",
   "  text.strong Strong text",

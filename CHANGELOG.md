@@ -5,6 +5,12 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Icons accept the full Tabler Icons 3.49.0 catalog in outline or `.filled`,
+  directly inside roots, cells and buttons. Buttons may draw an icon alone or
+  before their caption, staying inert. Icons have name-based text alternatives,
+  inherit their context's colour and warn with a fallback for missing styles.
+  The package bundles generated drawings and Tabler's MIT notice, with no runtime
+  dependency or network lookup. `icon archive` now uses Tabler's drawing.
 - Table cells accept `.sortable`, `.ascending` and `.descending` to draw stroked
   sort indicators, including with `.end`. Misplaced or competing sort variants
   warn and still draw the first. Text may stand in a non-table row, allowing

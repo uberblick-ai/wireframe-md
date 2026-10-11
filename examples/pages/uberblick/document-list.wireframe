@@ -23,7 +23,8 @@ page
         chip.more +2
       cell.end 2 hours ago
       cell
-        button.link pin
+        button.link
+          icon pin
     row
       cell Card blocks
       cell
@@ -31,4 +32,5 @@ page
         chip markdown
       cell.end 3 days ago
       cell
-        button.link pin
+        button.link
+          icon pin

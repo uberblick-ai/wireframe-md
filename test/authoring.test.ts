@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseWireframe } from "../src/index.js";
-import { ICONS, KINDS, type KindRule, type Place } from "../src/vocabulary.js";
+import { KINDS, type KindRule, type Place } from "../src/vocabulary.js";
 import { archivedBanner, cardBlock, deleteConfirmation, documentList } from "./samples.js";
 
 // AUTHORING.md is the primer agents read before writing a block, and the
@@ -128,6 +128,7 @@ describe("AUTHORING.md", () => {
       "table row": "a table `row`",
       toggle: "a `toggle`",
       cell: "a `cell`",
+      button: "a `button`",
     };
     const where = (rule: KindRule): string => {
       const inside = rule.place.filter((place) => place !== "top");
@@ -161,8 +162,11 @@ describe("AUTHORING.md", () => {
       });
     }
 
-    it("names every icon the parser allows, and no other", () => {
-      expect(backticked(rows.get("icon")!.label, /`([a-z-]+)`/g)).toEqual(ICONS);
+    it("names Tabler's catalog and valid example names", () => {
+      expect(rows.get("icon")!.label).toContain("Tabler");
+      for (const name of backticked(rows.get("icon")!.label, /`([a-z-]+)`/g)) {
+        expect(parseWireframe(`page\n  icon ${name}`).diagnostics).toEqual([]);
+      }
     });
   });
 

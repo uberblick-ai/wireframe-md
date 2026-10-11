@@ -23,11 +23,11 @@ const REQUIRED = [
   "LICENSE",
   "AUTHORING.md",
   "CHANGELOG.md",
+  "THIRD_PARTY_NOTICES.md",
   "dist/index.js",
   "dist/index.d.ts",
   "dist/styles.css",
 ];
-const OPTIONAL = ["THIRD_PARTY_NOTICES.md"];
 
 // A consumer's TypeScript, compiled against the installed declarations.
 const CONSUMER = `import {
@@ -85,10 +85,16 @@ function checkTarball(tarball: string): void {
     .split("\n")
     .map((entry) => entry.replace(/^package\//, ""));
   for (const file of files) {
-    const allowed = REQUIRED.includes(file) || OPTIONAL.includes(file) || /^dist\/[\w/-]+\.(js|d\.ts)$/.test(file);
+    const allowed = REQUIRED.includes(file) || /^dist\/[\w/-]+\.(js|d\.ts)$/.test(file);
     expect(allowed, `the tarball holds ${file}; only the build, package.json and the docs belong in it`);
   }
   for (const file of REQUIRED) expect(files.includes(file), `the tarball lacks ${file}`);
+  const notice = run("tar", ["-xzOf", tarball, "package/THIRD_PARTY_NOTICES.md"], root).stdout;
+  expect(notice.includes("Tabler Icons") && notice.includes("MIT License") && notice.includes("Paweł Kuna"), "the tarball lacks Tabler's MIT notice");
+  for (const file of files.filter((file) => file.endsWith(".js"))) {
+    const module = run("tar", ["-xzOf", tarball, `package/${file}`], root).stdout;
+    expect(!/(?:from\s*|import\s*\(|require\s*\()\s*["']@tabler\//.test(module), `${file} imports Tabler at runtime`);
+  }
 
   const manifest = JSON.parse(run("tar", ["-xzOf", tarball, "package/package.json"], root).stdout);
   expect(manifest.name === NAME, `package.json names ${manifest.name}, expected ${NAME}`);

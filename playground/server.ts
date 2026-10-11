@@ -88,6 +88,8 @@ async function handle(server: Server, examples: string, request: IncomingMessage
     // The browser's modules: the package's sources and the page's own, not this server.
     const module = /^\/(src|playground)\/([a-z]+)\.js$/.exec(pathname);
     if (module !== null && pathname !== "/playground/server.js") return sendModule(response, `${module[1]}/${module[2]}.ts`);
+    const icons = /^\/src\/generated\/(icons|icon-data-\d+)\.js$/.exec(pathname);
+    if (icons !== null) return sendModule(response, `src/generated/${icons[1]}.ts`);
     if (pathname === "/api/examples") return sendJson(response, 200, { examples: list(examples) });
     throw new Refusal(404, `nothing at ${pathname}`);
   }

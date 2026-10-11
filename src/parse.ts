@@ -1,5 +1,6 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { CELL_SORT_VARIANTS, ICONS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
+import { resolveIcon } from "./icons.js";
+import { CELL_SORT_VARIANTS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -197,8 +198,16 @@ function checkNode(
   if (rule === undefined) return;
 
   if (!rule.label && node.label !== "") warn(`${kind} takes no label`);
-  if (kind === "icon" && !ICONS.includes(node.label)) {
-    warn(`${node.label === "" ? "icon needs a name" : `unknown icon ${quote(node.label)}`}: expected ${list(ICONS)}`);
+  if (kind === "icon") {
+    const requested = node.variants.includes("filled") ? "filled" : "outline";
+    const drawing = resolveIcon(node.label, requested);
+    if (drawing === undefined) {
+      const base = node.label.endsWith("-filled") ? node.label.slice(0, -7) : "";
+      const suggestion = resolveIcon(base, "filled") === undefined ? "" : `; use icon.filled ${base}`;
+      warn(`${node.label === "" ? "icon needs a name" : `unknown icon ${quote(node.label)}`}: expected a Tabler icon name${suggestion}`);
+    } else if (drawing.style !== requested) {
+      warn(`icon ${quote(node.label)} has no ${requested} style: drawing ${drawing.style}`);
+    }
   }
   if (ROOTS.includes(kind)) {
     if (parent !== undefined) warn(`${kind} must be at the top level`);
@@ -230,7 +239,7 @@ function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode |
   if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button") return parent.kind;
   return undefined;
 }
 

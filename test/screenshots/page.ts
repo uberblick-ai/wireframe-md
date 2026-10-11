@@ -50,7 +50,7 @@ export async function open(page: Page): Promise<void> {
     const { pathname } = new URL(route.request().url());
     if (pathname === "/") return route.fulfill({ contentType: "text/html", body: PAGE });
     if (pathname === "/geist.woff2") return route.fulfill({ contentType: "font/woff2", path: FONT });
-    const module = /^\/src\/([a-z]+)\.js$/.exec(pathname)?.[1];
+    const module = /^\/src\/((?:generated\/)?[a-z0-9-]+)\.js$/.exec(pathname)?.[1];
     const source = module === undefined ? undefined : ts.sys.readFile(`${ROOT}src/${module}.ts`);
     if (source === undefined) return route.fulfill({ status: 404 });
     const options = { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext };

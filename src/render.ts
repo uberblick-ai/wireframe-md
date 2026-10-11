@@ -1,4 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
+import { type IconStyle, resolveIcon } from "./icons.js";
 import { CELL_SORT_VARIANTS, KINDS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
@@ -14,10 +15,7 @@ export const ROOT_CLASS = "wf-root";
 
 const SVG = "http://www.w3.org/2000/svg";
 
-// 16×16 stroke paths, keyed by the names the vocabulary allows.
-const ICON_PATHS: ReadonlyMap<string, string> = new Map([["archive", "M2 3h12v3H2zM3 6v7h10V6M6.5 9h3"]]);
-
-// The select's stroked 16×16 chevron-down. It belongs to select and is no icon name.
+// The select's stroked 16×16 chevron-down, separate from the icon catalog.
 const CHEVRON_PATH = "M4 6l4 4 4-4";
 
 // Stroked sort arrows belong to cells, not the icon vocabulary.
@@ -92,7 +90,13 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       break;
     }
     case "icon":
-      element.append(icon(document, node.label));
+      element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline"));
+      break;
+    case "button":
+      // Icons precede the caption; every child still draws, including misplaced ones.
+      if (node.label === "" && node.children.some((child) => child.kind === "icon")) element.classList.add("wf-icon-only");
+      for (const child of node.children.filter((child) => child.kind === "icon")) element.append(draw(document, child));
+      if (node.label !== "") element.append(document.createTextNode(node.label));
       break;
     case "select":
       // The chosen value, then the chevron-down.
@@ -114,6 +118,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   }
   // Children of any kind draw inside it, even where they are misplaced.
   for (const child of node.children) {
+    if (node.kind === "button" && child.kind === "icon") continue;
     (child.kind === "button" && actions !== undefined ? actions : body).append(draw(document, child));
   }
   if (node.kind === "input" || node.kind === "select") {
@@ -143,10 +148,26 @@ function unknown(document: Document, node: WireframeNode): HTMLElement {
 }
 
 /** An allowlisted icon as an inline SVG; any other name draws as a dashed box showing it. */
-function icon(document: Document, name: string): Node {
-  const path = ICON_PATHS.get(name);
-  if (path === undefined) return text(document, "span", ["wf-icon-unknown"], name);
-  return glyph(document, "wf-icon-glyph", path);
+function icon(document: Document, name: string, requested: IconStyle): Node {
+  const drawing = resolveIcon(name, requested);
+  if (drawing === undefined) return text(document, "span", ["wf-icon-unknown"], name);
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("class", `wf-icon-glyph wf-icon-${drawing.style}`);
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", name.replaceAll("-", " "));
+  for (const [d, paint] of drawing.paths) {
+    const shape = document.createElementNS(SVG, "path");
+    shape.setAttribute("d", d);
+    const classes = [
+      ...(paint & 1 ? ["wf-path-fill"] : []),
+      ...(paint & 2 ? ["wf-path-no-stroke"] : []),
+      ...(paint & 4 ? ["wf-path-half-opacity"] : []),
+    ];
+    if (classes.length > 0) shape.setAttribute("class", classes.join(" "));
+    svg.append(shape);
+  }
+  return svg;
 }
 
 /** A 16×16 inline SVG of one path from this file. */
