@@ -38,7 +38,7 @@
   </form>
 </nav>
 
-<main class="pg-main">
+<main class="pg-main" id="pg-main">
   <section class="pg-pane" aria-labelledby="pg-name">
     <div class="pg-bar">
       <h2 id="pg-name">Scratch</h2>
@@ -73,6 +73,15 @@
       <div id="pg-review"></div>
     </div>
   </section>
+</main>
+
+<main class="pg-overview" id="pg-overview" aria-labelledby="pg-overview-title" hidden>
+  <div class="pg-bar">
+    <h2 id="pg-overview-title">Overview</h2>
+    <span class="pg-count" id="pg-overview-count"></span>
+  </div>
+  <p class="pg-hint" id="pg-overview-hint"></p>
+  <ul class="pg-tiles" id="pg-tiles"></ul>
 </main>
 </div>
 </body>
