@@ -34,9 +34,3 @@ page
   text.small.amber Pending. Waiting for a connection.
   text.strong.green Synced. All changes are saved.
   text.blue Information. Sync runs automatically.
-banner.warning
-  icon.filled.green point
-  text The green icon overrides the warning tone.
-  row.end
-    button.primary Sync
-      icon.filled.blue point
