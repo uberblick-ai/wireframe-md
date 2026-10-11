@@ -4,19 +4,23 @@ page
       cell.sortable Name
       cell.sortable Role
       cell.end.descending Documents
+      cell.end.sortable Views
       cell Status
     row
       cell Ada Lovelace
       cell Admin
       cell.end 12
+      cell.end 96
       cell Active
     row
       cell Grace Hopper
       cell Editor
       cell.end 8
+      cell.end 42
       cell Invited
     row
       cell Alan Turing
       cell Reader
       cell.end 3
+      cell.end 17
       cell Active

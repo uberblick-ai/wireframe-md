@@ -3,48 +3,26 @@ page
   table
     row.head
       cell.sortable Title
-      cell.sortable Group
-      cell.end.ascending Changed
     row
       cell Web UI system
-      cell Design
-      cell.end 09:10
     row
       cell Card blocks
-      cell Getting started
-      cell.end 09:25
     row
       cell Release notes
-      cell Product
-      cell.end 09:40
     row
       cell Sync protocol
-      cell Engineering
-      cell.end 10:00
     row
       cell Team handbook
-      cell Operations
-      cell.end 10:15
     row
       cell Search design
-      cell Design
-      cell.end 10:30
     row
       cell API reference
-      cell Engineering
-      cell.end 10:45
     row
       cell Launch checklist
-      cell Product
-      cell.end 11:00
     row
       cell Access policy
-      cell Operations
-      cell.end 11:15
     row
       cell Planning notes
-      cell Product
-      cell.end 11:30
   row.end
     text.muted 1–10 of 24
     button Previous

@@ -1,0 +1,17 @@
+page
+  table
+    row.head
+      cell.sortable Name
+      cell.ascending Role
+      cell.end.descending Documents
+    row
+      cell Ada Lovelace
+      cell Admin
+      cell.end 12
+  row.end
+    text.small.muted 1–10 of 24
+    button Previous
+    button.primary 1
+    button 2
+    button 3
+    button Next
