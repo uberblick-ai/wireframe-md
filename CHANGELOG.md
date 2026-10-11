@@ -5,6 +5,12 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `page width=256` gives a page an optional width in CSS pixels, including its
+  border and padding and capped at its parent's space. Text wraps and content
+  that cannot fit still scrolls inside the wireframe. Widths are digits from 1
+  to 9999; invalid, misplaced and repeated widths warn. Pages without a width
+  stay fluid. The Uberblick sidebar joins the page examples.
+
 - Paired single backticks in `text` labels draw inline monospace spans, including
   small metadata in rows. Spans keep the line's size, weight, colour and wrapping
   and use the new `--wf-mono-font` host property with a system monospace default.

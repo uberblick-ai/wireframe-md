@@ -1,4 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
+import { widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
 import { CELL_SORT_VARIANTS, colourVariants, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
 
@@ -185,15 +186,21 @@ function checkNode(
   else if (node.id !== undefined && !ID.test(node.id)) {
     warn(`invalid id ${quote(`#${node.id}`)}: expected letters, digits, - or _`);
   }
-  let hasFieldLabel = false;
-  for (const { key } of node.attributes) {
-    if (key !== "label") {
-      warn(`unknown attribute ${quote(key)}: expected label on input or select (quote a label that starts with word=)`);
+  const seenAttributes = new Set<string>();
+  for (const { key, value } of node.attributes) {
+    if (key !== "label" && key !== "width") {
+      warn(`unknown attribute ${quote(key)}: expected label on input or select, or width on page (quote a label that starts with word=)`);
       continue;
     }
-    if (hasFieldLabel) warn('repeated attribute "label": the first value is used');
-    hasFieldLabel = true;
-    if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
+    if (seenAttributes.has(key)) warn(`repeated attribute ${quote(key)}: the first value is used`);
+    seenAttributes.add(key);
+    if (key === "label") {
+      if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
+    } else if (kind !== "page") {
+      warn('attribute "width" is only allowed on page');
+    } else if (widthPixels(value) === undefined) {
+      warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240`);
+    }
   }
   if (rule === undefined) return;
 
