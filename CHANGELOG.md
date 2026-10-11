@@ -5,6 +5,12 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+## 0.2.0
+
+The vocabulary grows from a dialog and a banner to whole pages: tables, form
+fields with labels, toggles, chips, frames, cards and a success banner. Nothing
+that 0.1.0 accepted changes meaning; only some warning texts are reworded.
+
 - `banner.success` marks a positive outcome with a green tint, icon tone and
   border in light and dark, themed through `--wf-success` and `--wf-success-tint`.
   Its accessible summary names it as a success banner. The Banners playground
