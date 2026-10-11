@@ -194,7 +194,7 @@ Uberblick. It is a development tool in `playground/`, outside the package.
 mise run playground
 ```
 
-It starts a server on `localhost`, port 4610 or a free one when that is taken,
+It installs the dependencies first, then starts a server on `localhost`, port 4610 or a free one when that is taken,
 and prints its URL. It renders with the package's sources, transpiled on each
 request, so a reload shows the current code without a build.
 
