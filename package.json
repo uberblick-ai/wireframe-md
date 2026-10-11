@@ -1,6 +1,6 @@
 {
   "name": "@uberblick/wireframe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A small text format for wireframes, rendered as themed HTML. Written by agents, embedded in Uberblick documents.",
   "keywords": [
     "wireframe",
