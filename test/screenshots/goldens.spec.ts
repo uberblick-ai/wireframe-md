@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "../samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "../samples.js";
 import { type Host, open, type Scheme, show } from "./page.js";
 
 // The goldens: both samples from "Samples", and the document list page from the
@@ -9,6 +9,21 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  {
+    name: "card-block",
+    source: cardBlock,
+    intro: "A delivery review lists a recommendation with a label, title, body and footer.",
+  },
+  {
+    name: "card-wrapping-title-and-footer",
+    source: readFileSync(new URL("../../examples/blocks/2-cards/wrapping-title-and-footer.wireframe", import.meta.url), "utf8"),
+    intro: "Long card titles and footers wrap inside the paper box.",
+  },
+  {
+    name: "several-cards",
+    source: readFileSync(new URL("../../examples/blocks/2-cards/several-cards.wireframe", import.meta.url), "utf8"),
+    intro: "Cards stack at full width with a small gap, including a title-only card.",
+  },
   {
     name: "figma-block-reading",
     source: figmaReading,

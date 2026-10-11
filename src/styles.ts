@@ -288,6 +288,17 @@ const STYLES = `.wf-root {
   line-height: 1.25;
 }
 
+/* A direct card title has the dialog title's size; titles elsewhere keep the
+   page size. :where keeps .small free to change only the size when combined. */
+.wf-root :where(.wf-card) > .wf-text.wf-title {
+  font-size: var(--_wf-title-size);
+  line-height: 1.3;
+}
+
+.wf-root .wf-text.wf-small {
+  font-size: calc(0.85 * var(--_wf-text-size));
+}
+
 .wf-root .wf-row {
   display: flex;
   flex: none;

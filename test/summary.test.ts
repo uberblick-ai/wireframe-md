@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, summarizeWireframe } from "../src/index.js";
-import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "./samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "./samples.js";
 
 const summary = (source: string): string => summarizeWireframe(parseWireframe(source));
 
 describe("summarizeWireframe", () => {
+  it("names a top-level card by its first title, or its first text without a title", () => {
+    expect(summary(cardBlock)).toBe("Wireframe: card “Let the launcher install dependencies”");
+    expect(summary("card\n  text Label\n  text.title First title\n  text.title Second title")).toBe("Wireframe: card “First title”");
+    expect(summary("card\n  text Body\n  text Footer")).toBe("Wireframe: card “Body”");
+    expect(summary("card\n  text.title Title\ncard\n  text Second card")).toBe("Wireframe: card “Title”; card “Second card”");
+    expect(summary("card")).toBe("Wireframe: card");
+  });
+
   it("names the dialog's question and the banner's message", () => {
     expect(summary(deleteConfirmation)).toBe("Wireframe: dialog “Delete “Q3 launch draft”?”");
     expect(summary(archivedBanner)).toBe(

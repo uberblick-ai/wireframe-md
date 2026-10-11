@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `card` may stand at the top level, still holding only text. `text.small` uses
+  the size of a chip's caption, and a card's direct `text.title` uses the dialog
+  title size. A top-level card's summary names its title before its other text.
+  These draw the Card block's label, title, body and footer in light and dark.
 - `frame` draws a neutral block frame with a caption label and direct buttons
   on the right; body children stack below it. `card` draws a bordered paper box
   holding only text. Both support light and dark; caption actions wrap without

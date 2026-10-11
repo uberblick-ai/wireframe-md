@@ -31,8 +31,8 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   // Its title is a text.title line.
   ["page", { place: ["top"], variants: [], label: false }],
   ["frame", { place: ["top"], variants: [], label: true }],
-  ["card", { place: ["root"], variants: [], label: false }],
-  ["text", { place: ["root", "card"], variants: ["muted", "strong", "title"], label: true }],
+  ["card", { place: ["top", "root"], variants: [], label: false }],
+  ["text", { place: ["root", "card"], variants: ["muted", "strong", "title", "small"], label: true }],
   // Inside a table, a row is a table row of cells: .head there, .end outside one.
   ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
@@ -49,6 +49,10 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["chip", { place: ["row", "cell"], variants: ["more"], label: true }],
 ]);
 
-export const ROOTS: readonly string[] = [...KINDS].filter(([, rule]) => rule.place.includes("top")).map(([kind]) => kind);
+// Placement roots hold the general vocabulary. A card may also stand at the
+// top level, but it still holds only text.
+export const ROOTS: readonly string[] = [...KINDS]
+  .filter(([, rule]) => rule.place.length === 1 && rule.place.includes("top"))
+  .map(([kind]) => kind);
 
 export const ICONS: readonly string[] = ["archive"];

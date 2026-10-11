@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, renderWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
 import { ICONS } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading, vocabulary } from "./samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading, vocabulary } from "./samples.js";
 
 /** Render a source that must render, with or without warnings. */
 const render = (source: string): HTMLElement => {
@@ -34,6 +34,16 @@ const drawn = (source: string): string[] => outline(render(source)).slice(1).map
 const count = (nodes: readonly WireframeNode[]): number => nodes.reduce((sum, n) => sum + 1 + count(n.children), 0);
 
 describe("samples", () => {
+  it("draws the Card block with its small muted label, title, body and footer", () => {
+    expect(drawn(cardBlock)).toEqual([
+      "div.wf-card",
+      "  div.wf-text.wf-small.wf-muted MORE AUTONOMY",
+      "  div.wf-text.wf-title Let the launcher install dependencies",
+      "  div.wf-text Add the documented block to ub-agents.yaml: …",
+      "  div.wf-text.wf-small.wf-muted UB-AGENTS.YAML · 2 RUNS STARTED WITHOUT THE CORPUS · #1072 #1304",
+    ]);
+  });
+
   it("draws the reading frame's label and actions above a text-only card and caption", () => {
     expect(drawn(figmaReading)).toEqual([
       "div.wf-frame",
@@ -149,6 +159,22 @@ describe("samples", () => {
 });
 
 describe("kinds and variants", () => {
+  it("draws title-only cards at the top level and small text with other variants", () => {
+    expect(drawn("card\n  text.title Title\ncard\n  text.small.strong Small bold text")).toEqual([
+      "div.wf-card", "  div.wf-text.wf-title Title",
+      "div.wf-card", "  div.wf-text.wf-small.wf-strong Small bold text",
+    ]);
+  });
+
+  it("still draws misplaced card children, nested cards, unknown variants and icons", () => {
+    const source = "card.big\n  row\n    card\n      text.title Nested\n  icon unknown\n  text.highlight Body";
+    expect(parseWireframe(source).diagnostics).toHaveLength(6);
+    expect(drawn(source)).toEqual([
+      "div.wf-card", "  div.wf-row", "    div.wf-card", "      div.wf-text.wf-title Nested",
+      "  span.wf-icon", "    span.wf-icon-unknown unknown", "  div.wf-text Body",
+    ]);
+  });
+
   it("omits an empty frame caption and handles a label or buttons alone", () => {
     expect(drawn("frame\n  text Body")).toEqual(["div.wf-frame", "  div.wf-text Body"]);
     expect(drawn("frame Caption")).toEqual([

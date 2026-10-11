@@ -75,6 +75,15 @@ export const figmaPrivate = [
   "    button Load",
 ].join("\n");
 
+/** The recommendation sketch on the product corpus page "Card blocks". */
+export const cardBlock = [
+  "card",
+  "  text.small.muted MORE AUTONOMY",
+  "  text.title Let the launcher install dependencies",
+  "  text Add the documented block to ub-agents.yaml: …",
+  "  text.small.muted UB-AGENTS.YAML · 2 RUNS STARTED WITHOUT THE CORPUS · #1072 #1304",
+].join("\n");
+
 /** Every kind and variant in Format v0.1. */
 export const vocabulary = [
   "dialog Every kind and variant",
@@ -137,6 +146,10 @@ export const vocabulary = [
   "  card",
   "    text.muted The live view",
   "    text Click to interact",
+  "card",
+  "  text.small.muted CARD LABEL",
+  "  text.title Card title",
+  "  text.small.strong Small strong text",
 ].join("\n");
 
 /** The public custom properties, which a host sets on any ancestor. */

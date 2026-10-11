@@ -200,14 +200,15 @@ function checkNode(
   if (kind === "icon" && !ICONS.includes(node.label)) {
     warn(`${node.label === "" ? "icon needs a name" : `unknown icon ${quote(node.label)}`}: expected ${list(ICONS)}`);
   }
-  if (rule.place.includes("top")) {
+  if (ROOTS.includes(kind)) {
     if (parent !== undefined) warn(`${kind} must be at the top level`);
     return;
   }
   const place = placeOf(parent, grandparent);
   if (place === "table row" && kind !== "cell") warn(`${kind} in a table row: expected cell`);
   else if (place === undefined || !(rule.place.includes(place) || (place === "frame" && rule.place.includes("root")))) {
-    warn(`${kind} must be directly inside ${inside(rule.place)}`);
+    const top = rule.place.includes("top") ? "at the top level or " : "";
+    warn(`${kind} must be ${top}directly inside ${inside(rule.place.filter((place) => place !== "top"))}`);
   }
   else if (kind === "row") {
     // A table row takes .head, and a row anywhere else .end.

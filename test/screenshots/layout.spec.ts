@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading, PROPERTIES, vocabulary } from "../samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading, PROPERTIES, vocabulary } from "../samples.js";
 import { open, show } from "./page.js";
 
 // Layout and theming in a real browser. These compare renders within one run,
@@ -57,6 +57,81 @@ function lines(page: Page, selector: string): Promise<number> {
 }
 
 test.describe("fit", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const host of ["column", "standalone"] as const) {
+      test(`the Card block fits at full size in ${scheme} on a ${host} host`, async ({ page }) => {
+        await show(page, cardBlock, { host, scheme });
+        const geometry = await page.evaluate(() => {
+          const root = document.querySelector<HTMLElement>(".wf-root")!;
+          const card = document.querySelector(".wf-card")!;
+          const style = getComputedStyle(root);
+          return {
+            width: root.clientWidth, scrollWidth: root.scrollWidth,
+            cardWidth: card.getBoundingClientRect().width,
+            padding: Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight),
+            fontSize: style.fontSize, shadow: getComputedStyle(card).boxShadow,
+            pageWidth: document.documentElement.clientWidth, pageScrollWidth: document.documentElement.scrollWidth,
+          };
+        });
+        expect(geometry.scrollWidth).toBe(geometry.width);
+        expect(geometry.cardWidth).toBe(geometry.width - geometry.padding);
+        expect(geometry.fontSize).toBe("14px");
+        expect(geometry.shadow).toBe("none");
+        expect(geometry.pageScrollWidth).toBe(geometry.pageWidth);
+        expect(await lines(page, ".wf-card > .wf-title")).toBe(1);
+        if (host === "column") expect(await measure(page)).toEqual({
+          root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+        });
+      });
+    }
+
+    for (const layout of ["block", "flex", "grid"] as const) {
+      test(`long titles and footers wrap and cards stack in a ${scheme} ${layout} column`, async ({ page }) => {
+        await show(page, `card\n  text.title ${"A long card title wraps between words. ".repeat(12)}\n  text.small.muted ${"A LONG FOOTER WRAPS WITHIN THE CARD. ".repeat(18)}\ncard\n  text.title Title only`, { host: "column", scheme, layout });
+        expect(await measure(page)).toEqual({
+          root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+        });
+        expect(await lines(page, ".wf-card > .wf-title")).toBeGreaterThan(1);
+        expect(await lines(page, ".wf-card > .wf-small")).toBeGreaterThan(1);
+        const boxes = await page.locator(".wf-card").evaluateAll((cards) => cards.map((card) => {
+          const { left, width, top, bottom } = card.getBoundingClientRect();
+          return { left, width, top, bottom };
+        }));
+        expect(boxes[0]!.width).toBe(boxes[1]!.width);
+        expect(boxes[0]!.left).toBe(boxes[1]!.left);
+        expect(boxes[1]!.top - boxes[0]!.bottom).toBeCloseTo(10.5, 1);
+      });
+    }
+
+    test(`card titles use the dialog size and small changes only size in ${scheme}`, async ({ page }) => {
+      await show(page, 'dialog Dialog title\n  text.title Outside card\npage\n  text.title Page title\n  row\n    chip Caption\ncard\n  text Label\n  text.title Card title\n  text.small Small mixed case\n  text.small.muted Small muted\n  text.small.strong Small bold\n  text.small.title Small title\n  row\n    text.title Indirect title', { scheme });
+      const style = async (selector: string) => page.locator(selector).evaluate((element) => {
+        const css = getComputedStyle(element);
+        return {
+          size: Number.parseFloat(css.fontSize), weight: css.fontWeight, colour: css.color,
+          transform: css.textTransform, lineHeight: Number.parseFloat(css.lineHeight),
+        };
+      });
+      const dialog = await style(".wf-dialog-title");
+      const pageTitle = await style(".wf-page > .wf-title");
+      const title = await style(".wf-card > .wf-title:not(.wf-small)");
+      const body = await style(".wf-card > .wf-text:not(.wf-title, .wf-small)");
+      const small = await style(".wf-card > .wf-small:not(.wf-muted, .wf-strong, .wf-title)");
+      expect(title).toEqual(dialog);
+      expect(title.size).toBeGreaterThan(body.size);
+      expect(title.size).toBeLessThan(pageTitle.size);
+      expect(await style(".wf-dialog-card > .wf-title")).toEqual(pageTitle);
+      expect(await style(".wf-card > .wf-row > .wf-title")).toEqual(pageTitle);
+      expect(small.size).toBeCloseTo(body.size * 0.85, 2);
+      expect(small.size).toBe((await style(".wf-chip")).size);
+      expect({ ...small, size: body.size, lineHeight: body.lineHeight }).toEqual(body);
+      expect(small.transform).toBe("none");
+      expect((await style(".wf-card > .wf-small.wf-muted")).colour).not.toBe(body.colour);
+      expect((await style(".wf-card > .wf-small.wf-strong")).weight).toBe("600");
+      expect((await style(".wf-card > .wf-small.wf-title")).size).toBe(small.size);
+    });
+  }
+
   for (const scheme of ["light", "dark"] as const) {
     for (const [name, source] of [["reading", figmaReading], ["private", figmaPrivate]]) {
       for (const host of ["column", "standalone"] as const) {
