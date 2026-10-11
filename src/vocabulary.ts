@@ -27,7 +27,7 @@ export interface KindRule {
 // A Map, so a kind such as `constructor` cannot find an Object.prototype member.
 export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["dialog", { place: ["top"], variants: [], label: true }],
-  ["banner", { place: ["top"], variants: ["neutral", "info", "warning", "danger"], label: false }],
+  ["banner", { place: ["top"], variants: ["neutral", "info", "warning", "danger", "success"], label: false }],
   // Its title is a text.title line.
   ["page", { place: ["top"], variants: [], label: false }],
   ["frame", { place: ["top"], variants: [], label: true }],

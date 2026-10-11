@@ -1,7 +1,7 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
 
 // Strongest first, as the stylesheet's later tone rules win.
-const TONES: readonly string[] = ["danger", "warning", "info"];
+const TONES: readonly string[] = ["danger", "warning", "info", "success"];
 
 /**
  * One line of plain text for the host's accessible label. It names each root

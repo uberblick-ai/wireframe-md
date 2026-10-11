@@ -89,7 +89,7 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
 | `dialog` | at the top level | none | the title |
-| `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red | none: its text goes on a `text` line |
+| `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red; `.success`: a positive outcome, tinted green | none: its text goes on a `text` line |
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
@@ -110,6 +110,13 @@ strip with its icon, text and buttons on one line. A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
 `button.link.danger` a destructive text button.
+
+`banner.success` marks a positive outcome, such as Saved or Restored. Its fill is
+a green tint, its icon uses the green tone and that tone is mixed into its border,
+with light and dark defaults. A host sets `--wf-success` and `--wf-success-tint`
+to restyle it. Its summary reads `success banner “…”`. There is no `.alert`;
+use `.danger` for a problem. Use `icon archive` only when archiving or restoring
+from the archive makes sense; other banners need no icon.
 
 A `frame` draws the shared block frame: a neutral 3 px left bar and faint neutral
 tint, the base radius on the right-hand corners and no other border. Its caption

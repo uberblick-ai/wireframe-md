@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `banner.success` marks a positive outcome with a green tint, icon tone and
+  border in light and dark, themed through `--wf-success` and `--wf-success-tint`.
+  Its accessible summary names it as a success banner. The Banners playground
+  entry now shows every tone, actions, wrapping text and banners above a page.
 - `card` may stand at the top level, still holding only text. `text.small` uses
   the size of a chip's caption, and a card's direct `text.title` uses the dialog
   title size, controlled by `--wf-title-size`. A top-level card's summary names

@@ -47,6 +47,9 @@ describe("summarizeWireframe", () => {
     expect(summary("banner\n  text Hi")).toBe("Wireframe: banner “Hi”");
     expect(summary("banner.neutral\n  text Hi")).toBe("Wireframe: banner “Hi”");
     expect(summary("banner.info\n  text Hi")).toBe("Wireframe: info banner “Hi”");
+    expect(summary("banner.success\n  text Restored")).toBe("Wireframe: success banner “Restored”");
+    expect(summary("banner.success.danger\n  text Hi")).toBe("Wireframe: danger banner “Hi”");
+    expect(summary("banner.success.info\n  text Hi")).toBe("Wireframe: info banner “Hi”");
     expect(summary("banner.danger\n  text Hi")).toBe("Wireframe: danger banner “Hi”");
     expect(summary("banner.danger.info\n  text Hi")).toBe("Wireframe: danger banner “Hi”");
     expect(summary("banner.purple\n  text Hi")).toBe("Wireframe: banner “Hi”");

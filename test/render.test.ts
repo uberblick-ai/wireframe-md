@@ -245,9 +245,19 @@ describe("kinds and variants", () => {
 
   it("draws a banner in its tone, neutral by default", () => {
     expect(drawn("banner")).toEqual(["div.wf-banner"]);
-    for (const tone of ["neutral", "info", "warning", "danger"]) {
+    for (const tone of ["neutral", "info", "warning", "danger", "success"]) {
       expect(drawn(`banner.${tone}`)).toEqual([`div.wf-banner.wf-${tone}`]);
     }
+  });
+
+  it("draws a success banner with its archive icon and message", () => {
+    expect(drawn("banner.success\n  icon archive\n  text Restored")).toEqual([
+      "div.wf-banner.wf-success",
+      "  span.wf-icon",
+      "    svg.wf-icon-glyph",
+      "      path",
+      "  div.wf-text Restored",
+    ]);
   });
 
   it("draws text plain, muted or strong", () => {

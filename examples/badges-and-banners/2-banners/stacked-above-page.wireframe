@@ -1,0 +1,10 @@
+banner.neutral
+  text This document is shared with the Product team.
+banner.warning
+  text You are offline. Changes will sync when you reconnect.
+page
+  text.title Launch notes
+  text Decisions and next steps from the weekly product review.
+  card
+    text.title Next steps
+    text Update the launch checklist and share the revised timeline.
