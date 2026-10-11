@@ -2,6 +2,11 @@
 repository: uberblick-ai/wireframe-md
 shared-instructions: .agents/ub_agents.md
 queue:
+  # Highest first; an issue without one ranks as priority:medium. A PR ranks
+  # with the issues it closes. The launcher reads these labels, never sets them.
+  priority:
+    labels: [priority:urgent, priority:high, priority:medium, priority:low]
+    default: priority:medium
   milestones: ignore
   dependencies: wait
 
