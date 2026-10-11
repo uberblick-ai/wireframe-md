@@ -745,7 +745,7 @@ test.describe("theming", () => {
         expect(styles.chevron).not.toBe(styles.value);
         expect(styles.fill).toBe("none");
         expect(styles.stroke).toBe(styles.chevron);
-        expect(styles.strokeWidth).toBe(styles.iconStrokeWidth);
+        expect(Number.parseFloat(styles.strokeWidth) / 16).toBe(Number.parseFloat(styles.iconStrokeWidth) / 24);
         expect([styles.cap, styles.join]).toEqual(["round", "round"]);
         return styles;
       };
