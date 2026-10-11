@@ -18,8 +18,11 @@ const examples = readdirSync(folder, { recursive: true, encoding: "utf8" })
 describe("examples", () => {
   it("has the seeds", () => {
     expect(examples).toEqual(expect.arrayContaining([
-        "banners-and-confirmations/1-banners/archived-banner.wireframe",
-        "banners-and-confirmations/2-confirmations/delete-confirmation.wireframe",
+        "badges-and-banners/1-badges/chip.wireframe",
+        "badges-and-banners/1-badges/chip-overflow.wireframe",
+        "badges-and-banners/1-badges/long-tags.wireframe",
+        "badges-and-banners/2-banners/archived-banner.wireframe",
+        "badges-and-banners/3-confirmations/delete-confirmation.wireframe",
         "pages/uberblick/document-list.wireframe",
         "reference/vocabulary/kinds-and-variants.wireframe",
       ]));
@@ -27,7 +30,7 @@ describe("examples", () => {
 
   it("has a group for each family of components", () => {
     const groups = new Set(examples.map((file) => file.split("/")[0]));
-    for (const group of ["badges", "forms", "navigation", "pages", "tables"]) expect(groups).toContain(group);
+    for (const group of ["badges-and-banners", "forms", "navigation", "pages", "tables"]) expect(groups).toContain(group);
   });
 
   it("holds the document list page as the product corpus sketches it", () => {
