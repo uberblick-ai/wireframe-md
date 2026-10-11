@@ -97,6 +97,11 @@ const STYLES = `.wf-root {
   cursor: default;
 }
 
+/* An empty block draws an empty root, which takes no space. */
+.wf-root:empty {
+  padding: 0;
+}
+
 /* In a column, block kinds take the full width, but never less than their
    content needs: a row of many buttons or a long word widens its box, and the
    root scrolls. */

@@ -136,6 +136,11 @@ test.describe("fit", () => {
     expect(room).toEqual({ left: 0, top: 0, bottom: 0 });
   });
 
+  test("an empty wireframe takes no space", async ({ page }) => {
+    await show(page, "", { host: "column" });
+    expect(await page.locator(".wf-root").boundingBox()).toMatchObject({ width: 710, height: 0 });
+  });
+
   test("the dialog's scrim stays inside the wireframe's box", async ({ page }) => {
     await show(page, `text Before\n${deleteConfirmation}\ntext After`, { host: "column" });
     const position = await page.evaluate(() => getComputedStyle(document.querySelector(".wf-dialog")!).position);

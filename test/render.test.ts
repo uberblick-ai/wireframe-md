@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, renderWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
+import { ICONS } from "../src/vocabulary.js";
 import { archivedBanner, deleteConfirmation, vocabulary } from "./samples.js";
 
 /** Render a source that must render, with or without warnings. */
@@ -128,6 +129,14 @@ describe("kinds and variants", () => {
     expect(svg.getAttribute("viewBox")).toBe("0 0 16 16");
     expect(svg.getAttribute("aria-hidden")).toBe("true");
     expect(svg.querySelector("path")?.getAttribute("d")).toBe("M2 3h12v3H2zM3 6v7h10V6M6.5 9h3");
+  });
+
+  it("draws every icon the vocabulary allows as an SVG", () => {
+    for (const name of ICONS) {
+      const source = `banner\n  icon ${name}`;
+      expect(parseWireframe(source).diagnostics).toEqual([]);
+      expect(render(source).querySelector(".wf-icon > svg.wf-icon-glyph > path")?.getAttribute("d")).toBeTruthy();
+    }
   });
 
   it("draws several roots one after another", () => {

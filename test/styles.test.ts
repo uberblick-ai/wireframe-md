@@ -44,7 +44,8 @@ describe("getEmbedStyles", () => {
 
   it("puts every selector under the root class", () => {
     for (const { selectors } of rules) {
-      for (const selector of selectors) expect(selector).toMatch(/^\.wf-root(?=$|[\s>])/);
+      // The root itself, which may be :empty, or something inside it.
+      for (const selector of selectors) expect(selector).toMatch(/^\.wf-root(?=$|:empty$|[\s>])/);
     }
   });
 
