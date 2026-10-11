@@ -5,6 +5,9 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `button.link` captions are underlined in their variant colour at `--wf-stroke`
+  thickness, including wrapped lines. Icons, icon-only links and other buttons
+  draw as before; every mock action stays inert.
 - Icons accept the full Tabler Icons 3.49.0 catalog in outline or `.filled`,
   directly inside roots, cells and buttons. Buttons may draw an icon alone or
   before their caption, staying inert. Icons have name-based text alternatives,

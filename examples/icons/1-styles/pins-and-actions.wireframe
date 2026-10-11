@@ -25,3 +25,9 @@ page
           icon trash
         button.primary Save
           icon device-floppy
+    row
+      cell Captioned links
+      cell
+        button.link Clear filters
+        button.link.danger Archive
+          icon archive

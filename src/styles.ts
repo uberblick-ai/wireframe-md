@@ -396,6 +396,13 @@ const STYLES = `.wf-root {
   color: var(--_wf-ink);
 }
 
+/* Decorate only the caption, leaving icons and the flex gap untouched. */
+.wf-root .wf-button.wf-link > .wf-button-caption {
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: var(--_wf-stroke);
+}
+
 .wf-root .wf-button:where(.wf-link.wf-primary) {
   color: var(--_wf-primary);
 }
