@@ -30,8 +30,9 @@
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
 //   --wf-radius-lg     the dialog's card and scrim, and a page
-//   --wf-text-size     the base type size; spacing and chips scale with it
-//   --wf-title-size    the dialog's title; text.title is one and a half times it
+//   --wf-text-size     the base type size; spacing, chips and text.small scale with it
+//   --wf-title-size    the dialog's title and a card's direct text.title; other text.title is one and a half
+//                      times it, unless combined with .small
 
 const STYLES = `.wf-root {
   --_wf-ink: var(--wf-ink, light-dark(oklch(0.145 0 0), oklch(0.985 0 0)));
@@ -286,6 +287,17 @@ const STYLES = `.wf-root {
   font-size: calc(1.5 * var(--_wf-title-size));
   font-weight: 600;
   line-height: 1.25;
+}
+
+/* A direct card title has the dialog title's size; titles elsewhere keep the
+   page size. :where keeps .small free to change only the size when combined. */
+.wf-root :where(.wf-card) > .wf-text.wf-title {
+  font-size: var(--_wf-title-size);
+  line-height: 1.3;
+}
+
+.wf-root .wf-text.wf-small {
+  font-size: calc(0.85 * var(--_wf-text-size));
 }
 
 .wf-root .wf-row {

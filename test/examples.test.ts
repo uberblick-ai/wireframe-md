@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseWireframe } from "../src/index.js";
 import { validName } from "../playground/catalog.js";
-import { documentList, figmaPrivate, figmaReading } from "./samples.js";
+import { cardBlock, documentList, figmaPrivate, figmaReading } from "./samples.js";
 
 // The playground's gallery: an example with an error fails the suite. Warnings,
 // missing approvals and examples changed since approval don't; a person sees
@@ -35,6 +35,11 @@ describe("examples", () => {
 
   it("holds the document list page as the product corpus sketches it", () => {
     expect(readFileSync(new URL("pages/uberblick/document-list.wireframe", folder), "utf8")).toBe(`${documentList}\n`);
+  });
+
+  it("holds the Card block source without diagnostics", () => {
+    expect(readFileSync(new URL("pages/uberblick/card-block.wireframe", folder), "utf8")).toBe(`${cardBlock}\n`);
+    expect(parseWireframe(cardBlock).diagnostics).toEqual([]);
   });
 
   it("holds both assigned Figma sources without diagnostics", () => {

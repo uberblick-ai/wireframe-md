@@ -1,0 +1,10 @@
+card
+  text.small.muted MORE AUTONOMY
+  text.title Prepare dependencies before delivery
+  text Give each worker the documented tools before it starts.
+card
+  text.small.muted LESS REWORK
+  text.title Keep the corpus available
+  text Start every run with the project's current requirements.
+card
+  text.title Review the next delivery

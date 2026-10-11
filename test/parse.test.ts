@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, type WireframeDiagnostic, type WireframeNode } from "../src/index.js";
 import { KINDS } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList } from "./samples.js";
 
 const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): WireframeNode => ({
   kind,
@@ -211,6 +211,11 @@ describe("line grammar", () => {
 });
 
 describe("warnings", () => {
+  it("accepts a top-level card and small text combined with other variants", () => {
+    expect(warnings(cardBlock)).toEqual([]);
+    expect(warnings("card\n  text.small.strong.title Title\npage\n  text.small.muted Label")).toEqual([]);
+  });
+
   it("accepts frame captions and text-only cards directly inside every root", () => {
     for (const kind of ["dialog", "banner", "page", "frame"]) {
       expect(warnings(`${kind}\n  card\n    text.muted Preview\n    text Body`)).toEqual([]);
@@ -221,8 +226,7 @@ describe("warnings", () => {
   it("warns about a nested frame, cards outside roots and caption buttons in other roots", () => {
     expect(warnings("frame Outer\n  frame Inner\n  row\n    card\ncard")).toEqual([
       warning(2, "frame must be at the top level"),
-      warning(4, "card must be directly inside dialog, banner, page or frame"),
-      warning(5, "card must be directly inside dialog, banner, page or frame"),
+      warning(4, "card must be at the top level or directly inside dialog, banner, page or frame"),
     ]);
     for (const kind of ["dialog", "banner", "page"]) {
       expect(warnings(`${kind}\n  button Open`)).toEqual([
@@ -232,17 +236,30 @@ describe("warnings", () => {
   });
 
   it("warns about every known kind except text directly inside a card", () => {
-    for (const kind of KINDS.keys()) {
-      if (kind === "text") continue;
-      const source = `frame\n  card\n    ${kind}${kind === "icon" ? " archive" : ""}`;
-      const diagnostics = warnings(source);
-      expect(diagnostics).toHaveLength(1);
-      expect(diagnostics[0]).toMatchObject({ line: 3, severity: "warning" });
-      expect(diagnostics[0]!.message).toContain(kind);
-      expect(diagnostics[0]!.message).toMatch(/must be (at the top level|directly inside)/);
+    for (const prefix of ["card\n  ", "frame\n  card\n    "]) {
+      for (const kind of KINDS.keys()) {
+        if (kind === "text") continue;
+        const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : ""}`);
+        expect(diagnostics).toHaveLength(1);
+        expect(diagnostics[0]).toMatchObject({ line: prefix.split("\n").length, severity: "warning" });
+        expect(diagnostics[0]!.message).toContain(kind);
+        expect(diagnostics[0]!.message).toMatch(/must be (at the top level|directly inside)/);
+      }
     }
     expect(warnings("frame\n  card\n    row")).toEqual([
       warning(3, "row must be directly inside dialog, banner, page, frame or table"),
+    ]);
+  });
+
+  it("warns about a card inside any non-root, including another card", () => {
+    for (const parent of KINDS.keys()) {
+      if (["dialog", "banner", "page", "frame"].includes(parent)) continue;
+      expect(warnings(`${parent}\n  card`)).toContainEqual(
+        warning(2, "card must be at the top level or directly inside dialog, banner, page or frame"),
+      );
+    }
+    expect(warnings("card\n  row")).toEqual([
+      warning(2, "row must be directly inside dialog, banner, page, frame or table"),
     ]);
   });
 
@@ -280,7 +297,7 @@ describe("warnings", () => {
   it("warns about unknown variants", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning or .danger'),
-      warning(2, 'unknown variant ".big" on text: expected .muted, .strong or .title'),
+      warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title or .small'),
       warning(3, 'unknown variant ".start" on row: expected .end or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([

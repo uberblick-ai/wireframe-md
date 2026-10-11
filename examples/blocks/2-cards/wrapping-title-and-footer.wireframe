@@ -1,0 +1,5 @@
+card
+  text.small.muted DELIVERY REVIEW
+  text.title Let the launcher install dependencies before each delivery run so every worker starts with the documented tools and the current corpus
+  text Add the documented block to the project configuration before starting the next delivery.
+  text.small.muted PROJECT CONFIGURATION · DEPENDENCIES INSTALLED BEFORE DELIVERY · CORPUS AVAILABLE TO EVERY WORKER · REVIEW THE NEXT RUN WITH THE TEAM

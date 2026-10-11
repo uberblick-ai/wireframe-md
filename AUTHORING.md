@@ -84,7 +84,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 ## Kinds
 
 `dialog`, `banner`, `page` and `frame` are roots: they stand at the top level and hold the
-rest.
+rest. A `card` may also stand at the top level, but holds only text lines.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
@@ -92,8 +92,8 @@ rest.
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red | none: its text goes on a `text` line |
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
-| `card` | directly inside a root | none | none: its text goes on `text` lines |
-| `text` | directly inside a root or a `card` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title | the text |
+| `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
+| `text` | directly inside a root or a `card` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its buttons to the right; `.head`: a table's header row, in grey | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
 | `icon` | directly inside a root | none | its name: `archive`, the only icon in v0.1 |
@@ -124,6 +124,12 @@ A `card` is a box on the paper ground with a 1 px border in the line colour, the
 base radius and no shadow. Only `text` lines belong in a card; they stack inside
 at full width. Any other child warns and still draws where it was written.
 Neither `frame` nor `card` takes variants, and a card takes no label.
+A card at the top level is still not a root for placement: a row, icon, control
+or another card inside it warns. Adjacent cards stack at full width with a small
+gap. Directly inside a card, `text.title` is bold at a dialog title's size,
+larger than body text and smaller than a page's title. Elsewhere it keeps the
+page title's size. `text.small` changes only the size and combines with other
+variants, such as `text.small.muted`; write capitals in the source itself.
 
 An `input` is an empty bordered field showing its placeholder in muted. A
 `select` is a closed select with the same border, radius, height and padding as
@@ -219,6 +225,24 @@ frame Figma · Checkout flow
   row
     button Load
 ```
+
+## Card block
+
+The recommendation from Uberblick's "Card blocks" page. The small muted label
+and footer are plain text; issue numbers keep the footer's muted colour.
+
+```wireframe
+card
+  text.small.muted MORE AUTONOMY
+  text.title Let the launcher install dependencies
+  text Add the documented block to ub-agents.yaml: …
+  text.small.muted UB-AGENTS.YAML · 2 RUNS STARTED WITHOUT THE CORPUS · #1072 #1304
+```
+
+A top-level card's summary names its first `text.title`, or its first text if it
+has no title: `Wireframe: card “Let the launcher install dependencies”`.
+Long titles and footers wrap inside the card, which fits the document column at
+full size and never widens the page.
 
 ## Samples
 
@@ -551,7 +575,7 @@ Use only the kinds, variants and icons in [Kinds](#kinds). Wrong:
 ```text
 banner.warning
   icon lock
-  text.small Read-only. Ask the owner for access.
+  text.big Read-only. Ask the owner for access.
   row.end
     link Request access
 ```
@@ -560,7 +584,7 @@ Diagnostics:
 
 ```text
 line 2: warning: unknown icon "lock": expected archive
-line 3: warning: unknown variant ".small" on text: expected .muted, .strong or .title
+line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title or .small
 line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 

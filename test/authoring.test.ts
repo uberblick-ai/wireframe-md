@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseWireframe } from "../src/index.js";
 import { ICONS, KINDS, type KindRule, type Place } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
+import { archivedBanner, cardBlock, deleteConfirmation, documentList } from "./samples.js";
 
 // AUTHORING.md is the primer agents read before writing a block, and the
 // package ships it. These tests read the file itself, so its examples, its
@@ -77,6 +77,10 @@ describe("AUTHORING.md", () => {
     expect(blocks(section("A page")).map((block) => block.body)).toEqual([documentList]);
   });
 
+  it("shows the Card block exactly as written", () => {
+    expect(blocks(section("Card block")).map((block) => block.body)).toEqual([cardBlock]);
+  });
+
   describe("common mistakes", () => {
     // The blocks under each mistake's heading.
     const mistakes = new Map<string, Block[]>();
@@ -125,8 +129,13 @@ describe("AUTHORING.md", () => {
       toggle: "a `toggle`",
       cell: "a `cell`",
     };
-    const where = (rule: KindRule): string =>
-      rule.place.includes("top") ? "at the top level" : `directly inside ${rule.place.map((place) => PLACES[place]).join(" or ")}`;
+    const where = (rule: KindRule): string => {
+      const inside = rule.place.filter((place) => place !== "top");
+      return [
+        ...(rule.place.includes("top") ? ["at the top level"] : []),
+        ...(inside.length > 0 ? [`directly inside ${inside.map((place) => PLACES[place]).join(" or ")}`] : []),
+      ].join(" or ");
+    };
     // `| kind | where | variants | label |` rows of the table under "Kinds".
     const rows = new Map(
       section("Kinds")

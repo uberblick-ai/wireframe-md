@@ -33,3 +33,7 @@ frame Figma · Payment, mobile
   card
     text.muted The live view
     text Click to interact
+card
+  text.small.muted CARD LABEL
+  text.title Card title
+  text.small.strong Small strong text
