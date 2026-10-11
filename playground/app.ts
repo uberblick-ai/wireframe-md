@@ -8,9 +8,9 @@ import {
 import { type Approval, describeStatus, diffLines, fingerprint, formatMarkup, type Status, statusOf } from "./approval.js";
 
 // The playground's page: the sidebar of examples by group, the editor, and the render,
-// diagnostics, summary and approval of what the editor holds. The server
-// transpiles the package's sources per request, so a reload renders with the
-// current code.
+// diagnostics, summary and approval of what the editor holds, or in their place
+// a group's overview, a tile per example. The server transpiles the package's
+// sources per request, so a reload renders with the current code.
 
 interface Example {
   name: string;
@@ -24,6 +24,7 @@ type Host = "standalone" | "column";
 
 /** Prose above the wireframe in the document column. */
 const INTRO = "A paragraph of the document. The wireframe below sits in Uberblick's 710 px column.";
+const SVG = "http://www.w3.org/2000/svg";
 
 function byId<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -55,10 +56,18 @@ const review = byId("pg-review");
 const groupList = byId("pg-groups");
 const addForm = byId<HTMLFormElement>("pg-add");
 const newName = byId<HTMLInputElement>("pg-new-name");
+const panes = byId("pg-main");
+const overviewPane = byId("pg-overview");
+const overviewTitle = byId("pg-overview-title");
+const overviewCount = byId("pg-overview-count");
+const overviewHint = byId("pg-overview-hint");
+const tiles = byId("pg-tiles");
 
 let examples: Example[] = [];
 /** The example in the editor, or undefined for a scratch source. */
 let current: Example | undefined;
+/** The group whose overview shows in place of the editor and render, "" for the ungrouped examples. */
+let overview: string | undefined;
 /** What the editor's source parses to. */
 let result: WireframeParseResult = parseWireframe("");
 /** The last render without an error, kept while the source has one. */
@@ -298,7 +307,9 @@ function showSidebar(): void {
       details.addEventListener("toggle", () => rememberCollapsed(key, !details.open));
 
       const heading = element("summary", "pg-group-head");
-      heading.append(element("span", "pg-group-name", groupLabel(key)), element("span", "pg-count", String(members.length)));
+      const name = element("span", "pg-group-name", groupLabel(key));
+      name.title = groupLabel(key);
+      heading.append(name, element("span", "pg-count", String(members.length)));
       const open = states.filter((state) => state !== "approved").length;
       if (open > 0) {
         const badge = element("span", "pg-badge", `${open} to review`);
@@ -324,24 +335,165 @@ function showSidebar(): void {
         }),
       );
       details.append(heading, list);
-      return details;
+
+      // The overview's control sits on the heading but outside the summary, which
+      // collapses the group and would hide a control inside it from screen readers.
+      const opener = element("a", "pg-opener") as HTMLAnchorElement;
+      opener.href = `#${key}/`;
+      opener.title = `Overview: every render in ${groupLabel(key)}`;
+      opener.setAttribute("aria-label", `Overview of ${groupLabel(key)}`);
+      if (key === overview) opener.setAttribute("aria-current", "page");
+      opener.append(gridIcon());
+      const group = element("div", "pg-group-wrap");
+      group.append(opener, details);
+      return group;
     }),
   );
   if (examples.length === 0) groupList.append(element("p", "pg-none", "No examples yet."));
+}
+
+/** Four squares, the overview's icon. */
+function gridIcon(): SVGElement {
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const squares = document.createElementNS(SVG, "path");
+  squares.setAttribute("d", "M2.5 2.5h4v4h-4zM9.5 2.5h4v4h-4zM2.5 9.5h4v4h-4zM9.5 9.5h4v4h-4z");
+  svg.append(squares);
+  return svg;
+}
+
+// A group's overview: a tile per example, in the sidebar's order, each the render
+// of its saved source in the host the toggle chooses.
+
+/** A group's overview in place of the editor and render while one shows. */
+function showOverview(): void {
+  panes.hidden = overview !== undefined;
+  overviewPane.hidden = overview === undefined;
+  // The form saves the editor's source, which an overview hides.
+  addForm.hidden = overview !== undefined;
+  if (overview === undefined) {
+    tiles.replaceChildren();
+    return;
+  }
+  const group = overview;
+  const members = examples.filter((example) => groupOf(example.name) === group);
+  overviewTitle.textContent = groupLabel(group);
+  overviewCount.textContent = members.length === 1 ? "1 example" : `${members.length} examples`;
+  overviewHint.textContent =
+    members.length === 0
+      ? "No examples in this group."
+      : "Each example's saved source, rendered in the host above. Open one to edit or approve it.";
+  tiles.replaceChildren(...members.map(tile));
+  fitTiles();
+}
+
+/** An example's tile: its name, status and warnings over the render of its saved source. */
+function tile(example: Example): HTMLElement {
+  const rendered = renderSaved(example);
+  const status = statusOf(rendered?.markup ?? null, stylesheet, example.approval);
+  const warnings = parseWireframe(example.source).diagnostics.filter(({ severity }) => severity === "warning").length;
+
+  const link = element("a", "pg-tile") as HTMLAnchorElement;
+  link.href = `#${example.name}`;
+  const dot = element("span", "pg-dot");
+  dot.dataset.state = status.state;
+  // Marks that fitTiles shows: how far it scaled the render, and a render that scrolls in its host.
+  const scale = element("span", "pg-tile-mark pg-tile-scale");
+  scale.title = "Scaled down to fit the tile";
+  const scrolls = element("span", "pg-tile-mark pg-tile-scrolls", "Scrolls");
+  scrolls.title = "Wider than its host: it scrolls sideways inside the wireframe, and the tile shows its start";
+  for (const mark of [scale, scrolls]) {
+    mark.setAttribute("aria-hidden", "true");
+    mark.hidden = true;
+  }
+  const head = element("span", "pg-tile-head");
+  head.append(dot, element("span", "pg-item-name", leafOf(example.name)), scrolls, scale);
+  const facts = element("span", "pg-tile-facts");
+  facts.append(element("span", "", describeStatus(status)));
+  if (warnings > 0) facts.append(element("span", "pg-tile-warnings", warnings === 1 ? "1 warning" : `${warnings} warnings`));
+
+  // The render pane's hosts. The render is a picture: inert, so it takes no
+  // focus and the tile's link takes its clicks.
+  const frame = element("div", `pg-tile-frame ${host === "standalone" ? "standalone" : "document"}`);
+  frame.inert = true;
+  const stage = element("div", "pg-tile-stage");
+  if (rendered === null) stage.append(element("p", "pg-empty", "Nothing to show"));
+  else if (host === "standalone") stage.append(rendered.element);
+  else {
+    const column = element("div", "column");
+    column.append(rendered.element);
+    stage.append(column);
+  }
+  frame.append(stage);
+  link.append(head, facts, frame);
+  const item = element("li");
+  item.append(link);
+  return item;
+}
+
+/**
+ * Scale each tile's render down to the tile's width where it is wider: the
+ * column keeps its 710 px, and on the bare page a render takes the tile's width
+ * and whatever more its root would scroll. The tile clips the stage's box, so the
+ * page never scrolls sideways.
+ */
+function fitTiles(): void {
+  for (const stage of tiles.querySelectorAll<HTMLElement>(".pg-tile-stage")) {
+    stage.style.width = "";
+    stage.style.transform = "";
+    stage.style.marginBottom = "";
+    const available = stage.offsetWidth;
+    const column = stage.querySelector<HTMLElement>(".column");
+    const root = stage.querySelector<HTMLElement>(".wf-root");
+    const scrolling = (): boolean => root !== null && root.scrollWidth > root.clientWidth;
+    let width = column?.offsetWidth ?? available;
+    // A wider bare page can wrap some content, so measure again until nothing scrolls.
+    for (let tries = 0; column === null && root !== null && scrolling() && tries < 3; tries += 1) {
+      width += root.scrollWidth - root.clientWidth;
+      stage.style.width = `${width}px`;
+    }
+    const ratio = Math.min(1, available / width);
+    const tile = stage.closest(".pg-tile");
+    const scale = tile?.querySelector<HTMLElement>(".pg-tile-scale");
+    if (scale) {
+      scale.hidden = ratio === 1;
+      scale.textContent = `${Math.floor(ratio * 100)}%`;
+    }
+    const scrolls = tile?.querySelector<HTMLElement>(".pg-tile-scrolls");
+    if (scrolls) scrolls.hidden = !scrolling();
+    if (ratio === 1) continue;
+    stage.style.width = `${width}px`;
+    stage.style.transform = `scale(${ratio})`;
+    // The transform leaves the stage's box as tall as before; take up only what shows.
+    stage.style.marginBottom = `${(ratio - 1) * stage.offsetHeight}px`;
+  }
 }
 
 function refresh(): void {
   update();
   showReview();
   showSidebar();
+  showOverview();
 }
 
 // Opening, saving, adding and approving.
 
 function openExample(example: Example | undefined): void {
+  overview = undefined;
   current = example;
   editor.value = example === undefined ? "" : saved(example);
   editor.scrollTop = 0;
+  lastGood = null;
+  say("");
+  refresh();
+}
+
+/** Show a group's overview, with nothing open in the editor until a tile or the sidebar opens an example. */
+function openOverview(group: string): void {
+  overview = group;
+  current = undefined;
+  editor.value = "";
   lastGood = null;
   say("");
   refresh();
@@ -394,14 +546,29 @@ async function add(name: string): Promise<void> {
   refresh();
 }
 
+/**
+ * What the address names: GROUP/ for a group's overview, / alone for the
+ * ungrouped examples' overview, otherwise an example, such as reference/vocabulary.
+ */
+function addressed(): string {
+  const hash = location.hash.slice(1);
+  try {
+    return decodeURIComponent(hash);
+  } catch {
+    return hash;
+  }
+}
+
 function openFromHash(): void {
-  const name = decodeURIComponent(location.hash.slice(1));
-  if (name === current?.name) return;
+  const target = addressed();
+  const group = target.endsWith("/") ? target.slice(0, -1) : undefined;
+  if (group === undefined ? overview === undefined && target === current?.name : group === overview) return;
   if (isDirty() && !confirm(`Discard the unsaved edits to ${current?.name}?`)) {
     history.replaceState(null, "", current === undefined ? location.pathname : `#${current.name}`);
     return;
   }
-  openExample(examples.find((example) => example.name === name));
+  if (group === undefined) openExample(examples.find((example) => example.name === target));
+  else openOverview(group);
 }
 
 // The toggles, remembered between visits.
@@ -432,6 +599,7 @@ async function start(): Promise<void> {
   choose<Host>("host", ["standalone", "column"], "standalone", (value) => {
     host = value;
     showPreview(!result.renderable && lastGood !== null);
+    showOverview();
   });
 
   editor.addEventListener("input", update);
@@ -454,14 +622,26 @@ async function start(): Promise<void> {
   window.addEventListener("beforeunload", (event) => {
     if (isDirty()) event.preventDefault();
   });
+  // A tile's render changes size with the overview's width and with the font.
+  let tilesWidth = 0;
+  new ResizeObserver(([entry]) => {
+    if (entry === undefined || entry.contentRect.width === tilesWidth) return;
+    tilesWidth = entry.contentRect.width;
+    fitTiles();
+  }).observe(tiles);
+  document.fonts.addEventListener("loadingdone", fitTiles);
 
   try {
     ({ examples } = await request<{ examples: Example[] }>("GET", "/api/examples"));
   } catch (error) {
     say(`The examples didn't load: ${error instanceof Error ? error.message : error}`, true);
   }
-  const name = decodeURIComponent(location.hash.slice(1));
-  openExample(examples.find((example) => example.name === name) ?? examples[0]);
+  const target = addressed();
+  if (target.endsWith("/")) {
+    openOverview(target.slice(0, -1));
+    return;
+  }
+  openExample(examples.find((example) => example.name === target) ?? examples[0]);
   if (current !== undefined) history.replaceState(null, "", `#${current.name}`);
 }
 

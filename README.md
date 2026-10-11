@@ -209,6 +209,20 @@ request, so a reload shows the current code without a build.
   to edit it, save it with **Save** (Ctrl+S or ⌘S), or save the editor's source
   as a new example, named `group/name` to put it in a group. `mise run test` fails when an example has an error;
   a warning is fine.
+- The grid button on a group's heading, Ungrouped included, opens the group's
+  overview in place of the editor and the render, to look over a whole family
+  side by side. It has a tile per example, in the sidebar's order: the render
+  of its saved source, its name, its status dot and status in words, and how
+  many warnings it has, such as "2 warnings". An example with an error shows
+  "Nothing to show". The tiles follow the toggles. A render wider than its tile,
+  such as the 710 px column, is scaled down to fit and marked with its scale;
+  one that scrolls sideways inside the column is marked "Scrolls". Open a tile
+  to edit that example. Leaving unsaved edits for an overview asks first, as
+  opening another example does.
+- Each view has its own address: `#reference/vocabulary` is an example
+  (`#NAME` when it has no group), `#reference/` the Reference group's overview,
+  and `#/` the overview of the ungrouped examples. A reload, a shared link, and
+  Back and Forward return to the view.
 
 ### Approval
 
