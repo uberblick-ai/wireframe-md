@@ -1,7 +1,7 @@
 name: CI
 
-# The merge gate: lint, typecheck, tests and the screenshot check on every pull
-# request and on main.
+# The merge gate: lint, typecheck, tests, the build and its package check, and
+# the screenshot check on every pull request and on main.
 # No secrets: none of these steps needs one.
 
 on:
@@ -50,6 +50,14 @@ jobs:
         run: mise run typecheck
       - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: mise run test
+
+      # The package as npm would publish it: packed, installed into a scratch
+      # project and imported there.
+      - id: build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: mise run build
+      - if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: mise run check-package
 
       # The screenshot check: layout and theming in Chromium, and the goldens in
       # test/screenshots/goldens, which come from this job's environment.

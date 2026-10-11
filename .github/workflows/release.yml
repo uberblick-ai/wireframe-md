@@ -1,0 +1,120 @@
+name: Release
+
+# Publishes the version in package.json to npm as @uberblick/wireframe, with
+# provenance, through npm trusted publishing: the publish job proves who it is
+# with GitHub's OIDC token, so no npm token is stored in secrets or files.
+#
+# To release (a maintainer):
+#   1. Merge a pull request that sets "version" in package.json and moves the
+#      CHANGELOG.md lines under Unreleased into that version's entry. For
+#      0.1.0, both are already in place.
+#   2. Run this workflow on main and type that version to confirm it: Actions,
+#      Release, Run workflow, or
+#        gh workflow run release.yml --ref main -f version=0.1.0
+#   3. Approve the deployment to the `npm` environment when it asks.
+#   Tagging the commit and writing the GitHub release stay by hand.
+#
+# One-time setup (a maintainer):
+#   - Create the environment `npm` in this repository's settings. Add required
+#     reviewers so every publish waits for approval, and allow deployments
+#     from main only.
+#   - An @uberblick npm org member adds a trusted publisher to
+#     @uberblick/wireframe on npmjs.com: GitHub Actions, organization
+#     uberblick-ai, repository wireframe-md, workflow release.yml, environment
+#     npm. Then, under the package's publishing access, disallow tokens, so only
+#     this workflow can publish.
+#   - npm may refuse a trusted publisher until the package name exists. If so,
+#     claim the name by hand without using 0.1.0, so 0.1.0 still comes from here
+#     with provenance: from an empty directory holding only a package.json of
+#     {"name": "@uberblick/wireframe", "version": "0.0.0"}, run
+#       npm publish --access public
+#     and once 0.1.0 is out,
+#       npm deprecate @uberblick/wireframe@0.0.0 "Placeholder; use 0.1.0 or later."
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to publish, as package.json gives it (for example 0.1.0)
+        required: true
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Checks and packs without any publishing rights, so no build or test
+  # dependency ever runs where an npm token can be had.
+  package:
+    name: check and pack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # Installs the toolchain pinned in mise.toml and puts `mise` on PATH.
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+
+      - name: Confirm the branch and version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases come from main, not $GITHUB_REF."
+            exit 1
+          fi
+          actual="$(node -p 'require("./package.json").version')"
+          if [ "$actual" != "$VERSION" ]; then
+            echo "::error::package.json has version $actual, not $VERSION."
+            exit 1
+          fi
+
+      - run: mise run install
+      - run: mise run lint
+      - run: mise run typecheck
+      - run: mise run test
+      - run: mise run build
+
+      # Pack once: the package check installs this tarball, and the publish job
+      # publishes the same file. npm pack doesn't create its destination.
+      - run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          npm pack --pack-destination "$RUNNER_TEMP/package"
+      - run: mise run check-package "$RUNNER_TEMP"/package/*.tgz
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: package
+          path: ${{ runner.temp }}/package/*.tgz
+          if-no-files-found: error
+
+  publish:
+    name: publish to npm
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The environment npm's trusted publisher names; it can require approval.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # Only for mise.toml's Node and its npm; nothing from the repository runs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: package
+          path: ${{ runner.temp }}/package
+
+      # npm exchanges the job's OIDC token for a short-lived publish token.
+      - run: npm publish "$RUNNER_TEMP"/package/*.tgz --provenance --access public

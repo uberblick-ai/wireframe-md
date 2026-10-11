@@ -1,0 +1,13 @@
+{
+  // The package build (`mise run build`): ES modules and type declarations from
+  // src into dist. No Node types, so the package can't come to rely on Node.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "types": []
+  },
+  "include": ["src"]
+}
