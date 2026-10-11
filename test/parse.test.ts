@@ -59,6 +59,13 @@ describe("samples", () => {
     });
   });
 
+  it("accepts a success banner with the archive icon without diagnostics", () => {
+    const result = parseWireframe("banner.success\n  icon archive\n  text Restored");
+    expect(result.renderable).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.nodes[0]?.variants).toEqual(["success"]);
+  });
+
   it("parses the archived banner", () => {
     expect(parseWireframe(archivedBanner)).toEqual({
       nodes: [
@@ -296,7 +303,7 @@ describe("warnings", () => {
 
   it("warns about unknown variants", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
-      warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning or .danger'),
+      warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning, .danger or .success'),
       warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title or .small'),
       warning(3, 'unknown variant ".start" on row: expected .end or .head'),
     ]);
