@@ -6,7 +6,8 @@
 // pointing them at its own tokens. The root reads each one into a private
 // `--_wf-*` property with a default, so its own declarations never shadow the
 // host's. Colour defaults pair a light and a dark value in light-dark(), which
-// follows the color-scheme the root inherits. The font family is inherited too.
+// follows the color-scheme the root inherits. The UI font family is inherited;
+// only inline monospace spans use --wf-mono-font.
 //
 // Public properties:
 //   --wf-ink           text, and the secondary button's caption
@@ -36,6 +37,7 @@
 //   --wf-text-size     the base type size; spacing, chips and text.small scale with it
 //   --wf-title-size    the dialog's title and a card's direct text.title; other text.title is one and a half
 //                      times it, unless combined with .small
+//   --wf-mono-font     the font family of paired-backtick spans on text lines
 
 const STYLES = `.wf-root {
   --_wf-ink: var(--wf-ink, light-dark(oklch(0.145 0 0), oklch(0.985 0 0)));
@@ -63,6 +65,7 @@ const STYLES = `.wf-root {
   --_wf-radius-lg: var(--wf-radius-lg, 10px);
   --_wf-text-size: var(--wf-text-size, 0.875rem);
   --_wf-title-size: var(--wf-title-size, 1rem);
+  --_wf-mono-font: var(--wf-mono-font, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
 
   /* Roots stack one after another. Content wider than the host's box scrolls
      inside the root, never the page. A minmax(0, 1fr) column gives the root no
@@ -282,6 +285,11 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-text {
   margin: 0;
+}
+
+/* Inline spans change only the face; size, weight, colour and wrapping inherit. */
+.wf-root .wf-mono {
+  font-family: var(--_wf-mono-font);
 }
 
 .wf-root .wf-text.wf-muted {

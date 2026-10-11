@@ -185,4 +185,5 @@ export const PROPERTIES = [
   "--wf-radius-lg",
   "--wf-text-size",
   "--wf-title-size",
+  "--wf-mono-font",
 ] as const;

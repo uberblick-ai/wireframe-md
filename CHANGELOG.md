@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Paired single backticks in `text` labels draw inline monospace spans, including
+  small metadata in rows. Spans keep the line's size, weight, colour and wrapping
+  and use the new `--wf-mono-font` host property with a system monospace default.
+  Summaries omit paired markers. Unmatched or empty pairs and all non-text
+  labels keep their backticks as written, without new diagnostics.
 - Icons and text accept `.red`, `.amber`, `.green` and `.blue`, reusing the
   existing danger, warning, success and info theme properties. Icons override
   their context's colour and name the hue in their text alternative. Text keeps

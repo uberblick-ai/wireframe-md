@@ -809,22 +809,24 @@ test.describe("theming", () => {
     "--wf-radius-lg": "0px",
     "--wf-text-size": "20px",
     "--wf-title-size": "30px",
+    "--wf-mono-font": "serif",
   };
 
   test("each public property restyles the wireframe from an ancestor", async ({ page }) => {
-    const host = await show(page, vocabulary);
-    const root = page.locator(".wf-root");
-    const before = await root.screenshot();
-    const unchanged: string[] = [];
     for (const property of PROPERTIES) {
+      // Each property starts with a fresh render, so resized or scrolled earlier
+      // examples cannot affect its screenshot. Mono needs only one text line.
+      const source = property === "--wf-mono-font" ? "page\n  text Run `npm test`" : vocabulary;
+      const host = await show(page, source);
+      const root = page.locator(".wf-root");
+      const before = await root.screenshot();
       // Colours get a green nothing draws by default.
       const value = values[property] ?? "rgb(0, 160, 0)";
       await host.evaluate((element, [property, value]) => element.style.setProperty(property!, value!), [property, value]);
-      if ((await root.screenshot()).equals(before)) unchanged.push(property);
+      expect((await root.screenshot()).equals(before), `${property} changes the drawing`).toBe(false);
       await host.evaluate((element, property) => element.style.removeProperty(property), property);
+      expect((await root.screenshot()).equals(before), `${property} restores the drawing`).toBe(true);
     }
-    expect(unchanged).toEqual([]);
-    expect((await root.screenshot()).equals(before)).toBe(true);
   });
 
   for (const [name, source, width] of [

@@ -42,9 +42,10 @@ kind.variant#id key=value Label
   quoted label; a quoted attribute must be followed by a space or the line's end.
   Other attributes get a warning. A repeated `label=` warns and uses the first
   value; `label=` on any other kind warns and doesn't change its drawing.
-- **Label** is the rest of the line, as plain text, without trailing spaces.
-  Markdown isn't formatted, so `*draft*` shows its asterisks. Typographic quotes
-  such as “ ” and ’ are plain text.
+- **Label** is the rest of the line, without trailing spaces. On `text` lines,
+  paired single backticks mark inline monospace spans; every other kind keeps
+  its backticks as written. Other Markdown isn't formatted, so `*draft*` shows
+  its asterisks. Typographic quotes such as “ ” and ’ are plain text.
 
 **Quotes.** A label needs quotes only where it would be read as an attribute: when
 it starts with `word=`, meaning a letter, then letters, digits, `-` or `_`, then
@@ -57,6 +58,30 @@ dialog "width=2 is the default"
   text "\"Draft\" pages stay private."
   text Outside quotes, \ and “curly quotes” are plain text.
 ```
+
+**Inline monospace.** On `text` lines only, single backticks pair from the left
+and draw the text between them in monospace, without the markers. Several spans
+may share a label, quoted or unquoted. An unmatched single backtick, an empty
+pair or a run of two or more backticks stays literal, without a diagnostic.
+This works inside roots, cards and non-table rows, with every text variant.
+Use mono for text people copy, such as a revision id or a command.
+
+```wireframe
+page
+  row
+    text.small.muted Edited 3 minutes ago
+    text.small.muted rev `e9faf4df`
+  text "Run `npm test` then `npm run build`."
+```
+
+Each span changes only the font family: it keeps the line's size, weight and
+colour, has no box, background or padding, and wraps between words like the
+rest of the line. Its contents draw as text, never markup. The host sets
+`--wf-mono-font` on an ancestor, for example to Geist Mono; the default is
+`ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`. Other text keeps the
+host's UI font. When a text line names a root in the accessible summary, its
+paired markers are omitted and the span is not announced: a `card` holding
+`` text Run `npm test` `` is summarized as `Wireframe: card “Run npm test”`.
 
 **Indentation.** Two spaces make a child. Indent with spaces only, in steps of two,
 at most one level deeper than the line above. The first line has none. A line may
