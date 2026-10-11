@@ -75,7 +75,7 @@ export class ExampleEditor {
     this.section.setAttribute("aria-labelledby", heading.id);
     const bar = element("div", "pg-bar");
     bar.append(heading, this.status, this.dirtyMark, this.staleMark, this.summary, this.saveButton, this.approveButton, this.reviewButton);
-    this.summary.tabIndex = 0;
+    if (example !== undefined) this.summary.tabIndex = 0;
     this.saveButton.title = "Save this example (Ctrl+S or ⌘S in its editor)";
     this.review.id = `${id}-review`;
     this.review.hidden = true;
@@ -100,6 +100,10 @@ export class ExampleEditor {
     this.preview.setAttribute("role", "img");
     this.notice.setAttribute("role", "status");
     this.section.append(bar, panes, this.diagnostics, this.review, this.notice);
+    if (example === undefined) {
+      this.summary.classList.add("pg-scratch-summary");
+      this.section.insertBefore(this.summary, this.diagnostics);
+    }
     this.textarea.addEventListener("input", () => {
       this.update();
       this.changed();
@@ -133,9 +137,10 @@ export class ExampleEditor {
     const rendered = renderWireframe(this.result);
     if (rendered !== null) this.lastGood = rendered;
     this.showPreview();
-    const count = this.textarea.value.replace(/\n$/, "").split("\n").length;
-    // 20px lines plus one line of breathing room; past 40 lines, scroll.
-    this.editor.style.height = `${(Math.min(count, 40) + 1) * 20}px`;
+    const count = this.textarea.value.split("\n").length;
+    // Count the trailing empty line too. Add one 20px line of breathing room
+    // and the textarea's 16px vertical padding plus the editor's 2px border.
+    this.editor.style.height = `${(Math.min(count, 40) + 1) * 20 + 18}px`;
     const marks = new Map<number, string>();
     for (const { line, severity } of this.result.diagnostics) if (marks.get(line) !== "error") marks.set(line, severity);
     this.gutter.replaceChildren(...Array.from({ length: count }, (_, index) =>
@@ -154,6 +159,7 @@ export class ExampleEditor {
       return item;
     }));
     const summary = summarizeWireframe(this.result);
+    if (this.example === undefined) this.summary.textContent = summary;
     this.summary.title = summary;
     this.summary.setAttribute("aria-label", summary);
     this.preview.setAttribute("aria-label", summary);

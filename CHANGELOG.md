@@ -5,10 +5,6 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
-- The development playground groups examples into families and entry pages,
-  with compact independent editors, family overviews and a Scratch page.
-  Human approvals share `examples/approvals.json` and track source, stylesheet
-  and markup changes; entries and families show partial approval counts.
 - `AUTHORING.md`, a primer for agents writing ```` ```wireframe ```` blocks,
   ships in the package as `@uberblick/wireframe/AUTHORING.md`: the grammar,
   every kind, both samples and the common mistakes, each with the diagnostic it

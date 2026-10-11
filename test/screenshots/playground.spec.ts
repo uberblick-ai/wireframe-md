@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -46,18 +46,18 @@ test("entry pages have ordered independent compact editors and collapsed reviews
   await expect(input.locator(".pg-diagnostics")).toBeHidden();
   await expect(input.locator(".pg-review")).toBeHidden();
   await expect(input.locator(".pg-summary")).toHaveAttribute("title", /Wireframe/);
-  await expect(input.locator(".pg-editor")).toHaveCSS("height", "80px");
+  await expect(input.locator(".pg-editor")).toHaveCSS("height", "98px");
   const shortHeight = (await input.boundingBox())!.height;
-  expect(shortHeight).toBeLessThan(155);
+  expect(shortHeight).toBeLessThan(173);
   await input.locator("textarea").fill("page");
-  await expect(input.locator(".pg-editor")).toHaveCSS("height", "40px");
+  await expect(input.locator(".pg-editor")).toHaveCSS("height", "58px");
   await input.locator("textarea").fill(`page\n${"  text Line\n".repeat(45)}`);
-  await expect(input.locator(".pg-editor")).toHaveCSS("height", "820px");
+  await expect(input.locator(".pg-editor")).toHaveCSS("height", "838px");
   expect(await input.locator("textarea").evaluate((editor) => editor.scrollHeight > editor.clientHeight)).toBe(true);
   await input.locator("textarea").fill(INPUT);
-  await expect(input.locator(".pg-editor")).toHaveCSS("height", "80px");
+  await expect(input.locator(".pg-editor")).toHaveCSS("height", "98px");
   await input.locator("textarea").fill(`${INPUT}\n`);
-  await expect(input.locator(".pg-editor")).toHaveCSS("height", "80px");
+  await expect(input.locator(".pg-editor")).toHaveCSS("height", "118px");
   await input.locator("textarea").fill(INPUT);
   await input.getByRole("button", { name: "Review", exact: true }).click();
   await expect(input.locator(".pg-review")).toBeVisible();
@@ -65,6 +65,49 @@ test("entry pages have ordered independent compact editors and collapsed reviews
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
   await page.getByRole("radio", { name: "Document column, 710 px" }).check();
   await expect(page.locator(".pg-preview .column")).toHaveCount(3);
+});
+
+test("editors fit every line up to the cap and keep gutters aligned when scrolling", async ({ page }) => {
+  const input = page.locator('[id="forms/1-basic-inputs/input"]');
+  const textarea = input.locator("textarea");
+  const gutter = input.locator(".pg-gutter");
+  for (const lines of [1, 3, 39, 40]) {
+    const source = ["page", ...Array.from({ length: lines - 1 }, () => "  text Line")].join("\n");
+    for (const ending of ["", "\n"]) {
+      await textarea.fill(source + ending);
+      const size = await textarea.evaluate((editor) => ({ client: editor.clientHeight, scroll: editor.scrollHeight }));
+      expect(size.scroll).toBeLessThanOrEqual(size.client);
+      await expect(gutter.locator("span")).toHaveCount(lines + (ending === "" ? 0 : 1));
+      await textarea.evaluate((editor) => { editor.scrollTop = editor.scrollHeight; });
+      await expect.poll(() => textarea.evaluate((editor) => editor.scrollTop)).toBe(0);
+    }
+  }
+  for (const ending of ["", "\n"]) {
+    await textarea.fill(["page", ...Array.from({ length: 45 }, () => "  text Line")].join("\n") + ending);
+    await textarea.evaluate((editor) => { editor.scrollTop = editor.scrollHeight; });
+    const bottom = await textarea.evaluate((editor) => editor.scrollHeight - editor.clientHeight);
+    expect(bottom).toBeGreaterThan(0);
+    await expect.poll(() => textarea.evaluate((editor) => editor.scrollTop)).toBe(bottom);
+    await expect.poll(() => gutter.evaluate((editor) => editor.scrollTop)).toBe(bottom);
+  }
+  await textarea.fill(`${INPUT}\n`);
+  await textarea.hover();
+  await page.mouse.wheel(0, 100);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  expect(await textarea.evaluate((editor) => editor.scrollTop)).toBe(0);
+  expect(await gutter.evaluate((editor) => editor.scrollTop)).toBe(0);
+});
+
+test("every committed example fits without editor overflow", async ({ page }) => {
+  const textarea = page.locator('[id="forms/1-basic-inputs/input"] textarea');
+  const examples = join(import.meta.dirname, "../../examples");
+  const files = readdirSync(examples, { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith(".wireframe"));
+  expect(files.length).toBeGreaterThan(0);
+  for (const path of files) {
+    await textarea.fill(readFileSync(join(examples, path), "utf8"));
+    const size = await textarea.evaluate((editor) => ({ client: editor.clientHeight, scroll: editor.scrollHeight }));
+    expect(size.scroll, path).toBeLessThanOrEqual(size.client);
+  }
 });
 
 test("save buttons and editor shortcuts save only their own example", async ({ page }) => {
@@ -173,6 +216,8 @@ test("Scratch adds new or existing folders, rejects duplicates, and guards unsav
   await page.getByRole("link", { name: "Scratch", exact: true }).click();
   await expect(page.locator("#pg-add")).toBeVisible();
   await page.locator("textarea").fill(INPUT);
+  await expect(page.locator(".pg-scratch-summary")).toBeVisible();
+  await expect(page.locator(".pg-scratch-summary")).toHaveText("Wireframe: page");
   await page.locator("#pg-new-family").fill("forms");
   await expect(page.locator("#pg-entries option")).toHaveCount(2);
   await page.locator("#pg-new-entry").fill("1-basic-inputs");
@@ -189,6 +234,7 @@ test("Scratch adds new or existing folders, rejects duplicates, and guards unsav
   await expect(page.locator("#pg-add")).toBeHidden();
   await page.getByRole("link", { name: "Scratch", exact: true }).click();
   await page.locator("textarea").fill("page Draft");
+  await expect(page.locator(".pg-scratch-summary")).toHaveText("Wireframe: page “Draft”");
   page.once("dialog", (dialog) => void dialog.dismiss());
   await page.locator('a[href="#forms/1-basic-inputs"]').click();
   await expect(page).toHaveURL(`${url}#scratch`);

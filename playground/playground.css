@@ -536,6 +536,7 @@ body [hidden] {
 }
 
 .pg-bar .pg-summary { margin-left: auto; }
+.pg-scratch-summary { display: block; margin: 6px 0; cursor: auto; }
 .pg-preview > .standalone { padding: 4px; }
 
 .pg-label {
