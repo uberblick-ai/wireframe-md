@@ -9,6 +9,8 @@ import { createRequire } from "node:module";
 const root = new URL("../", import.meta.url);
 const dist = new URL("dist/", root);
 
+const { writeIcons } = await import(new URL("generate-icons.ts", import.meta.url).href);
+writeIcons();
 rmSync(dist, { recursive: true, force: true });
 const tsc = createRequire(import.meta.url).resolve("typescript/bin/tsc");
 const { status } = spawnSync(process.execPath, [tsc, "--project", "tsconfig.build.json"], { cwd: root, stdio: "inherit" });

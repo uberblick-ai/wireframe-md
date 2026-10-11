@@ -1,0 +1,27 @@
+page
+  text.title Icons and mock actions
+  icon pin
+  icon.filled pin
+  table
+    row.head
+      cell Document
+      cell Tags and actions
+    row
+      cell Outline pin
+        icon pin
+      cell
+        chip web
+        button.link
+          icon pin
+        button Archive
+          icon archive
+    row
+      cell Filled pin
+        icon.filled pin
+      cell
+        button
+          icon.filled pin
+        button.link.danger
+          icon trash
+        button.primary Save
+          icon device-floppy

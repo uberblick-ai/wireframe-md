@@ -546,8 +546,14 @@ const STYLES = `.wf-root {
   white-space: nowrap;
 }
 
-.wf-root .wf-cell > :is(.wf-chip, .wf-button):not(:last-child) {
+.wf-root .wf-cell > :is(.wf-chip, .wf-button, .wf-icon):not(:last-child) {
   margin-inline-end: 0.375em;
+}
+
+/* An icon's block SVG supplies the inline-flex button's baseline. Centre the
+   button beside cell text instead of resting the SVG's bottom on that baseline. */
+.wf-root .wf-cell > .wf-button.wf-has-icon {
+  vertical-align: middle;
 }
 
 /* A small neutral tag. .more, the count of the rest, is text with no box. */
@@ -576,6 +582,16 @@ const STYLES = `.wf-root {
   align-items: center;
   gap: 0.375em;
   color: var(--_wf-muted);
+  vertical-align: middle;
+}
+
+.wf-root .wf-button > .wf-icon {
+  color: inherit;
+}
+
+.wf-root .wf-button.wf-icon-only {
+  min-width: 0;
+  padding-inline: 0.3125em;
 }
 
 .wf-root .wf-icon-glyph {
@@ -584,7 +600,6 @@ const STYLES = `.wf-root {
   height: 1.15em;
 }
 
-.wf-root .wf-icon-glyph,
 .wf-root .wf-select-caret,
 .wf-root .wf-cell-sort {
   fill: none;
@@ -592,6 +607,32 @@ const STYLES = `.wf-root {
   stroke-width: calc(1.5 * var(--_wf-stroke));
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Tabler's 24-unit grid uses the same stroke as the controls' 16-unit grid. */
+.wf-root .wf-icon-glyph {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: calc(2.25 * var(--_wf-stroke));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wf-root .wf-icon-glyph.wf-icon-filled {
+  fill: currentColor;
+  stroke: none;
+}
+
+.wf-root .wf-icon-glyph > .wf-path-fill {
+  fill: currentColor;
+}
+
+.wf-root .wf-icon-glyph > .wf-path-no-stroke {
+  stroke: none;
+}
+
+.wf-root .wf-icon-glyph > .wf-path-half-opacity {
+  opacity: 0.5;
 }
 
 .wf-root .wf-icon-unknown,

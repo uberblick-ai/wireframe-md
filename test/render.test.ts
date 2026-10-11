@@ -82,7 +82,9 @@ describe("samples", () => {
     expect(drawn(archivedBanner)).toEqual([
       "div.wf-banner.wf-warning",
       "  span.wf-icon",
-      "    svg.wf-icon-glyph",
+      "    svg.wf-icon-glyph.wf-icon-outline",
+      "      path",
+      "      path",
       "      path",
       "  div.wf-text Archived. Read-only and hidden from the document list.",
       "  div.wf-row.wf-end",
@@ -120,7 +122,12 @@ describe("samples", () => {
       "        span.wf-chip.wf-more +2",
       "      div.wf-cell.wf-end 2 hours ago",
       "      div.wf-cell",
-      "        span.wf-button.wf-link pin",
+      "        span.wf-button.wf-link.wf-has-icon.wf-icon-only",
+      "          span.wf-icon",
+      "            svg.wf-icon-glyph.wf-icon-outline",
+      "              path",
+      "              path",
+      "              path",
       "    div.wf-row",
       "      div.wf-cell Card blocks",
       "      div.wf-cell",
@@ -128,7 +135,12 @@ describe("samples", () => {
       "        span.wf-chip markdown",
       "      div.wf-cell.wf-end 3 days ago",
       "      div.wf-cell",
-      "        span.wf-button.wf-link pin",
+      "        span.wf-button.wf-link.wf-has-icon.wf-icon-only",
+      "          span.wf-icon",
+      "            svg.wf-icon-glyph.wf-icon-outline",
+      "              path",
+      "              path",
+      "              path",
     ]);
   });
 
@@ -254,7 +266,9 @@ describe("kinds and variants", () => {
     expect(drawn("banner.success\n  icon archive\n  text Restored")).toEqual([
       "div.wf-banner.wf-success",
       "  span.wf-icon",
-      "    svg.wf-icon-glyph",
+      "    svg.wf-icon-glyph.wf-icon-outline",
+      "      path",
+      "      path",
       "      path",
       "  div.wf-text Restored",
     ]);
@@ -329,9 +343,11 @@ describe("kinds and variants", () => {
     const icon = render("banner\n  icon archive").querySelector(".wf-icon")!;
     const svg = icon.querySelector("svg")!;
     expect(svg.namespaceURI).toBe("http://www.w3.org/2000/svg");
-    expect(svg.getAttribute("viewBox")).toBe("0 0 16 16");
-    expect(svg.getAttribute("aria-hidden")).toBe("true");
-    expect(svg.querySelector("path")?.getAttribute("d")).toBe("M2 3h12v3H2zM3 6v7h10V6M6.5 9h3");
+    expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+    expect(svg.getAttribute("aria-hidden")).toBeNull();
+    expect(svg.getAttribute("aria-label")).toBe("archive");
+    expect(svg.querySelectorAll("path")).toHaveLength(3);
+    expect(svg.querySelector("path")?.getAttribute("d")).toBe("M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2");
   });
 
   it("draws every icon the vocabulary allows as an SVG", () => {
@@ -484,7 +500,9 @@ describe("warnings", () => {
       "div.wf-text Hi",
       "div.wf-row.wf-end",
       "span.wf-icon",
-      "  svg.wf-icon-glyph",
+      "  svg.wf-icon-glyph.wf-icon-outline",
+      "    path",
+      "    path",
       "    path",
     ]);
     expect(drawn("banner\n  dialog Nested\n  row\n    text In a row\n    icon archive\n  button Loose")).toEqual([
@@ -495,7 +513,9 @@ describe("warnings", () => {
       "  div.wf-row",
       "    div.wf-text In a row",
       "    span.wf-icon",
-      "      svg.wf-icon-glyph",
+      "      svg.wf-icon-glyph.wf-icon-outline",
+      "        path",
+      "        path",
       "        path",
       "  span.wf-button Loose",
     ]);
@@ -547,10 +567,10 @@ describe("warnings", () => {
   });
 
   it("draws an unknown icon as a box showing its name", () => {
-    expect(drawn("banner\n  icon trash\n  icon")).toEqual([
+    expect(drawn("banner\n  icon pinn\n  icon")).toEqual([
       "div.wf-banner",
       "  span.wf-icon",
-      "    span.wf-icon-unknown trash",
+      "    span.wf-icon-unknown pinn",
       "  span.wf-icon",
       "    span.wf-icon-unknown",
     ]);
@@ -624,7 +644,7 @@ describe("inert output", () => {
     const elements = [root, ...root.querySelectorAll("*")];
     expect(new Set(elements.map((element) => element.localName))).toEqual(new Set(["div", "span", "svg", "path"]));
     const attributes = new Set(elements.flatMap((element) => element.getAttributeNames()));
-    expect(attributes).toEqual(new Set(["class", "data-line", "viewBox", "aria-hidden", "d"]));
+    expect(attributes).toEqual(new Set(["class", "data-line", "viewBox", "aria-hidden", "aria-label", "role", "d"]));
     // No class from the source: `.onclick` and `.primary` on a button only add known ones.
     const classes = new Set(elements.flatMap((element) => [...element.classList]));
     for (const name of classes) expect(name).toMatch(/^wf-[a-z-]+$/);

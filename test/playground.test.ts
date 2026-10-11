@@ -71,6 +71,10 @@ describe("the playground's server", () => {
     const index = await call("GET", "/src/index.js");
     expect(index.text).toContain('export { parseWireframe } from "./parse.js"');
     expect(index.text).not.toContain("export type");
+    expect((await call("GET", "/src/generated/icons.js")).text).toContain("export const ICON_DATA");
+    const data = await call("GET", "/src/generated/icon-data-0.js");
+    expect(data.status).toBe(200);
+    expect(data.text.includes("Tabler Icons")).toBe(true);
     expect((await call("GET", "/hosts.css")).text).toContain(".column");
   });
 

@@ -103,7 +103,7 @@ describe("samples", () => {
     expect(table?.children.map((row) => [row.line, row.variants, row.children.map((cell) => cell.kind)])).toEqual([
       [11, ["head"], ["cell", "cell", "cell", "cell", "cell"]],
       [17, [], ["cell", "cell", "cell", "cell", "cell"]],
-      [27, [], ["cell", "cell", "cell", "cell", "cell"]],
+      [28, [], ["cell", "cell", "cell", "cell", "cell"]],
     ]);
   });
 
@@ -271,11 +271,11 @@ describe("warnings", () => {
   });
 
   it("warns about frame and card variants, a card label and an unknown icon", () => {
-    expect(warnings("frame.teal Caption\n  card.large Label\n    text Body\n  icon figma")).toEqual([
+    expect(warnings("frame.teal Caption\n  card.large Label\n    text Body\n  icon pinn")).toEqual([
       warning(1, 'unknown variant ".teal": frame takes no variants'),
       warning(2, 'unknown variant ".large": card takes no variants'),
       warning(2, "card takes no label"),
-      warning(4, 'unknown icon "figma": expected archive'),
+      warning(4, 'unknown icon "pinn": expected a Tabler icon name'),
     ]);
   });
 
@@ -309,7 +309,7 @@ describe("warnings", () => {
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
-      warning(2, 'unknown variant ".big": icon takes no variants'),
+      warning(2, 'unknown variant ".big" on icon: expected .filled'),
       warning(4, 'unknown variant ".ghost" on button: expected .primary, .danger, .link or .focus'),
     ]);
   });
@@ -375,10 +375,10 @@ describe("warnings", () => {
   });
 
   it("warns about an icon name that is missing or not on the allowlist", () => {
-    expect(warnings("banner\n  icon\n  icon trash\n  icon Archive")).toEqual([
-      warning(2, "icon needs a name: expected archive"),
-      warning(3, 'unknown icon "trash": expected archive'),
-      warning(4, 'unknown icon "Archive": expected archive'),
+    expect(warnings("banner\n  icon\n  icon pinn\n  icon Archive")).toEqual([
+      warning(2, "icon needs a name: expected a Tabler icon name"),
+      warning(3, 'unknown icon "pinn": expected a Tabler icon name'),
+      warning(4, 'unknown icon "Archive": expected a Tabler icon name'),
     ]);
   });
 
@@ -401,11 +401,11 @@ describe("warnings", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
       warning(1, "text must be directly inside dialog, banner, page, frame, card or row"),
       warning(2, "row must be directly inside dialog, banner, page, frame or table"),
-      warning(3, "icon must be directly inside dialog, banner, page or frame"),
+      warning(3, "icon must be directly inside dialog, banner, page, frame, cell or button"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
       warning(4, "row must be directly inside dialog, banner, page, frame or table"),
-      warning(5, "icon must be directly inside dialog, banner, page or frame"),
+      warning(5, "icon must be directly inside dialog, banner, page, frame, cell or button"),
     ]);
   });
 

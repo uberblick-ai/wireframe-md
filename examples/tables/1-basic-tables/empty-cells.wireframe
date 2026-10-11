@@ -16,4 +16,5 @@ page
       cell
         chip web
       cell
-        button.link pin
+        button.link
+          icon pin

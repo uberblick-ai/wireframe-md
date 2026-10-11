@@ -95,8 +95,8 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
-| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
-| `icon` | directly inside a root | none | its name: `archive`, the only icon in v0.1 |
+| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
+| `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value |
 | `toggle` | directly inside a root or a `row` | none | none: its choices are `option` lines |
@@ -117,6 +117,36 @@ with light and dark defaults. A host sets `--wf-success` and `--wf-success-tint`
 to restyle it. Its summary reads `success banner “…”`. There is no `.alert`;
 use `.danger` for a problem. Use `icon archive` only when archiving or restoring
 from the archive makes sense; other banners need no icon.
+
+Icons use every name in the bundled Tabler Icons 3.49.0 catalog, without aliases
+or lookup at runtime. `icon pin` draws outline and `icon.filled pin` draws filled.
+Use the base name, not `pin-filled`. If a name lacks the requested style, it warns
+and draws the available style instead. An unknown name warns and draws a dashed
+box showing the name; `pin-filled` also suggests `icon.filled pin`.
+
+An icon may stand directly inside a root, a cell or a button. It is muted on its
+own, uses a banner's tone and inherits a button's colour. Outline icons match
+the controls' stroke weight; filled icons draw solid shapes. Each icon's text
+alternative is its name with hyphens read as spaces, so `dots-vertical` is read
+as “dots vertical”. The root's accessible summary stays the same.
+
+A button holding an icon and no caption is an icon-only mock action. With a
+caption, the icon draws before it. `button.link` draws a bare icon; a plain button
+draws a border. Both remain non-focusable spans. Icons in cells line up beside
+text, chips and buttons. Icons in rows, cards or text warn and still draw.
+
+```wireframe
+page
+  table
+    row
+      cell Pinned document
+        icon pin
+      cell
+        button.link
+          icon.filled pin
+        button Archive
+          icon archive
+```
 
 A `frame` draws the shared block frame: a neutral 3 px left bar and faint neutral
 tint, the base radius on the right-hand corners and no other border. Its caption
@@ -141,7 +171,7 @@ variants, such as `text.small.muted`; write capitals in the source itself.
 An `input` is an empty bordered field showing its placeholder in muted. A
 `select` is a closed select with the same border, radius, height and padding as
 an input, with no fill, its chosen value in ink and a muted stroked chevron-down
-at the end. The chevron belongs to select and is not an `icon` name. Both fields
+at the end. The select's chevron is separate from the icon catalog. Both fields
 take the full width on their own. `label=` names either field above its control,
 in ink; the line's label stays the placeholder or chosen value. In a `row`,
 labelled fields share the width equally unless a control needs a wider column,
@@ -235,7 +265,8 @@ page
         chip.more +2
       cell.end 2 hours ago
       cell
-        button.link pin
+        button.link
+          icon pin
     row
       cell Card blocks
       cell
@@ -243,7 +274,8 @@ page
         chip markdown
       cell.end 3 days ago
       cell
-        button.link pin
+        button.link
+          icon pin
 ```
 
 ## Figma blocks
@@ -560,7 +592,8 @@ page
     row
       cell Web UI system
       chip web
-      button.link pin
+      button.link
+        icon pin
 ```
 
 Diagnostics:
@@ -580,7 +613,8 @@ page
       cell
         chip web
       cell
-        button.link pin
+        button.link
+          icon pin
 ```
 
 ### A root inside another node
@@ -617,7 +651,7 @@ Use only the kinds, variants and icons in [Kinds](#kinds). Wrong:
 
 ```text
 banner.warning
-  icon lock
+  icon pinn
   text.big Read-only. Ask the owner for access.
   row.end
     link Request access
@@ -626,12 +660,12 @@ banner.warning
 Diagnostics:
 
 ```text
-line 2: warning: unknown icon "lock": expected archive
+line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title or .small
 line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
-Fixed, leaving out the icon, since v0.1 has only `archive`:
+Fixed without an icon, since this banner is not about archiving:
 
 ```wireframe
 banner.warning

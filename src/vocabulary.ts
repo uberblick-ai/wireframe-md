@@ -14,7 +14,7 @@ export const LIMITS = {
  * a root, a row, a table, a table row (a row directly inside a table), a toggle
  * or a cell. A frame is a root that also allows caption buttons; a card holds text.
  */
-export type Place = "top" | "root" | "frame" | "card" | "row" | "table" | "table row" | "toggle" | "cell";
+export type Place = "top" | "root" | "frame" | "card" | "row" | "table" | "table row" | "toggle" | "cell" | "button";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -39,7 +39,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.
-  ["icon", { place: ["root"], variants: [], label: true }],
+  ["icon", { place: ["root", "cell", "button"], variants: ["filled"], label: true }],
   // The label is the placeholder.
   ["input", { place: ["root", "row"], variants: [], label: true }],
   // The label is the chosen value.
@@ -57,4 +57,4 @@ export const ROOTS: readonly string[] = [...KINDS]
   .filter(([, rule]) => rule.place.length === 1 && rule.place.includes("top"))
   .map(([kind]) => kind);
 
-export const ICONS: readonly string[] = ["archive"];
+export { ICONS } from "./icons.js";

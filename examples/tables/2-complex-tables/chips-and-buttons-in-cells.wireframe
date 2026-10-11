@@ -10,11 +10,13 @@ page
         chip web
         chip spec
       cell.end
-        button.link pin
+        button.link
+          icon pin
         button.link.danger Remove
     row
       cell Card blocks
       cell
         chip markdown
       cell.end
-        button pin
+        button
+          icon.filled pin

@@ -108,7 +108,7 @@ host can resolve it from the installed package, for example with
 | `text` | directly inside a root, a `card` or a non-table `row` | `.muted`, `.strong`, `.title`, `.small` | the text |
 | `row` | directly inside a root, or a `table` as a table row of cells | `.end` aligns its children right; `.head` is a table's header row | none |
 | `button` | directly inside a `row` or a `cell` | `.primary`, `.danger`, `.link`, `.focus` | the caption |
-| `icon` | directly inside a root | none | its name: `archive` |
+| `icon` | directly inside a root, a `cell` or a `button` | `.filled`, outline by default | its exact Tabler name, such as `pin` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value, in a bordered closed select with a chevron-down |
 | `toggle` | directly inside a root or a `row` | none | none; its options are `option` lines |
@@ -119,7 +119,7 @@ host can resolve it from the installed package, for example with
 
 A `select` shares the input's border, radius, height and padding, with no fill,
 its value in ink and a muted stroked chevron-down at the end. The chevron belongs
-to select and is not an icon name. Like an input, a select on its own takes the
+to select, separate from the icon catalog. Like an input, a select on its own takes the
 full width. `label=Role` or `label="Work email"` on an input or select names the
 field above its control in ink, while the line's label remains its placeholder
 or chosen value. Labelled fields share a row equally unless a control needs a
@@ -151,7 +151,7 @@ inherits.
 | Property | Controls | Light default | Dark default |
 | --- | --- | --- | --- |
 | `--wf-ink` | text, the secondary button's caption, ascending and descending sort arrows | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
-| `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, sortable arrows, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
+| `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner or button, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, sortable arrows, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
 | `--wf-paper` | cards, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
 | `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
@@ -174,7 +174,7 @@ The sizes are the same in light and dark.
 
 | Property | Controls | Default |
 | --- | --- | --- |
-| `--wf-stroke` | border width; a frame's left bar is three times it; icon, select chevron and cell sort strokes are one and a half times it | `1px` |
+| `--wf-stroke` | border width; a frame's left bar is three times it; select chevron and cell sort strokes are one and a half times it on a 16-unit grid, and icons match on Tabler's 24-unit grid | `1px` |
 | `--wf-focus-width` | the focus ring's width | `2px` |
 | `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
