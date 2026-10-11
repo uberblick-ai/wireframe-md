@@ -3,7 +3,7 @@ page
     row.head
       cell.sortable Name
       cell.ascending Role
-      cell.end.descending Documents
+      cell.end.sortable Documents
     row
       cell Ada Lovelace
       cell Admin
@@ -14,4 +14,16 @@ page
     button.primary 1
     button 2
     button 3
+    button Next
+  table
+    row.head
+      cell.sortable Name
+      cell.sortable Role
+      cell.end.descending Documents
+    row
+      cell Ada Lovelace
+      cell Admin
+      cell.end 12
+  row
+    text.muted This sentence explains the current selection and the next step, with enough words to wrap beside the action button.
     button Next

@@ -15,6 +15,11 @@ const samples = [
     intro: "Tables show sort state and pagination using inert header arrows, text and buttons.",
   })),
   {
+    name: "tables-reference-sorts-and-row-text",
+    source: readFileSync(new URL("../../examples/reference/vocabulary/table-sorts-and-row-text.wireframe", import.meta.url), "utf8"),
+    intro: "Each table has one sorted column; long row text wraps beside its action.",
+  },
+  {
     name: "card-block",
     source: cardBlock,
     intro: "A delivery review lists a recommendation with a label, title, body and footer.",

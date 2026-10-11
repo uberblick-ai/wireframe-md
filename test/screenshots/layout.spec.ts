@@ -11,6 +11,24 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const scheme of ["light", "dark"] as const) {
+  for (const width of [710, 400]) {
+    for (const row of ["row", "row.end"]) {
+      test(`long text in ${row} wraps beside its button within ${width} px in ${scheme}`, async ({ page }) => {
+        await show(page, `page\n  ${row}\n    text.muted This sentence explains the current selection and the next step, with enough words to wrap beside the action button.\n    button Next`, { scheme, host: "column", width });
+        expect(await measure(page)).toEqual({
+          root: { width, scrollWidth: width }, column: { width, scrollWidth: width }, escaped: [],
+        });
+        expect(await lines(page, ".wf-row > .wf-text")).toBeGreaterThan(1);
+        const text = await page.locator(".wf-row > .wf-text").boundingBox();
+        const button = await page.locator(".wf-row > .wf-button").boundingBox();
+        expect(button!.x).toBeGreaterThan(text!.x + text!.width);
+        expect(button!.y).toBeGreaterThanOrEqual(text!.y);
+        expect(button!.y + button!.height).toBeLessThanOrEqual(text!.y + text!.height);
+        expect(await lines(page, ".wf-button")).toBe(1);
+      });
+    }
+  }
+
   test(`sort arrows keep captions muted, share the chevron stroke and follow end-aligned text in ${scheme}`, async ({ page }) => {
     await show(page, "page\n  select Any\n  text Ink\n  table\n    row.head\n      cell.end.sortable Name\n      cell.end.ascending Count\n      cell.end.descending Date", { scheme, host: "column" });
     const styles = async () => page.evaluate(() => {
@@ -502,6 +520,7 @@ test.describe("fit", () => {
     "a row of many buttons": `dialog Pick one\n  row.end\n${"    button Option\n".repeat(25)}`,
     "a long word in a dialog": `dialog Title\n  text ${"x".repeat(300)}`,
     "a long word in a banner": `banner\n  text ${"x".repeat(300)}\n  row.end\n    button Restore`,
+    "a long word in a row": `page\n  row.end\n    text ${"x".repeat(300)}\n    button Next`,
     "a long button caption": `banner\n  row\n    button ${"x".repeat(300)}`,
     "a row of buttons at the top level": `row\n${"  button Option\n".repeat(25)}`,
     "a table of many columns": `page\n  table\n    row\n${"      cell Column\n".repeat(25)}`,

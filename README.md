@@ -134,7 +134,8 @@ A header cell's `.sortable` draws a muted stroked ↕ after its caption;
 `.ascending` draws ↑ and `.descending` draws ↓ in ink. The caption stays muted,
 and the variants combine with `.end`. A sort variant outside a table's header
 row or more than one sort variant on a cell warns and still draws the first.
-Mark at most one sorted column per table. Text in a non-table row keeps its
+Mark at most one sorted column per table. Long row text wraps between words
+beside the other children. Text in a non-table row keeps its
 variants and source order without naming the root in its summary. A sibling
 `row.end` below a table can draw pagination with `text.muted`, page buttons and
 `button.primary` for the current page. Sorting and paging remain static drawings.

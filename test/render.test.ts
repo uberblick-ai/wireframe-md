@@ -285,7 +285,7 @@ describe("kinds and variants", () => {
   });
 
   it.each([
-    ["sortable", "M5 13V3m-3 3 3-3 3 3M11 3v10m-3-3 3 3 3-3"],
+    ["sortable", "M8 13V3M4 7l4-4 4 4M4 9l4 4 4-4"],
     ["ascending", "M8 13V3M4 7l4-4 4 4"],
     ["descending", "M8 3v10M4 9l4 4 4-4"],
   ])("draws cell.%s after its caption, including with .end and in a warned body cell", (variant, path) => {

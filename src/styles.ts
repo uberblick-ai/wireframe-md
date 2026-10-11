@@ -321,7 +321,7 @@ const STYLES = `.wf-root {
 }
 
 .wf-root .wf-row > .wf-text {
-  flex: none;
+  flex: 0 1 auto;
 }
 
 /* Field labels wrap instead of setting column widths. Controls keep their

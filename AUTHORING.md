@@ -179,7 +179,8 @@ both still draw the first sort variant written.
 
 Outside a table row, `text` may stand directly inside a `row`. It draws on the
 row's line in source order and keeps its text variants. Text in a row does not
-name its root in the accessible summary. A pagination row goes below the table
+name its root in the accessible summary. Long text wraps between words beside
+the other children. A pagination row goes below the table
 as its sibling, using existing text and buttons:
 
 ```wireframe
