@@ -1,0 +1,32 @@
+page
+  text.title Documents
+  table
+    row.head
+      cell.sortable Title
+    row
+      cell Web UI system
+    row
+      cell Card blocks
+    row
+      cell Release notes
+    row
+      cell Sync protocol
+    row
+      cell Team handbook
+    row
+      cell Search design
+    row
+      cell API reference
+    row
+      cell Launch checklist
+    row
+      cell Access policy
+    row
+      cell Planning notes
+  row.end
+    text.muted 1–10 of 24
+    button Previous
+    button.primary 1
+    button 2
+    button 3
+    button Next

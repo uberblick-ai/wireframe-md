@@ -10,6 +10,98 @@ test.beforeEach(async ({ page }) => {
   await open(page);
 });
 
+for (const scheme of ["light", "dark"] as const) {
+  for (const width of [710, 400]) {
+    for (const row of ["row", "row.end"]) {
+      test(`long text in ${row} wraps beside its button within ${width} px in ${scheme}`, async ({ page }) => {
+        await show(page, `page\n  ${row}\n    text.muted This sentence explains the current selection and the next step, with enough words to wrap beside the action button.\n    button Next`, { scheme, host: "column", width });
+        expect(await measure(page)).toEqual({
+          root: { width, scrollWidth: width }, column: { width, scrollWidth: width }, escaped: [],
+        });
+        expect(await lines(page, ".wf-row > .wf-text")).toBeGreaterThan(1);
+        const text = await page.locator(".wf-row > .wf-text").boundingBox();
+        const button = await page.locator(".wf-row > .wf-button").boundingBox();
+        expect(button!.x).toBeGreaterThan(text!.x + text!.width);
+        expect(button!.y).toBeGreaterThanOrEqual(text!.y);
+        expect(button!.y + button!.height).toBeLessThanOrEqual(text!.y + text!.height);
+        expect(await lines(page, ".wf-button")).toBe(1);
+      });
+    }
+  }
+
+  test(`sort arrows keep captions muted, share the chevron stroke and follow end-aligned text in ${scheme}`, async ({ page }) => {
+    await show(page, "page\n  select Any\n  text Ink\n  table\n    row.head\n      cell.end.sortable Name\n      cell.end.ascending Count\n      cell.end.descending Date", { scheme, host: "column" });
+    const styles = async () => page.evaluate(() => {
+      const caret = getComputedStyle(document.querySelector(".wf-select-caret")!);
+      const ink = getComputedStyle(document.querySelector(".wf-text")!).color;
+      const cells = [...document.querySelectorAll(".wf-cell")].map((cell) => {
+        const glyph = cell.querySelector("svg")!;
+        const style = getComputedStyle(glyph);
+        const caption = document.createRange();
+        caption.selectNodeContents(cell.firstChild!);
+        const box = glyph.getBoundingClientRect();
+        return {
+          caption: getComputedStyle(cell).color, glyph: style.color,
+          fill: style.fill, stroke: style.stroke, strokeWidth: style.strokeWidth,
+          cap: style.strokeLinecap, join: style.strokeLinejoin,
+          alignment: getComputedStyle(cell).textAlign,
+          followsCaption: box.left >= caption.getBoundingClientRect().right,
+          endGap: cell.getBoundingClientRect().right - Number.parseFloat(getComputedStyle(cell).paddingRight) - box.right,
+        };
+      });
+      return { muted: caret.color, ink, strokeWidth: caret.strokeWidth, cells };
+    });
+    const check = (actual: Awaited<ReturnType<typeof styles>>) => {
+      expect(actual.cells.map((cell) => cell.caption)).toEqual([actual.muted, actual.muted, actual.muted]);
+      expect(actual.cells.map((cell) => cell.glyph)).toEqual([actual.muted, actual.ink, actual.ink]);
+      for (const cell of actual.cells) {
+        expect(cell.fill).toBe("none");
+        expect(cell.stroke).toBe(cell.glyph);
+        expect(cell.strokeWidth).toBe(actual.strokeWidth);
+        expect(cell.cap).toBe("round");
+        expect(cell.join).toBe("round");
+        expect(cell.alignment).toBe("end");
+        expect(cell.followsCaption).toBe(true);
+        expect(Math.abs(cell.endGap)).toBeLessThan(0.5);
+      }
+    };
+    check(await styles());
+    await page.locator(".column").evaluate((host) => {
+      host.style.setProperty("--wf-ink", "rgb(10, 20, 30)");
+      host.style.setProperty("--wf-muted", "rgb(40, 50, 60)");
+      host.style.setProperty("--wf-stroke", "2px");
+    });
+    const overridden = await styles();
+    check(overridden);
+    expect(overridden.ink).toBe("rgb(10, 20, 30)");
+    expect(overridden.muted).toBe("rgb(40, 50, 60)");
+    expect(overridden.strokeWidth).toBe("3px");
+  });
+
+  test(`the paginated table fits 710 px at full size with its footer on one line in ${scheme}`, async ({ page }) => {
+    const source = readFileSync(new URL("../../examples/tables/2-complex-tables/paginated-table.wireframe", import.meta.url), "utf8");
+    await show(page, source, { scheme, host: "column" });
+    expect(await measure(page)).toEqual({
+      root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+    });
+    expect(await page.locator(".wf-root").evaluate((root) => getComputedStyle(root).fontSize)).toBe("14px");
+    const row = page.locator(".wf-page > .wf-row.wf-end");
+    await expect(row.locator(":scope > *")).toHaveText(["1–10 of 24", "Previous", "1", "2", "3", "Next"]);
+    const geometry = await row.evaluate((row) => {
+      const boxes = [...row.children].map((child) => child.getBoundingClientRect());
+      return {
+        sameLine: Math.max(...boxes.map((box) => box.top)) < Math.min(...boxes.map((box) => box.bottom)),
+        ordered: boxes.every((box, index) => index === 0 || box.left > boxes[index - 1]!.right),
+        endGap: row.getBoundingClientRect().right - boxes.at(-1)!.right,
+      };
+    });
+    expect(geometry.sameLine).toBe(true);
+    expect(geometry.ordered).toBe(true);
+    expect(Math.abs(geometry.endGap)).toBeLessThan(0.5);
+    await expect(page.locator(".wf-root button, .wf-root [tabindex], .wf-root a, .wf-root input")).toHaveCount(0);
+  });
+}
+
 interface Fit {
   /** The root's width, and its content's: equal when nothing scrolls. */
   root: { width: number; scrollWidth: number };
@@ -428,6 +520,7 @@ test.describe("fit", () => {
     "a row of many buttons": `dialog Pick one\n  row.end\n${"    button Option\n".repeat(25)}`,
     "a long word in a dialog": `dialog Title\n  text ${"x".repeat(300)}`,
     "a long word in a banner": `banner\n  text ${"x".repeat(300)}\n  row.end\n    button Restore`,
+    "a long word in a row": `page\n  row.end\n    text ${"x".repeat(300)}\n    button Next`,
     "a long button caption": `banner\n  row\n    button ${"x".repeat(300)}`,
     "a row of buttons at the top level": `row\n${"  button Option\n".repeat(25)}`,
     "a table of many columns": `page\n  table\n    row\n${"      cell Column\n".repeat(25)}`,

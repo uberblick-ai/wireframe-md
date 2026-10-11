@@ -24,6 +24,8 @@ export interface KindRule {
   label: boolean;
 }
 
+export const CELL_SORT_VARIANTS: readonly string[] = ["sortable", "ascending", "descending"];
+
 // A Map, so a kind such as `constructor` cannot find an Object.prototype member.
 export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["dialog", { place: ["top"], variants: [], label: true }],
@@ -32,7 +34,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["page", { place: ["top"], variants: [], label: false }],
   ["frame", { place: ["top"], variants: [], label: true }],
   ["card", { place: ["top", "root"], variants: [], label: false }],
-  ["text", { place: ["root", "card"], variants: ["muted", "strong", "title", "small"], label: true }],
+  ["text", { place: ["root", "card", "row"], variants: ["muted", "strong", "title", "small"], label: true }],
   // Inside a table, a row is a table row of cells: .head there, .end outside one.
   ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
@@ -45,7 +47,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["toggle", { place: ["root", "row"], variants: [], label: false }],
   ["option", { place: ["toggle"], variants: ["current"], label: true }],
   ["table", { place: ["root"], variants: [], label: false }],
-  ["cell", { place: ["table row"], variants: ["end"], label: true }],
+  ["cell", { place: ["table row"], variants: ["end", ...CELL_SORT_VARIANTS], label: true }],
   ["chip", { place: ["row", "cell"], variants: ["more"], label: true }],
 ]);
 

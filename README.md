@@ -105,8 +105,8 @@ host can resolve it from the installed package, for example with
 | `dialog` | at the top level | none | the title |
 | `banner` | at the top level | `.neutral` (default), `.info`, `.warning`, `.danger` | none; its text goes on a `text` line |
 | `page` | at the top level | none | none; its title goes on a `text.title` line |
-| `text` | directly inside a root | `.muted`, `.strong`, `.title` | the text |
-| `row` | directly inside a root, or a `table` as a table row of cells | `.end` aligns its buttons right; `.head` is a table's header row | none |
+| `text` | directly inside a root, a `card` or a non-table `row` | `.muted`, `.strong`, `.title`, `.small` | the text |
+| `row` | directly inside a root, or a `table` as a table row of cells | `.end` aligns its children right; `.head` is a table's header row | none |
 | `button` | directly inside a `row` or a `cell` | `.primary`, `.danger`, `.link`, `.focus` | the caption |
 | `icon` | directly inside a root | none | its name: `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
@@ -114,7 +114,7 @@ host can resolve it from the installed package, for example with
 | `toggle` | directly inside a root or a `row` | none | none; its options are `option` lines |
 | `option` | directly inside a `toggle` | `.current` | the caption |
 | `table` | directly inside a root | none | none |
-| `cell` | directly inside a table row | `.end` right-aligns, with tabular figures | its text, or none |
+| `cell` | directly inside a table row | `.end` right-aligns, with tabular figures; `.sortable`, `.ascending`, `.descending` draw sort arrows | its text, or none |
 | `chip` | directly inside a `row` or a `cell` | `.more` is the count of the rest | the tag, or the count |
 
 A `select` shares the input's border, radius, height and padding, with no fill,
@@ -130,6 +130,16 @@ value stays on one line; overflow scrolls inside the wireframe, never the page.
 Other attributes, `label=` on the wrong kind and repeated `label=` values warn;
 the first field label draws.
 
+A header cell's `.sortable` draws a muted stroked ↕ after its caption;
+`.ascending` draws ↑ and `.descending` draws ↓ in ink. The caption stays muted,
+and the variants combine with `.end`. A sort variant outside a table's header
+row or more than one sort variant on a cell warns and still draws the first.
+Mark at most one sorted column per table. Long row text wraps between words
+beside the other children. Text in a non-table row keeps its
+variants and source order without naming the root in its summary. A sibling
+`row.end` below a table can draw pagination with `text.muted`, page buttons and
+`button.primary` for the current page. Sorting and paging remain static drawings.
+
 ## Theming
 
 A wireframe takes the font family from its host and resets the other text
@@ -140,8 +150,8 @@ inherits.
 
 | Property | Controls | Light default | Dark default |
 | --- | --- | --- | --- |
-| `--wf-ink` | text, and the secondary button's caption | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
-| `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
+| `--wf-ink` | text, the secondary button's caption, ascending and descending sort arrows | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, sortable arrows, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
 | `--wf-paper` | cards, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
 | `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
@@ -164,7 +174,7 @@ The sizes are the same in light and dark.
 
 | Property | Controls | Default |
 | --- | --- | --- |
-| `--wf-stroke` | border width; a frame's left bar is three times it; icon and select chevron strokes are one and a half times it | `1px` |
+| `--wf-stroke` | border width; a frame's left bar is three times it; icon, select chevron and cell sort strokes are one and a half times it | `1px` |
 | `--wf-focus-width` | the focus ring's width | `2px` |
 | `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |

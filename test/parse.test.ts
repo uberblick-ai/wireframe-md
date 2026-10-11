@@ -287,7 +287,7 @@ describe("warnings", () => {
     ]);
     expect(result.diagnostics).toEqual([
       warning(2, `unknown kind "box": expected ${KIND_LIST}`),
-      warning(3, "text must be directly inside dialog, banner, page, frame or card"),
+      warning(3, "text must be directly inside dialog, banner, page, frame, card or row"),
     ]);
   });
 
@@ -399,12 +399,11 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog, banner, page, frame or card"),
+      warning(1, "text must be directly inside dialog, banner, page, frame, card or row"),
       warning(2, "row must be directly inside dialog, banner, page, frame or table"),
       warning(3, "icon must be directly inside dialog, banner, page or frame"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(3, "text must be directly inside dialog, banner, page, frame or card"),
       warning(4, "row must be directly inside dialog, banner, page, frame or table"),
       warning(5, "icon must be directly inside dialog, banner, page or frame"),
     ]);
@@ -465,6 +464,36 @@ describe("warnings", () => {
     ]);
   });
 
+  it("accepts one sort variant per header cell, with end alignment and multiple sorted columns", () => {
+    expect(warnings("page\n  table\n    row.head\n      cell.sortable Name\n      cell.end.ascending Count\n      cell.descending Date")).toEqual([]);
+  });
+
+  it.each(["sortable", "ascending", "descending"])("warns about cell.%s outside a table header row", (variant) => {
+    expect(warnings(`page\n  table\n    row\n      cell.${variant} Body`)).toEqual([
+      warning(4, `cell.${variant} must be directly inside a header row`),
+    ]);
+    expect(warnings(`page\n  row.head\n    cell.${variant} Loose`)).toEqual([
+      warning(2, "row.head must be directly inside table"),
+      warning(3, `cell.${variant} must be directly inside a header row`),
+      warning(3, "cell must be directly inside a table row"),
+    ]);
+  });
+
+  it("warns once about competing sort variants, including repeated ones", () => {
+    expect(warnings("page\n  table\n    row.head\n      cell.end.descending.sortable.ascending Count\n      cell.sortable.sortable Name")).toEqual([
+      warning(4, "cell takes one of .sortable, .ascending or .descending: the first is used"),
+      warning(5, "cell takes one of .sortable, .ascending or .descending: the first is used"),
+    ]);
+    expect(warnings("page\n  table\n    row\n      cell.ascending.descending Count")).toEqual([
+      warning(4, "cell.ascending must be directly inside a header row"),
+      warning(4, "cell takes one of .sortable, .ascending or .descending: the first is used"),
+    ]);
+  });
+
+  it("accepts text variants directly inside a non-table row", () => {
+    expect(warnings("page\n  row.end\n    text.small.muted 1–10 of 24\n    text.strong Count\n    text.title Title\n    button Next")).toEqual([]);
+  });
+
   it("warns about any kind but cell in a table row", () => {
     const source = [
       "page",
@@ -521,7 +550,7 @@ describe("warnings", () => {
       warning(4, 'unknown variant ".small": toggle takes no variants'),
       warning(5, 'unknown variant ".selected" on option: expected .current'),
       warning(6, 'unknown variant ".striped": table takes no variants'),
-      warning(8, 'unknown variant ".start" on cell: expected .end'),
+      warning(8, 'unknown variant ".start" on cell: expected .end, .sortable, .ascending or .descending'),
       warning(11, 'unknown variant ".danger" on chip: expected .more'),
     ]);
   });
