@@ -25,6 +25,11 @@ describe("summarizeWireframe", () => {
     expect(summary("page\n  input Search titles")).toBe("Wireframe: page");
   });
 
+  it("does not name a root by text in a row", () => {
+    expect(summary("page\n  row.end\n    text.muted 1–10 of 24\n    button Next")).toBe("Wireframe: page");
+    expect(summary("page\n  row\n    text.title In a row\n  text Direct text")).toBe("Wireframe: page “Direct text”");
+  });
+
   it("names a frame by its caption label, without falling back to body text", () => {
     expect(summary(figmaReading)).toBe("Wireframe: frame “Figma · Payment, mobile”");
     expect(summary(figmaPrivate)).toBe("Wireframe: frame “Figma · Checkout flow”");

@@ -1,5 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
-import { KINDS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, KINDS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -19,6 +19,13 @@ const ICON_PATHS: ReadonlyMap<string, string> = new Map([["archive", "M2 3h12v3H
 
 // The select's stroked 16×16 chevron-down. It belongs to select and is no icon name.
 const CHEVRON_PATH = "M4 6l4 4 4-4";
+
+// Stroked sort arrows belong to cells, not the icon vocabulary.
+const SORT_PATHS: ReadonlyMap<string, string> = new Map([
+  ["sortable", "M5 13V3m-3 3 3-3 3 3M11 3v10m-3-3 3 3 3-3"],
+  ["ascending", "M8 13V3M4 7l4-4 4 4"],
+  ["descending", "M8 3v10M4 9l4 4 4-4"],
+]);
 
 // Kinds that sit in a line of text or a row; the rest are blocks.
 const INLINE: readonly string[] = ["button", "icon", "select", "option", "chip"];
@@ -51,8 +58,15 @@ export function renderWireframe(
 function draw(document: Document, node: WireframeNode): HTMLElement {
   const rule = KINDS.get(node.kind);
   if (rule === undefined) return unknown(document, node);
+  const sortIndex = node.kind === "cell"
+    ? node.variants.findIndex((variant) => CELL_SORT_VARIANTS.includes(variant))
+    : -1;
+  const sort = node.variants[sortIndex];
   // Only variants the kind knows become classes, so an unknown one adds no styling.
-  const variants = node.variants.filter((variant) => rule.variants.includes(variant)).map((variant) => `wf-${variant}`);
+  const variants = node.variants
+    .filter((variant, index) => rule.variants.includes(variant) &&
+      (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
+    .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
 
@@ -85,6 +99,12 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       element.textContent = node.label;
       element.append(glyph(document, "wf-select-caret", CHEVRON_PATH));
       break;
+    case "cell": {
+      element.textContent = node.label;
+      const path = sort === undefined ? undefined : SORT_PATHS.get(sort);
+      if (path !== undefined) element.append(glyph(document, "wf-cell-sort", path));
+      break;
+    }
     default:
       // A banner, page, card, row, toggle or table takes no label. One written anyway warns and draws as text.
       if (node.label !== "") {

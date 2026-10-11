@@ -1,5 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { ICONS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, ICONS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -205,6 +205,13 @@ function checkNode(
     return;
   }
   const place = placeOf(parent, grandparent);
+  if (kind === "cell") {
+    const sorts = node.variants.filter((variant) => CELL_SORT_VARIANTS.includes(variant));
+    if (sorts.length > 0 && !(place === "table row" && parent?.variants.includes("head"))) {
+      warn(`cell.${sorts[0]} must be directly inside a header row`);
+    }
+    if (sorts.length > 1) warn("cell takes one of .sortable, .ascending or .descending: the first is used");
+  }
   if (place === "table row" && kind !== "cell") warn(`${kind} in a table row: expected cell`);
   else if (place === undefined || !(rule.place.includes(place) || (place === "frame" && rule.place.includes("root")))) {
     const top = rule.place.includes("top") ? "at the top level or " : "";

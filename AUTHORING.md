@@ -93,8 +93,8 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
-| `text` | directly inside a root or a `card` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
-| `row` | directly inside a root or a `table` | `.end`: aligns its buttons to the right; `.head`: a table's header row, in grey | none |
+| `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
+| `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
 | `icon` | directly inside a root | none | its name: `archive`, the only icon in v0.1 |
 | `input` | directly inside a root or a `row` | none | the placeholder |
@@ -102,7 +102,7 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `toggle` | directly inside a root or a `row` | none | none: its choices are `option` lines |
 | `option` | directly inside a `toggle` | `.current`: the chosen one | the caption |
 | `table` | directly inside a root | none | none: it holds rows |
-| `cell` | directly inside a table `row` | `.end`: right-aligned, for times and figures | its text, or none for an empty cell |
+| `cell` | directly inside a table `row` | `.end`: right-aligned, for times and figures; `.sortable`: muted ↕; `.ascending`: ink ↑; `.descending`: ink ↓ | its text, or none for an empty cell |
 | `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
 
 A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-width
@@ -167,6 +167,41 @@ each `cell` holds its text, `chip` lines or `button` lines. A table draws with
 rules under the header and between rows, and no other lines. Give every row the
 same number of cells, an empty `cell` where a column has nothing. `.head` is for
 a table row and `.end` for a row anywhere else.
+
+Header cells may take one of `.sortable`, `.ascending` or `.descending`. The
+stroked arrow follows the caption, which keeps the header row's muted colour.
+These combine with `.end`: `cell.end.descending` stays right-aligned with its
+arrow after the caption. The arrows belong to the cell and are not `icon` names.
+Mark at most one sorted column per table; the other sortable columns use
+`.sortable`. Two sorted columns do not warn. A sort variant outside a `row.head`
+directly inside a `table` warns, as does more than one sort variant on a cell;
+both still draw the first sort variant written.
+
+Outside a table row, `text` may stand directly inside a `row`. It draws on the
+row's line in source order and keeps its text variants. Text in a row does not
+name its root in the accessible summary. A pagination row goes below the table
+as its sibling, using existing text and buttons:
+
+```wireframe
+page
+  table
+    row.head
+      cell.ascending Name
+      cell.end.sortable Documents
+    row
+      cell Ada Lovelace
+      cell.end 12
+  row.end
+    text.muted 1–10 of 24
+    button Previous
+    button.primary 1
+    button 2
+    button 3
+    button Next
+```
+
+Sort indicators and pagination draw a static state; sorting and paging behaviour
+are outside the format.
 
 ## A page
 

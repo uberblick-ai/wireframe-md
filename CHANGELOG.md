@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Table cells accept `.sortable`, `.ascending` and `.descending` to draw stroked
+  sort indicators, including with `.end`. Misplaced or competing sort variants
+  warn and still draw the first. Text may stand in a non-table row, allowing
+  static pagination with existing buttons.
+
 ## 0.2.0
 
 The vocabulary grows from a dialog and a banner to whole pages: tables, form

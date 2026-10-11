@@ -272,6 +272,47 @@ describe("kinds and variants", () => {
     expect(drawn("dialog\n  row\n  row.end").slice(2)).toEqual(["    div.wf-row", "    div.wf-row.wf-end"]);
   });
 
+  it("draws row text and buttons in source order, retaining text variants", () => {
+    expect(drawn("page\n  row.end\n    button Previous\n    text.small.muted 1–10 of 24\n    text.strong Count\n    text.title Title\n    button Next")).toEqual([
+      "div.wf-page",
+      "  div.wf-row.wf-end",
+      "    span.wf-button Previous",
+      "    div.wf-text.wf-small.wf-muted 1–10 of 24",
+      "    div.wf-text.wf-strong Count",
+      "    div.wf-text.wf-title Title",
+      "    span.wf-button Next",
+    ]);
+  });
+
+  it.each([
+    ["sortable", "M5 13V3m-3 3 3-3 3 3M11 3v10m-3-3 3 3 3-3"],
+    ["ascending", "M8 13V3M4 7l4-4 4 4"],
+    ["descending", "M8 3v10M4 9l4 4 4-4"],
+  ])("draws cell.%s after its caption, including with .end and in a warned body cell", (variant, path) => {
+    for (const row of ["row", "row.head"]) {
+      for (const end of ["", ".end"]) {
+        const root = render(`page\n  table\n    ${row}\n      cell${end}.${variant} Caption`);
+        const cell = root.querySelector(".wf-cell")!;
+        expect(cell.firstChild?.textContent).toBe("Caption");
+        expect(cell.classList.contains("wf-end")).toBe(end !== "");
+        const svg = cell.lastChild as SVGSVGElement;
+        expect(svg.getAttribute("class")).toBe("wf-cell-sort");
+        expect(svg.getAttribute("viewBox")).toBe("0 0 16 16");
+        expect(svg.getAttribute("aria-hidden")).toBe("true");
+        expect(svg.querySelector("path")?.getAttribute("d")).toBe(path);
+        expect(root.querySelector(".wf-icon")).toBeNull();
+      }
+    }
+  });
+
+  it("draws only the first sort variant, even when competing variants warn", () => {
+    for (const first of ["sortable", "ascending", "descending"]) {
+      const single = render(`page\n  table\n    row.head\n      cell.end.${first} Caption`);
+      const competing = render(`page\n  table\n    row.head\n      cell.end.${first}.descending.ascending.sortable Caption`);
+      expect(competing.outerHTML).toBe(single.outerHTML);
+    }
+  });
+
   it("draws buttons as secondary by default, and with each variant", () => {
     const buttons = ["button", "button.primary", "button.danger", "button.link", "button.focus", "button.primary.danger"];
     expect(drawn(`dialog\n  row\n${buttons.map((b) => `    ${b} Go`).join("\n")}`).slice(3)).toEqual([

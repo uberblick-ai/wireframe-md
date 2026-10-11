@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...["sorted-ascending", "sorted-descending", "paginated-table"].map((name) => ({
+    name: `tables-${name}`,
+    source: readFileSync(new URL(`../../examples/tables/2-complex-tables/${name}.wireframe`, import.meta.url), "utf8"),
+    intro: "Tables show sort state and pagination using inert header arrows, text and buttons.",
+  })),
   {
     name: "card-block",
     source: cardBlock,

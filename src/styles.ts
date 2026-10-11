@@ -12,7 +12,7 @@
 //   --wf-ink           text, and the secondary button's caption
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
 //                      an input's placeholder, a select's chevron-down, options but the current one, a table's
-//                      header row and chip.more
+//                      header row, cell.sortable's arrows and chip.more
 //   --wf-paper         cards, a page and the secondary button's fill
 //   --wf-line          borders: cards, a page, buttons, inputs, selects, the banner's base and unknown boxes;
 //                      a table's rules; mixed into a chip's fill
@@ -27,7 +27,7 @@
 //   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint,
 //   --wf-success-tint                          a banner's fill
-//   --wf-stroke        border width; icon and select chevron strokes are one and a half times it
+//   --wf-stroke        border width; icon, select chevron and cell sort strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
 //   --wf-radius-lg     the dialog's card and scrim, and a page
@@ -320,6 +320,10 @@ const STYLES = `.wf-root {
   justify-content: flex-end;
 }
 
+.wf-root .wf-row > .wf-text {
+  flex: none;
+}
+
 /* Field labels wrap instead of setting column widths. Controls keep their
    minimum content width, widening the surrounding boxes when needed. In a row,
    columns stretch together and label tracks absorb any extra wrapped lines. */
@@ -522,6 +526,19 @@ const STYLES = `.wf-root {
   margin: 0;
 }
 
+.wf-root .wf-cell-sort {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: 0.375em;
+  vertical-align: -0.125em;
+  color: var(--_wf-ink);
+}
+
+.wf-root .wf-cell.wf-sortable > .wf-cell-sort {
+  color: var(--_wf-muted);
+}
+
 /* Times and figures: they line up on the right and keep to one line. */
 .wf-root .wf-cell.wf-end {
   text-align: end;
@@ -568,7 +585,8 @@ const STYLES = `.wf-root {
 }
 
 .wf-root .wf-icon-glyph,
-.wf-root .wf-select-caret {
+.wf-root .wf-select-caret,
+.wf-root .wf-cell-sort {
   fill: none;
   stroke: currentColor;
   stroke-width: calc(1.5 * var(--_wf-stroke));

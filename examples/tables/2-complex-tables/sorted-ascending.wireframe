@@ -1,0 +1,22 @@
+page
+  table
+    row.head
+      cell.ascending Name
+      cell.sortable Role
+      cell.end.sortable Documents
+      cell Status
+    row
+      cell Ada Lovelace
+      cell Admin
+      cell.end 12
+      cell Active
+    row
+      cell Alan Turing
+      cell Reader
+      cell.end 3
+      cell Active
+    row
+      cell Grace Hopper
+      cell Editor
+      cell.end 8
+      cell Invited
