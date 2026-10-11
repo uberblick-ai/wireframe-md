@@ -43,9 +43,16 @@ function measure(page: Page): Promise<Fit> {
 /** How many lines `selector`'s text takes. */
 function lines(page: Page, selector: string): Promise<number> {
   return page.evaluate((selector) => {
-    const range = document.createRange();
-    range.selectNodeContents(document.querySelector(selector)!);
-    return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+    // Count text lines, not the control boxes and SVGs around them: a bordered
+    // select is taller than its text, while its chevron is shorter.
+    const walker = document.createTreeWalker(document.querySelector(selector)!, NodeFilter.SHOW_TEXT);
+    const tops = new Set<number>();
+    while (walker.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(walker.currentNode);
+      for (const rect of range.getClientRects()) tops.add(Math.round(rect.top));
+    }
+    return tops.size;
   }, selector);
 }
 
@@ -176,7 +183,40 @@ test.describe("fit", () => {
     expect(Math.round(button!.x + button!.width - inRow!.x)).toBe(Math.round(full!.width));
   });
 
-  test("a toggle's options and a select share one line, the caret after the value", async ({ page }) => {
+  for (const container of ["root", "page", "dialog"] as const) {
+    test(`a select stretches like an input in a ${container}, with its chevron at the far end`, async ({ page }) => {
+      const fields = "input Search\nselect Any tag\nselect";
+      const source = container === "root" ? fields : `${container}\n${fields.split("\n").map((line) => `  ${line}`).join("\n")}`;
+      await show(page, source, { host: "column" });
+      const input = await page.locator(".wf-input").boundingBox();
+      for (const select of await page.locator(".wf-select").all()) {
+        const box = await select.boundingBox();
+        expect(box).toMatchObject({ x: input!.x, width: input!.width, height: input!.height });
+        const gap = await select.evaluate((element) => {
+          const style = getComputedStyle(element);
+          const chevron = element.querySelector("svg")!.getBoundingClientRect();
+          return element.getBoundingClientRect().right - chevron.right - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderRightWidth);
+        });
+        expect(gap).toBeCloseTo(0, 1);
+      }
+      expect((await measure(page)).escaped).toEqual([]);
+    });
+  }
+
+  test("a row's select keeps its content width while the input fills the space, at the same height", async ({ page }) => {
+    await show(page, "page\n  input Search\n  row\n    input Search\n    select Any tag\n    select Any tag", { host: "column" });
+    const [full, input, first, second, row] = await Promise.all(
+      [".wf-page > .wf-input", ".wf-row > .wf-input", ".wf-select:first-of-type", ".wf-select:last-of-type", ".wf-row"].map((selector) => page.locator(selector).boundingBox()),
+    );
+    expect(first!.height).toBe(input!.height);
+    expect(second!.height).toBe(input!.height);
+    expect(first!.width).toBe(second!.width);
+    expect(first!.width).toBeLessThan(input!.width);
+    expect(row!.width).toBe(full!.width);
+    expect(second!.x + second!.width).toBeCloseTo(full!.x + full!.width, 1);
+  });
+
+  test("a toggle's options and a select share one line, the chevron after the value", async ({ page }) => {
     await show(page, documentList, { host: "column" });
     const boxes = await page.evaluate(() =>
       [...document.querySelectorAll(".wf-option, .wf-select, .wf-select-caret")].map((element) => {
@@ -204,6 +244,10 @@ test.describe("fit", () => {
     "a long word in a table cell": `page\n  table\n    row\n      cell ${"x".repeat(300)}\n      cell.end 2 hours ago`,
     "a long word in a page's title": `page\n  text.title ${"x".repeat(100)}`,
     "a long word in an input": `page\n  row\n    input ${"x".repeat(300)}\n    select Any tag`,
+    "a long select value at the top level": `select ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a page": `page\n  select ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a dialog": `dialog Pick one\n  select ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a row": `page\n  row\n    input Search\n    select ${"Long chosen value ".repeat(30)}`,
     "a row of many chips": `page\n  row\n${"    chip release\n".repeat(25)}`,
   };
   for (const [name, source] of Object.entries(wide)) {
@@ -215,6 +259,14 @@ test.describe("fit", () => {
         expect(root.scrollWidth).toBeGreaterThan(710);
         expect(column).toEqual({ width: 710, scrollWidth: 710 });
         expect(escaped).toEqual([]);
+        if (name.startsWith("a long select value")) {
+          const lineCount = await page.locator(".wf-select").evaluate((select) => {
+            const range = document.createRange();
+            range.selectNode(select.firstChild!);
+            return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+          });
+          expect(lineCount).toBe(1);
+        }
       });
     }
   }
@@ -274,6 +326,63 @@ test.describe("fit", () => {
 });
 
 test.describe("theming", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`select shares input geometry and icon strokes in ${scheme}, including host overrides`, async ({ page }) => {
+      const host = await show(page, "page\n  row\n    input Search\n    select Any tag\n  icon archive", { scheme });
+      const appearance = () => page.evaluate(() => {
+        const field = (selector: string) => {
+          const element = document.querySelector(selector)!;
+          const style = getComputedStyle(element);
+          return {
+            height: element.getBoundingClientRect().height,
+            border: style.border,
+            radius: style.borderRadius,
+            padding: style.padding,
+            fill: style.backgroundColor,
+          };
+        };
+        const input = getComputedStyle(document.querySelector(".wf-input")!);
+        const select = getComputedStyle(document.querySelector(".wf-select")!);
+        const chevron = getComputedStyle(document.querySelector(".wf-select-caret")!);
+        const icon = getComputedStyle(document.querySelector(".wf-icon-glyph")!);
+        return {
+          input: field(".wf-input"), select: field(".wf-select"),
+          ink: getComputedStyle(document.querySelector(".wf-root")!).color,
+          value: select.color, muted: input.color, chevron: chevron.color,
+          fill: chevron.fill, stroke: chevron.stroke, strokeWidth: chevron.strokeWidth,
+          iconStrokeWidth: icon.strokeWidth, cap: chevron.strokeLinecap, join: chevron.strokeLinejoin,
+        };
+      });
+      const check = async () => {
+        const styles = await appearance();
+        expect(styles.select).toEqual(styles.input);
+        expect(styles.select.fill).toBe("rgba(0, 0, 0, 0)");
+        expect(styles.value).toBe(styles.ink);
+        expect(styles.chevron).toBe(styles.muted);
+        expect(styles.chevron).not.toBe(styles.value);
+        expect(styles.fill).toBe("none");
+        expect(styles.stroke).toBe(styles.chevron);
+        expect(styles.strokeWidth).toBe(styles.iconStrokeWidth);
+        expect([styles.cap, styles.join]).toEqual(["round", "round"]);
+        return styles;
+      };
+      const defaults = await check();
+      expect(defaults.select.radius).toBe("6px");
+      expect(defaults.strokeWidth).toBe("1.5px");
+      await host.evaluate((element) => {
+        element.style.setProperty("--wf-line", "rgb(10, 20, 30)");
+        element.style.setProperty("--wf-radius", "11px");
+        element.style.setProperty("--wf-stroke", "3px");
+        element.style.setProperty("--wf-muted", "rgb(40, 50, 60)");
+      });
+      const overridden = await check();
+      expect(overridden.select.border).toBe("3px solid rgb(10, 20, 30)");
+      expect(overridden.select.radius).toBe("11px");
+      expect(overridden.strokeWidth).toBe("4.5px");
+      expect(overridden.chevron).toBe("rgb(40, 50, 60)");
+    });
+  }
+
   /** The dialog title's colour and the card's fill. */
   const colours = (page: Page): Promise<string[]> =>
     page.evaluate(() =>
