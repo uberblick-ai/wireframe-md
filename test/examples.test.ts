@@ -8,11 +8,18 @@ import { parseWireframe } from "../src/index.js";
 // those in the playground.
 
 const folder = new URL("../examples/", import.meta.url);
-const examples = readdirSync(folder).filter((file) => file.endsWith(".wireframe"));
+// The examples directly in examples/ and in its group folders, as group/name.wireframe.
+const examples = readdirSync(folder, { recursive: true, encoding: "utf8" })
+  .map((file) => file.replaceAll("\\", "/"))
+  .filter((file) => file.endsWith(".wireframe"));
 
 describe("examples", () => {
   it("has the seeds", () => {
-    expect(examples).toEqual(expect.arrayContaining(["archived-banner.wireframe", "delete-confirmation.wireframe", "vocabulary.wireframe"]));
+    expect(examples).toEqual(expect.arrayContaining([
+        "samples/archived-banner.wireframe",
+        "samples/delete-confirmation.wireframe",
+        "reference/vocabulary.wireframe",
+      ]));
   });
 
   it("includes one that gives a warning", () => {

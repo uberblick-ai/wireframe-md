@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
@@ -14,15 +14,18 @@ import ts from "typescript";
 //   node playground/server.ts      (mise run playground)
 //
 // It listens on localhost only and writes nothing but example and approval files
-// directly in examples/. Writes must come from its own page.
+// in examples/ or one group folder below it. Writes must come from its own page.
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const PORT = 4610;
 const FONT = join(ROOT, "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2");
 
 // Lowercase words joined by hyphens: no dots, slashes or anything a path could use.
-const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const MAX_NAME = 64;
+const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const MAX_SEGMENT = 64;
+// An example's name: its file name, after its group's folder when it has one,
+// such as samples/delete-confirmation.
+const NAME = /^(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Generous for a source within the parser's 64,000 characters, its markup and fingerprint.
 const MAX_BODY = 1_000_000;
 const FINGERPRINT = /^sha256:[0-9a-f]{64}$/;
@@ -82,7 +85,7 @@ async function handle(server: Server, examples: string, request: IncomingMessage
   }
 
   // POST /api/examples adds an example, PUT /api/examples/NAME saves one, PUT /api/approvals/NAME approves one.
-  const [, collection, name] = /^\/api\/(examples|approvals)(?:\/([^/]*))?$/.exec(pathname) ?? [];
+  const [, collection, name] = /^\/api\/(examples|approvals)(?:\/(.*))?$/.exec(pathname) ?? [];
   if (collection === undefined) throw new Refusal(404, `nothing at ${pathname}`);
   const route = `${method} ${collection}${name === undefined ? "" : "/NAME"}`;
   if (!["POST examples", "PUT examples/NAME", "PUT approvals/NAME"].includes(route)) {
@@ -137,13 +140,16 @@ function string(body: Record<string, unknown>, key: string): string {
 }
 
 /**
- * The path of an example's file or its approval, directly in `examples`. A name
- * that isn't lowercase words joined by hyphens is refused, so no name reaches
- * outside the folder.
+ * The path of an example's file or its approval, in `examples` or one group
+ * folder below it. A name that isn't lowercase words joined by hyphens, with at
+ * most one slash after a group, is refused, so no name reaches outside the folder.
  */
 function pathOf(examples: string, name: string, file: "example" | "approval"): string {
-  if (!NAME.test(name) || name.length > MAX_NAME) {
-    throw new Refusal(400, `refused the name "${name.slice(0, MAX_NAME)}": expected lowercase letters and digits joined by hyphens, at most ${MAX_NAME} characters`);
+  if (!NAME.test(name) || name.split("/").some((segment) => segment.length > MAX_SEGMENT)) {
+    throw new Refusal(
+      400,
+      `refused the name "${name.slice(0, 2 * MAX_SEGMENT + 1)}": expected lowercase letters and digits joined by hyphens, at most ${MAX_SEGMENT} characters, after a group folder and a slash if it has one`,
+    );
   }
   return join(examples, file === "example" ? `${name}.wireframe` : `${name}.approval.json`);
 }
@@ -157,15 +163,24 @@ function read(path: string): string | undefined {
   }
 }
 
-/** Every example by name, with its saved source and its approval, or null when it has none. */
+/** The names of the examples directly in `folder`, after `group/` when given. */
+function namesIn(folder: string, group = ""): string[] {
+  return readdirSync(folder)
+    .filter((file) => file.endsWith(".wireframe") && SEGMENT.test(file.slice(0, -".wireframe".length)))
+    .map((file) => `${group}${file.slice(0, -".wireframe".length)}`);
+}
+
+/**
+ * Every example by name, with its saved source and its approval, or null when it
+ * has none: those directly in `examples`, and those in its group folders.
+ */
 function list(examples: string): { name: string; source: string; approval: unknown }[] {
-  return readdirSync(examples)
-    .filter((file) => file.endsWith(".wireframe") && NAME.test(file.slice(0, -".wireframe".length)))
+  const groups = readdirSync(examples).filter(
+    (entry) => SEGMENT.test(entry) && entry.length <= MAX_SEGMENT && statSync(join(examples, entry)).isDirectory(),
+  );
+  return [...namesIn(examples), ...groups.flatMap((group) => namesIn(join(examples, group), `${group}/`))]
     .sort()
-    .map((file) => {
-      const name = file.slice(0, -".wireframe".length);
-      return { name, source: readFileSync(join(examples, file), "utf8"), approval: readApproval(examples, name) };
-    });
+    .map((name) => ({ name, source: readFileSync(pathOf(examples, name, "example"), "utf8"), approval: readApproval(examples, name) }));
 }
 
 function readApproval(examples: string, name: string): { source: string; stylesheet: string; markup: string } | null {
@@ -187,8 +202,11 @@ function readApproval(examples: string, name: string): { source: string; stylesh
 function addExample(examples: string, body: Record<string, unknown>): { name: string; source: string } {
   const name = string(body, "name");
   const source = string(body, "source");
+  const path = pathOf(examples, name, "example");
+  // A new group gets its folder, one level down.
+  if (name.includes("/")) mkdirSync(join(examples, name.slice(0, name.indexOf("/"))), { recursive: true });
   try {
-    writeFileSync(pathOf(examples, name, "example"), source, { flag: "wx" });
+    writeFileSync(path, source, { flag: "wx" });
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new Refusal(409, `an example named ${name} exists`);
     throw error;
