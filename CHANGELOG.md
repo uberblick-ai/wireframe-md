@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `frame` draws a neutral block frame with a caption label and direct buttons
+  on the right; body children stack below it. `card` draws a bordered paper box
+  holding only text. Both support light and dark; caption actions wrap without
+  widening the page. These draw the Figma block's reading and private states.
 - `input` and `select` accept `label=Role` or `label="Work email"` to name a field
   above its placeholder or chosen value. Labelled fields share a row equally,
   with aligned controls and wrapping labels. Long control values can widen their

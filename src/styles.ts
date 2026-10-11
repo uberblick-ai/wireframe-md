@@ -13,8 +13,8 @@
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
 //                      an input's placeholder, a select's chevron-down, options but the current one, a table's
 //                      header row and chip.more
-//   --wf-paper         the dialog card, a page and the secondary button's fill
-//   --wf-line          borders: the card, a page, buttons, inputs, selects, the banner's base and unknown boxes;
+//   --wf-paper         cards, a page and the secondary button's fill
+//   --wf-line          borders: cards, a page, buttons, inputs, selects, the banner's base and unknown boxes;
 //                      a table's rules; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
@@ -23,11 +23,12 @@
 //   --wf-danger-ink    the caption on a filled button.primary.danger
 //   --wf-focus         button.focus's ring
 //   --wf-info, --wf-warning                     a banner's icon, also mixed into its border
-//   --wf-neutral-tint, --wf-info-tint,
+//   --wf-neutral-tint  a neutral banner's and a frame's fill; --wf-muted is the frame's left bar and caption
+//   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint         a banner's fill
 //   --wf-stroke        border width; icon and select chevron strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
-//   --wf-radius        buttons, banners, inputs, selects, chips and unknown boxes
+//   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
 //   --wf-radius-lg     the dialog's card and scrim, and a page
 //   --wf-text-size     the base type size; spacing and chips scale with it
 //   --wf-title-size    the dialog's title; text.title is one and a half times it
@@ -108,8 +109,8 @@ const STYLES = `.wf-root {
 /* In a column, block kinds take the full width, but never less than their
    content needs: a row of many buttons, a wide table or a long word widens its
    box, and the root scrolls. */
-.wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown),
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
+.wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown),
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
   justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
@@ -200,6 +201,71 @@ const STYLES = `.wf-root {
   padding: 1.5em 1.75em 1.75em;
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius-lg);
+  background: var(--_wf-paper);
+}
+
+/* The neutral shared block frame. Only its left edge has a border. */
+.wf-root .wf-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75em;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0.75em 1em;
+  border-left: calc(3 * var(--_wf-stroke)) solid var(--_wf-muted);
+  border-top-right-radius: var(--_wf-radius);
+  border-bottom-right-radius: var(--_wf-radius);
+  background: var(--_wf-neutral-tint);
+}
+
+.wf-root .wf-frame-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+  min-width: 0;
+}
+
+.wf-root .wf-frame-label {
+  flex: 1 1 12em;
+  min-width: 0;
+  color: var(--_wf-muted);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.wf-root .wf-frame-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5em;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
+.wf-root .wf-frame-actions > .wf-button {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* A text-only box on paper, with the base radius and no shadow. */
+.wf-root .wf-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75em;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 1em;
+  border: var(--_wf-stroke) solid var(--_wf-line);
+  border-radius: var(--_wf-radius);
   background: var(--_wf-paper);
 }
 

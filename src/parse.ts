@@ -206,7 +206,9 @@ function checkNode(
   }
   const place = placeOf(parent, grandparent);
   if (place === "table row" && kind !== "cell") warn(`${kind} in a table row: expected cell`);
-  else if (place === undefined || !rule.place.includes(place)) warn(`${kind} must be directly inside ${inside(rule.place)}`);
+  else if (place === undefined || !(rule.place.includes(place) || (place === "frame" && rule.place.includes("root")))) {
+    warn(`${kind} must be directly inside ${inside(rule.place)}`);
+  }
   else if (kind === "row") {
     // A table row takes .head, and a row anywhere else .end.
     const [variant, expected] = place === "table" ? ["end", inside(["root"])] : ["head", inside(["table"])];
@@ -217,9 +219,10 @@ function checkNode(
 /** Where a node with this parent stands; undefined inside a kind that holds no known ones. */
 function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode | undefined): Place | undefined {
   if (parent === undefined) return "top";
+  if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card") return parent.kind;
   return undefined;
 }
 

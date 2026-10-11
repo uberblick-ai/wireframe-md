@@ -16,7 +16,7 @@ export function summarizeWireframe(result: WireframeParseResult): string {
 }
 
 function describe(node: WireframeNode): string {
-  const text = node.label || node.children.find((child) => child.kind === "text" && child.label !== "")?.label;
+  const text = node.label || (node.kind === "frame" ? undefined : node.children.find((child) => child.kind === "text" && child.label !== "")?.label);
   return text ? `${name(node)} “${text}”` : name(node);
 }
 

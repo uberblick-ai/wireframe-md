@@ -28,3 +28,8 @@ banner.danger
   text Danger banner
   row.end
     button.link.danger Delete…
+frame Figma · Payment, mobile
+  button.link Expand
+  card
+    text.muted The live view
+    text Click to interact

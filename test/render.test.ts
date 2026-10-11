@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, renderWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
 import { ICONS } from "../src/vocabulary.js";
-import { archivedBanner, deleteConfirmation, documentList, vocabulary } from "./samples.js";
+import { archivedBanner, deleteConfirmation, documentList, figmaPrivate, figmaReading, vocabulary } from "./samples.js";
 
 /** Render a source that must render, with or without warnings. */
 const render = (source: string): HTMLElement => {
@@ -34,6 +34,28 @@ const drawn = (source: string): string[] => outline(render(source)).slice(1).map
 const count = (nodes: readonly WireframeNode[]): number => nodes.reduce((sum, n) => sum + 1 + count(n.children), 0);
 
 describe("samples", () => {
+  it("draws the reading frame's label and actions above a text-only card and caption", () => {
+    expect(drawn(figmaReading)).toEqual([
+      "div.wf-frame",
+      "  div.wf-frame-caption",
+      "    div.wf-frame-label Figma · Payment, mobile",
+      "    div.wf-frame-actions",
+      "      span.wf-button.wf-link Expand",
+      "      span.wf-button.wf-link Open in Figma",
+      "  div.wf-card",
+      "    div.wf-text.wf-muted (the frame, live from Figma)",
+      "    div.wf-text Click to interact",
+      "  div.wf-text Card form after the address step. Error states are on the next frame.",
+    ]);
+  });
+
+  it("keeps the private frame's Load button in its body row", () => {
+    const root = render(figmaPrivate);
+    expect(root.querySelector(".wf-frame-actions")!.textContent).toBe("Open in Figma");
+    expect(root.querySelector(".wf-frame > .wf-row > .wf-button")!.textContent).toBe("Load");
+    expect(root.querySelectorAll("[data-line]")).toHaveLength(5);
+  });
+
   it("draws the delete confirmation as a card on a scrim, with its title, body and buttons", () => {
     expect(drawn(deleteConfirmation)).toEqual([
       "div.wf-dialog",
@@ -127,6 +149,28 @@ describe("samples", () => {
 });
 
 describe("kinds and variants", () => {
+  it("omits an empty frame caption and handles a label or buttons alone", () => {
+    expect(drawn("frame\n  text Body")).toEqual(["div.wf-frame", "  div.wf-text Body"]);
+    expect(drawn("frame Caption")).toEqual([
+      "div.wf-frame", "  div.wf-frame-caption", "    div.wf-frame-label Caption",
+    ]);
+    expect(drawn("frame\n  button.link Copy")).toEqual([
+      "div.wf-frame", "  div.wf-frame-caption", "    div.wf-frame-actions", "      span.wf-button.wf-link Copy",
+    ]);
+  });
+
+  it("keeps caption buttons in source order even when body nodes occur between them", () => {
+    const root = render("frame Caption\n  button.primary First\n  text Body\n  button.link Second\n  row\n    button Third");
+    expect([...root.querySelectorAll(".wf-frame-actions > .wf-button")].map((button) => button.textContent)).toEqual(["First", "Second"]);
+    expect(root.querySelector(".wf-frame > .wf-row")!.textContent).toBe("Third");
+  });
+
+  it("draws an empty card and stacks its text lines without a caption", () => {
+    expect(drawn("frame\n  card\n  card\n    text.strong Title\n    text Body")).toEqual([
+      "div.wf-frame", "  div.wf-card", "  div.wf-card", "    div.wf-text.wf-strong Title", "    div.wf-text Body",
+    ]);
+  });
+
   it("draws field names above their placeholders and values, alone and in a row", () => {
     const source = 'page\n  input label="Email address" name@company.com\n  select label=Role Editor\n  row\n    input label="First name" First\n    select label=Team Engineering';
     expect(drawn(source)).toEqual([
@@ -320,28 +364,39 @@ describe("kinds and variants", () => {
 });
 
 describe("warnings", () => {
+  it("retains misplaced frame and card nodes, labels, children and unknown icons", () => {
+    const root = render('page\n  frame.teal <script>caption</script>\n    card.large Unexpected label\n      row\n        button Load\n      icon figma\n  button Outside');
+    expect(root.querySelector(".wf-page > .wf-frame > .wf-frame-caption")!.textContent).toBe("<script>caption</script>");
+    expect(root.querySelector(".wf-card > .wf-text")!.textContent).toBe("Unexpected label");
+    expect(root.querySelector(".wf-card > .wf-row > .wf-button")!.textContent).toBe("Load");
+    expect(root.querySelector(".wf-card .wf-icon-unknown")!.textContent).toBe("figma");
+    expect(root.querySelector(".wf-page > .wf-button")!.textContent).toBe("Outside");
+    expect(root.querySelector(".wf-teal, .wf-large, script, button, a, [tabindex]")).toBeNull();
+    expect(root.querySelectorAll("[data-line]")).toHaveLength(7);
+  });
+
   it("draws an unknown kind as a box with its kind, label and children", () => {
-    expect(drawn("card Settings\n  text Body\n  row\n    button Save")).toEqual([
+    expect(drawn("box Settings\n  text Body\n  row\n    button Save")).toEqual([
       "div.wf-unknown",
       "  div.wf-unknown-head",
-      "    span.wf-unknown-kind card",
+      "    span.wf-unknown-kind box",
       "    span.wf-unknown-label Settings",
       "  div.wf-text Body",
       "  div.wf-row",
       "    span.wf-button Save",
     ]);
-    expect(drawn("card")).toEqual(["div.wf-unknown", "  div.wf-unknown-head", "    span.wf-unknown-kind card"]);
+    expect(drawn("box")).toEqual(["div.wf-unknown", "  div.wf-unknown-head", "    span.wf-unknown-kind box"]);
     // A line with no kind, such as `.muted Hi`.
     expect(drawn(".muted Hi")).toEqual(["div.wf-unknown", "  div.wf-unknown-head", "    span.wf-unknown-label Hi"]);
   });
 
   it("draws a kind outside a known one inside an unknown one where it was written", () => {
-    expect(drawn("dialog\n  card\n    text Hi")).toEqual([
+    expect(drawn("dialog\n  box\n    text Hi")).toEqual([
       "div.wf-dialog",
       "  div.wf-dialog-card",
       "    div.wf-unknown",
       "      div.wf-unknown-head",
-      "        span.wf-unknown-kind card",
+      "        span.wf-unknown-kind box",
       "      div.wf-text Hi",
     ]);
   });

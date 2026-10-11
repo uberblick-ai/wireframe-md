@@ -1,0 +1,11 @@
+frame Figma · Checkout flow for returning customers with saved payment methods and delivery addresses
+  button.link Action 1
+  button.link Action 2
+  button.link Action 3
+  button.link Action 4
+  button.link Action 5
+  button.link Action 6
+  button.link Action 7
+  button.link Action 8
+  button.link A long caption action that wraps onto several lines within the available width
+  text Caption labels and actions wrap inside the frame.

@@ -1,0 +1,13 @@
+frame Report · Recent changes
+  button.link Copy
+  text The row's buttons stay in the body.
+  row
+    button Previous
+    button Next
+  table
+    row.head
+      cell Document
+      cell.end Changed
+    row
+      cell Release plan
+      cell.end Today

@@ -1,0 +1,7 @@
+frame Figma · Payment, mobile
+  button.link Expand
+  button.link Open in Figma
+  card
+    text.muted (the frame, live from Figma)
+    text Click to interact
+  text Card form after the address step. Error states are on the next frame.
