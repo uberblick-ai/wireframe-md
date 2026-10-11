@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeStatus, diffLines, fingerprint, formatMarkup, statusOf } from "../playground/approval.js";
+import { approvalFingerprint, describeStatus, diffLines, fingerprint, formatMarkup, statusOf } from "../playground/approval.js";
 import { getEmbedStyles, parseWireframe, renderWireframe } from "../src/index.js";
 import { archivedBanner } from "./samples.js";
 
@@ -61,37 +61,32 @@ describe("fingerprint", () => {
   });
 });
 
+describe("approvalFingerprint", () => {
+  it("covers the source, stylesheet and markup independently", async () => {
+    const original = await approvalFingerprint("source", "css", "markup");
+    for (const inputs of [["source\n", "css", "markup"], ["source", "changed", "markup"], ["source", "css", "changed"]]) {
+      expect(await approvalFingerprint(inputs[0]!, inputs[1]!, inputs[2]!)).not.toBe(original);
+    }
+    expect(await approvalFingerprint("a", "bc", "d")).not.toBe(await approvalFingerprint("ab", "c", "d"));
+  });
+});
+
 describe("statusOf", () => {
-  const approval = { source: "banner", markup: "<div>", stylesheet: "sha256:1" };
-
-  it("is approved while the markup and the stylesheet match", () => {
-    expect(statusOf("<div>", "sha256:1", approval)).toEqual({ state: "approved" });
+  const approval = { approved: true, fingerprint: "sha256:1" };
+  it("is approved only while the full fingerprint matches", () => {
+    expect(statusOf("sha256:1", approval)).toEqual({ state: "approved" });
+    expect(statusOf("sha256:2", approval)).toEqual({ state: "changed" });
   });
-
-  it("says which of the markup and the stylesheet changed", () => {
-    expect(statusOf("<span>", "sha256:1", approval)).toEqual({ state: "changed", markup: true, stylesheet: false });
-    expect(statusOf("<div>", "sha256:2", approval)).toEqual({ state: "changed", markup: false, stylesheet: true });
-    expect(statusOf("<span>", "sha256:2", approval)).toEqual({ state: "changed", markup: true, stylesheet: true });
+  it("is unapproved without an approval or with approved false, and an error without a render", () => {
+    expect(statusOf("sha256:1", null)).toEqual({ state: "unapproved" });
+    expect(statusOf("sha256:1", { ...approval, approved: false })).toEqual({ state: "unapproved" });
+    expect(statusOf(null, approval)).toEqual({ state: "error" });
   });
-
-  it("ignores the approved source: what counts is what a person saw", () => {
-    expect(statusOf("<div>", "sha256:1", { ...approval, source: "banner\n" })).toEqual({ state: "approved" });
-  });
-
-  it("is unapproved without an approval, and an error without a render", () => {
-    expect(statusOf("<div>", "sha256:1", null)).toEqual({ state: "unapproved" });
-    expect(statusOf(null, "sha256:1", approval)).toEqual({ state: "error" });
-  });
-
-  it("describes each status in a few words", () => {
+  it("describes every state", () => {
     expect(describeStatus({ state: "approved" })).toBe("Approved");
     expect(describeStatus({ state: "unapproved" })).toBe("Not yet approved");
     expect(describeStatus({ state: "error" })).toBe("Has errors");
-    expect(describeStatus({ state: "changed", markup: true, stylesheet: false })).toBe("Changed since approval: markup");
-    expect(describeStatus({ state: "changed", markup: false, stylesheet: true })).toBe("Changed since approval: stylesheet");
-    expect(describeStatus({ state: "changed", markup: true, stylesheet: true })).toBe(
-      "Changed since approval: markup and stylesheet",
-    );
+    expect(describeStatus({ state: "changed" })).toBe("Changed since approval");
   });
 });
 

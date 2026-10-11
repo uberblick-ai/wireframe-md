@@ -1,9 +1,11 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { join } from "node:path";
+import { registerHooks } from "node:module";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import type { Approval } from "./approval.js";
 
 // The playground: a page to edit a wireframe and see its render, diagnostics and
 // summary, with a gallery of the examples in examples/ and their approvals. It
@@ -14,18 +16,31 @@ import ts from "typescript";
 //   node playground/server.ts      (mise run playground)
 //
 // It listens on localhost only and writes nothing but example and approval files
-// in examples/ or one group folder below it. Writes must come from its own page.
+// at examples/FAMILY/ENTRY/NAME.wireframe, or examples/approvals.json.
+// Writes must come from its own page.
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
+// Node strips TypeScript, but the package's .js import specifiers target its
+// build. Resolve those specifiers to sources only within this development tool.
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (context.parentURL !== undefined && specifier.endsWith(".js")) {
+      const target = new URL(specifier, context.parentURL);
+      const roots = [new URL("../src/", import.meta.url).href, new URL("./", import.meta.url).href];
+      if (roots.some((root) => target.href.startsWith(root))) return nextResolve(target.href.replace(/\.js$/, ".ts"), context);
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const parserURL = new URL("../src/parse.js", import.meta.url).href;
+const approvalURL = new URL("./approval.js", import.meta.url).href;
+const catalogURL = new URL("./catalog.js", import.meta.url).href;
+const { parseWireframe } = await import(parserURL) as typeof import("../src/parse.js");
+const { approvalFingerprint } = await import(approvalURL) as typeof import("./approval.js");
+const { compareNames, validName } = await import(catalogURL) as typeof import("./catalog.js");
 const PORT = 4610;
 const FONT = join(ROOT, "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2");
 
-// Lowercase words joined by hyphens: no dots, slashes or anything a path could use.
-const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const MAX_SEGMENT = 64;
-// An example's name: its file name, after its group's folder when it has one,
-// such as reference/vocabulary.
-const NAME = /^(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Generous for a source within the parser's 64,000 characters, its markup and fingerprint.
 const MAX_BODY = 1_000_000;
 const FINGERPRINT = /^sha256:[0-9a-f]{64}$/;
@@ -37,13 +52,6 @@ const STATIC: ReadonlyMap<string, { file: string; type: string }> = new Map([
   ["/hosts.css", { file: join(ROOT, "test/screenshots/hosts.css"), type: "text/css; charset=utf-8" }],
   ["/geist.woff2", { file: FONT, type: "font/woff2" }],
 ]);
-
-/** An approval file, with the source and markup as arrays of lines so its diffs read line by line. */
-interface ApprovalFile {
-  source: string[];
-  stylesheet: string;
-  markup: string[];
-}
 
 class Refusal extends Error {
   readonly status: number;
@@ -95,7 +103,7 @@ async function handle(server: Server, examples: string, request: IncomingMessage
   const body = await readJson(request);
   if (route === "POST examples") return sendJson(response, 201, addExample(examples, body));
   if (route === "PUT examples/NAME") return sendJson(response, 200, saveExample(examples, name ?? "", body));
-  return sendJson(response, 200, approve(examples, name ?? "", body));
+  return sendJson(response, 200, await approve(examples, name ?? "", body));
 }
 
 /** The request's Host, refused unless it names this server on loopback, so a rebound DNS name can't reach it. */
@@ -140,18 +148,16 @@ function string(body: Record<string, unknown>, key: string): string {
 }
 
 /**
- * The path of an example's file or its approval, in `examples` or one group
- * folder below it. A name that isn't lowercase words joined by hyphens, with at
- * most one slash after a group, is refused, so no name reaches outside the folder.
+ * Only FAMILY/ENTRY/NAME is writable. Validation also defines what the list shows.
  */
-function pathOf(examples: string, name: string, file: "example" | "approval"): string {
-  if (!NAME.test(name) || name.split("/").some((segment) => segment.length > MAX_SEGMENT)) {
+function pathOf(examples: string, name: string): string {
+  if (!validName(name)) {
     throw new Refusal(
       400,
-      `refused the name "${name.slice(0, 2 * MAX_SEGMENT + 1)}": expected lowercase letters and digits joined by hyphens, at most ${MAX_SEGMENT} characters, after a group folder and a slash if it has one`,
+      `refused the name "${name.slice(0, 194)}": expected FAMILY/ENTRY/NAME, each segment lowercase letters and digits joined by hyphens, at most 64 characters`,
     );
   }
-  return join(examples, file === "example" ? `${name}.wireframe` : `${name}.approval.json`);
+  return join(examples, `${name}.wireframe`);
 }
 
 function read(path: string): string | undefined {
@@ -163,48 +169,45 @@ function read(path: string): string | undefined {
   }
 }
 
-/** The names of the examples directly in `folder`, after `group/` when given. */
-function namesIn(folder: string, group = ""): string[] {
-  return readdirSync(folder)
-    .filter((file) => file.endsWith(".wireframe") && SEGMENT.test(file.slice(0, -".wireframe".length)))
-    .map((file) => `${group}${file.slice(0, -".wireframe".length)}`);
-}
-
-/**
- * Every example by name, with its saved source and its approval, or null when it
- * has none: those directly in `examples`, and those in its group folders.
- */
+/** Only valid examples at the family/entry depth, with approvals read once. */
 function list(examples: string): { name: string; source: string; approval: unknown }[] {
-  const groups = readdirSync(examples).filter(
-    (entry) => SEGMENT.test(entry) && entry.length <= MAX_SEGMENT && statSync(join(examples, entry)).isDirectory(),
-  );
-  return [...namesIn(examples), ...groups.flatMap((group) => namesIn(join(examples, group), `${group}/`))]
-    .sort()
-    .map((name) => ({ name, source: readFileSync(pathOf(examples, name, "example"), "utf8"), approval: readApproval(examples, name) }));
+  const approvals = readApprovals(examples);
+  return readdirSync(examples, { recursive: true, encoding: "utf8" })
+    .map((file) => file.replaceAll("\\", "/"))
+    .filter((file) => file.endsWith(".wireframe") && statSync(join(examples, file)).isFile())
+    .map((file) => file.slice(0, -".wireframe".length))
+    .filter(validName)
+    .sort(compareNames)
+    .map((name) => ({ name, source: readFileSync(pathOf(examples, name), "utf8"), approval: approvalOf(approvals[name]) }));
 }
 
-function readApproval(examples: string, name: string): { source: string; stylesheet: string; markup: string } | null {
-  const text = read(pathOf(examples, name, "approval"));
-  if (text === undefined) return null;
+function readApprovals(examples: string): Record<string, unknown> {
+  const text = read(join(examples, "approvals.json"));
+  if (text === undefined) return {};
   try {
-    const { source, stylesheet, markup } = JSON.parse(text) as ApprovalFile;
-    const lines = (value: unknown): value is string[] => Array.isArray(value) && value.every((line) => typeof line === "string");
-    if (lines(source) && lines(markup) && typeof stylesheet === "string") {
-      return { source: source.join("\n"), stylesheet, markup: markup.join("\n") };
-    }
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
   } catch {
-    // Reported below, like a file of the wrong shape.
+    // Refuse writes too, so an unreadable file cannot lose other approvals.
   }
-  console.warn(`examples/${name}.approval.json can't be read, so ${name} shows as not yet approved`);
-  return null;
+  throw new Refusal(409, "examples/approvals.json is not a JSON mapping; repair it before loading or approving examples");
+}
+
+function approvalOf(value: unknown): Approval | null {
+  if (typeof value !== "object" || value === null) return null;
+  const entry = value as Record<string, unknown>;
+  if (typeof entry.approved !== "boolean" || typeof entry.fingerprint !== "string" || !FINGERPRINT.test(entry.fingerprint)) return null;
+  const approval: Approval = { approved: entry.approved, fingerprint: entry.fingerprint };
+  if (typeof entry.markup === "string") approval.markup = entry.markup;
+  if (typeof entry.stylesheet === "string") approval.stylesheet = entry.stylesheet;
+  return approval;
 }
 
 function addExample(examples: string, body: Record<string, unknown>): { name: string; source: string } {
   const name = string(body, "name");
   const source = string(body, "source");
-  const path = pathOf(examples, name, "example");
-  // A new group gets its folder, one level down.
-  if (name.includes("/")) mkdirSync(join(examples, name.slice(0, name.indexOf("/"))), { recursive: true });
+  const path = pathOf(examples, name);
+  mkdirSync(dirname(path), { recursive: true });
   try {
     writeFileSync(path, source, { flag: "wx" });
   } catch (error) {
@@ -215,7 +218,7 @@ function addExample(examples: string, body: Record<string, unknown>): { name: st
 }
 
 function saveExample(examples: string, name: string, body: Record<string, unknown>): { name: string; source: string } {
-  const path = pathOf(examples, name, "example");
+  const path = pathOf(examples, name);
   const source = string(body, "source");
   if (read(path) === undefined) throw new Refusal(404, `no example named ${name}`);
   writeFileSync(path, source);
@@ -227,17 +230,25 @@ function saveExample(examples: string, name: string, body: Record<string, unknow
  * source and sends its markup; a source that isn't the one in the file, such as
  * unsaved edits, is refused.
  */
-function approve(examples: string, name: string, body: Record<string, unknown>): { source: string; stylesheet: string; markup: string } {
-  const saved = read(pathOf(examples, name, "example"));
+async function approve(examples: string, name: string, body: Record<string, unknown>): Promise<Approval> {
+  const path = pathOf(examples, name);
+  const saved = read(path);
   if (saved === undefined) throw new Refusal(404, `no example named ${name}`);
   const source = string(body, "source");
   const stylesheet = string(body, "stylesheet");
   const markup = string(body, "markup");
   if (source !== saved) throw new Refusal(409, `the source differs from examples/${name}.wireframe: save it, then approve`);
+  if (!parseWireframe(saved).renderable) throw new Refusal(400, "fix the source's errors before approving");
   if (!FINGERPRINT.test(stylesheet)) throw new Refusal(400, "expected the stylesheet as sha256: and 64 hex digits");
-  const file: ApprovalFile = { source: source.split("\n"), stylesheet, markup: markup.split("\n") };
-  writeFileSync(pathOf(examples, name, "approval"), `${JSON.stringify(file, null, 2)}\n`);
-  return { source, stylesheet, markup };
+  const fingerprint = await approvalFingerprint(source, stylesheet, markup);
+  // The digest yields: recheck the source and read the mapping afterwards, so
+  // concurrent approvals preserve each other and a concurrent save is refused.
+  if (read(path) !== source) throw new Refusal(409, "the source changed while approving; reload and review it again");
+  const approval: Approval = { approved: true, fingerprint, markup, stylesheet };
+  const entries = { ...readApprovals(examples), [name]: approval };
+  const sorted = Object.fromEntries(Object.keys(entries).sort().map((key) => [key, entries[key]]));
+  writeFileSync(join(examples, "approvals.json"), `${JSON.stringify(sorted, null, 2)}\n`);
+  return approval;
 }
 
 function sendModule(response: ServerResponse, path: string): void {
