@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `AUTHORING.md`, a primer for agents writing ```` ```wireframe ```` blocks,
+  ships in the package as `@uberblick/wireframe/AUTHORING.md`: the grammar,
+  every kind, both samples and the common mistakes, each with the diagnostic it
+  gets and its fix.
+
 ## 0.1.0
 
 The first release: Format v0.1, enough to sketch a confirmation dialog and a page

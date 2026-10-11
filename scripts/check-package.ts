@@ -8,15 +8,25 @@ import ts from "typescript";
 // Checks the package as a user gets it. Packs it as npm publish would, or takes
 // a tarball the release workflow already packed, checks what the tarball and
 // its package.json hold, installs it into a scratch project and checks that the
-// API, its types and the stylesheet resolve there. Build first.
+// API, its types, the stylesheet and the authoring primer resolve there. Build
+// first.
 //
 //   node scripts/check-package.ts [TARBALL]
 
 const NAME = "@uberblick/wireframe";
 const API = ["getEmbedStyles", "parseWireframe", "renderWireframe", "summarizeWireframe"];
-const EXPORTS = [".", "./styles.css"];
+const EXPORTS = [".", "./styles.css", "./AUTHORING.md"];
 // Besides dist's modules and declarations, the tarball holds these files and nothing else.
-const REQUIRED = ["package.json", "README.md", "LICENSE", "CHANGELOG.md", "dist/index.js", "dist/index.d.ts", "dist/styles.css"];
+const REQUIRED = [
+  "package.json",
+  "README.md",
+  "LICENSE",
+  "AUTHORING.md",
+  "CHANGELOG.md",
+  "dist/index.js",
+  "dist/index.d.ts",
+  "dist/styles.css",
+];
 const OPTIONAL = ["THIRD_PARTY_NOTICES.md"];
 
 // A consumer's TypeScript, compiled against the installed declarations.
@@ -109,16 +119,22 @@ async function checkApi(consumer: string): Promise<void> {
   const entry = join(consumer, "api.js");
   writeFileSync(
     entry,
-    [`export * as wireframe from "${NAME}";`, `export const styles = import.meta.resolve("${NAME}/styles.css");`].join("\n"),
+    [
+      `export * as wireframe from "${NAME}";`,
+      `export const styles = import.meta.resolve("${NAME}/styles.css");`,
+      `export const authoring = import.meta.resolve("${NAME}/AUTHORING.md");`,
+    ].join("\n"),
   );
   try {
-    const { wireframe, styles } = await import(pathToFileURL(entry).href);
+    const { wireframe, styles, authoring } = await import(pathToFileURL(entry).href);
     const names = Object.keys(wireframe).sort();
     expect(names.join() === API.join(), `${NAME} exports ${names.join(", ")}, expected ${API.join(", ")}`);
     const result = wireframe.parseWireframe("banner.warning\n  text Archived.");
     const summary = wireframe.summarizeWireframe(result);
     expect(summary === "Wireframe: warning banner “Archived.”", `the installed package summarizes a sample as ${summary}`);
     expect(readFileSync(new URL(styles), "utf8") === wireframe.getEmbedStyles(), `${NAME}/styles.css differs from getEmbedStyles()`);
+    const primer = readFileSync(join(root, "AUTHORING.md"), "utf8");
+    expect(readFileSync(new URL(authoring), "utf8") === primer, `${NAME}/AUTHORING.md differs from the repository's AUTHORING.md`);
   } catch (error) {
     problems.push(`the installed package doesn't load: ${error instanceof Error ? error.message : error}`);
   }
@@ -164,4 +180,4 @@ if (problems.length > 0) {
   console.error(`The package check failed:\n${problems.map((problem) => `- ${problem}`).join("\n")}`);
   process.exit(1);
 }
-console.log(`${NAME}: the tarball, its package.json, the API, its types (${Object.keys(RESOLUTIONS).join(", ")}) and styles.css check out.`);
+console.log(`${NAME}: the tarball, its package.json, the API, its types (${Object.keys(RESOLUTIONS).join(", ")}), styles.css and AUTHORING.md check out.`);
