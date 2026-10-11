@@ -122,12 +122,13 @@ its value in ink and a muted stroked chevron-down at the end. The chevron belong
 to select and is not an icon name. Like an input, a select on its own takes the
 full width. `label=Role` or `label="Work email"` on an input or select names the
 field above its control in ink, while the line's label remains its placeholder
-or chosen value. Labelled fields share a row equally, with their controls aligned
-even when a label wraps; long labels wrap within their column without widening
-it. An unlabelled select takes its content's width in a row while an unlabelled
-input fills the room left. A long value stays on one line; overflow scrolls inside
-the wireframe, never the page. Other attributes, `label=` on the wrong kind and
-repeated `label=` values warn; the first field label draws.
+or chosen value. Labelled fields share a row equally unless a control needs a
+wider column, with their controls aligned even when a label wraps; long labels
+wrap within their column without widening it. An unlabelled select takes its
+content's width in a row while an unlabelled input fills the room left. A long
+value stays on one line; overflow scrolls inside the wireframe, never the page.
+Other attributes, `label=` on the wrong kind and repeated `label=` values warn;
+the first field label draws.
 
 ## Theming
 

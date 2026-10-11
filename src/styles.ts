@@ -234,14 +234,15 @@ const STYLES = `.wf-root {
   justify-content: flex-end;
 }
 
-/* Field labels never contribute a minimum width. In a row, equal columns
-   stretch together and their label tracks absorb any extra wrapped lines. */
+/* Field labels wrap instead of setting column widths. Controls keep their
+   minimum content width, widening the surrounding boxes when needed. In a row,
+   columns stretch together and label tracks absorb any extra wrapped lines. */
 .wf-root .wf-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(min-content, 1fr);
   grid-template-rows: 1fr auto;
   gap: 0.5em;
-  min-width: 0;
+  min-width: min-content;
   align-self: stretch;
   justify-self: stretch;
 }

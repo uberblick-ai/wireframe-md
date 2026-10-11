@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { archivedBanner, deleteConfirmation, documentList } from "../samples.js";
 import { type Host, open, type Scheme, show } from "./page.js";
@@ -33,6 +34,11 @@ const samples = [
     source: readFileSync(new URL("../../examples/forms/1-basic-inputs/long-field-label.wireframe", import.meta.url), "utf8"),
     intro: "A wrapped field label keeps the controls aligned without widening its column.",
   },
+  {
+    name: "long-labelled-select",
+    source: 'page\n  select label=Team "Engineering, Product and Design leadership group for all regional offices and programme directors"\npage\n  row\n    select label=Team "Engineering, Product and Design leadership group"\n    input label=Name Hint',
+    intro: "Long select values stay within their fields and frames, scrolling inside the wireframe when needed.",
+  },
 ];
 
 for (const { name, source, intro } of samples) {
@@ -46,4 +52,3 @@ for (const { name, source, intro } of samples) {
     }
   }
 }
-import { readFileSync } from "node:fs";

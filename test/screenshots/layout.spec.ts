@@ -103,6 +103,17 @@ test.describe("fit", () => {
       expect(await widths("Email address for invitations and workspace notifications ".repeat(8))).toEqual(short);
       expect(await widths("x".repeat(300))).toEqual(short);
     });
+
+    test(`a labelled select's value stays inside its column beside another field in a ${layout} host`, async ({ page }) => {
+      await show(page, 'page\n  row\n    select label=Team "Engineering, Product and Design leadership group"\n    input label=Name Hint', { host: "column", layout });
+      expect(await measure(page)).toEqual({
+        root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+      });
+      expect(await lines(page, ".wf-select")).toBe(1);
+      const select = await page.locator(".wf-select").boundingBox();
+      const nextField = await page.locator(".wf-field").nth(1).boundingBox();
+      expect(select!.x + select!.width).toBeLessThan(nextField!.x);
+    });
   }
 
   for (const [name, source] of [
@@ -296,6 +307,10 @@ test.describe("fit", () => {
     "a long select value in a page": `page\n  select ${"Long chosen value ".repeat(30)}`,
     "a long select value in a dialog": `dialog Pick one\n  select ${"Long chosen value ".repeat(30)}`,
     "a long select value in a row": `page\n  row\n    input Search\n    select ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a labelled field at the top level": `select label=Team ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a labelled field in a page": `page\n  select label=Team ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a labelled field in a dialog": `dialog Pick one\n  select label=Team ${"Long chosen value ".repeat(30)}`,
+    "a long select value in a labelled field in a row": `page\n  row\n    select label=Team ${"Long chosen value ".repeat(30)}\n    input label=Name Hint`,
     "a row of many chips": `page\n  row\n${"    chip release\n".repeat(25)}`,
   };
   for (const [name, source] of Object.entries(wide)) {

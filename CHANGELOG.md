@@ -7,8 +7,9 @@ format, the vocabulary and the rendering may change in any minor version.
 
 - `input` and `select` accept `label=Role` or `label="Work email"` to name a field
   above its placeholder or chosen value. Labelled fields share a row equally,
-  with aligned controls and wrapping labels. A repeated label or one on another
-  kind warns; other attributes still warn.
+  with aligned controls and wrapping labels. Long control values can widen their
+  columns and surrounding boxes, scrolling inside the wireframe. A repeated
+  label or one on another kind warns; other attributes still warn.
 - `select` draws as a bordered closed form control with the input's geometry,
   its chosen value in ink and a muted stroked chevron-down. It stretches on its
   own, keeps its content's width in a row, and scrolls long values inside the

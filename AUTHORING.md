@@ -115,8 +115,9 @@ an input, with no fill, its chosen value in ink and a muted stroked chevron-down
 at the end. The chevron belongs to select and is not an `icon` name. Both fields
 take the full width on their own. `label=` names either field above its control,
 in ink; the line's label stays the placeholder or chosen value. In a `row`,
-labelled fields share the width equally and their controls line up even when a
-label wraps. Long field labels wrap within their column and never widen it.
+labelled fields share the width equally unless a control needs a wider column,
+and their controls line up even when a label wraps. Long field labels wrap within
+their column and never widen it.
 An unlabelled select keeps its content's width and an unlabelled input fills the
 room left. A long select value stays on one line; overflow scrolls inside the
 wireframe, never the page.
