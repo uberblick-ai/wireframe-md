@@ -91,7 +91,7 @@ document.head.append(style);
 
 ## The format
 
-One node per line, `kind.variant Label`; two spaces of indentation make a
+One node per line, `kind.variant key=value Label`; two spaces of indentation make a
 child. A block can hold several roots, drawn one after another.
 
 Agents writing a block should read [AUTHORING.md](AUTHORING.md) first: the
@@ -120,9 +120,14 @@ host can resolve it from the installed package, for example with
 A `select` shares the input's border, radius, height and padding, with no fill,
 its value in ink and a muted stroked chevron-down at the end. The chevron belongs
 to select and is not an icon name. Like an input, a select on its own takes the
-full width. In a row it takes its content's width while an input fills the room
-left. A long value stays on one line and widens its box; overflow scrolls inside
-the wireframe, never the page.
+full width. `label=Role` or `label="Work email"` on an input or select names the
+field above its control in ink, while the line's label remains its placeholder
+or chosen value. Labelled fields share a row equally, with their controls aligned
+even when a label wraps; long labels wrap within their column without widening
+it. An unlabelled select takes its content's width in a row while an unlabelled
+input fills the room left. A long value stays on one line; overflow scrolls inside
+the wireframe, never the page. Other attributes, `label=` on the wrong kind and
+repeated `label=` values warn; the first field label draws.
 
 ## Theming
 

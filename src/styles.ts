@@ -234,6 +234,33 @@ const STYLES = `.wf-root {
   justify-content: flex-end;
 }
 
+/* Field labels never contribute a minimum width. In a row, equal columns
+   stretch together and their label tracks absorb any extra wrapped lines. */
+.wf-root .wf-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 0.5em;
+  min-width: 0;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.wf-root .wf-row > .wf-field {
+  flex: 1 1 0;
+}
+
+.wf-root .wf-field-label {
+  min-width: 0;
+  color: var(--_wf-ink);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.wf-root .wf-field > :is(.wf-input, .wf-select) {
+  min-width: min-content;
+}
+
 /* Buttons are secondary unless a variant says otherwise. Variant rules share
    one specificity, so their order decides: .link beats a fill, .danger colours
    any of them, and .focus adds a ring to all. */

@@ -1,14 +1,14 @@
 page
   text.title Team settings
   row
-    input First name
-    input Last name
+    input label="First name" First
+    input label="Last name" Last
   row
-    input Email address
-    select Editor
+    input label="Email address" name@company.com
+    select label=Role Editor
   row
-    select Engineering
-    select Europe
+    select label=Team Engineering
+    select label=Region Europe
   row.end
     button Cancel
     button.primary Save

@@ -57,6 +57,54 @@ function lines(page: Page, selector: string): Promise<number> {
 }
 
 test.describe("fit", () => {
+  for (const layout of ["block", "flex", "grid"] as const) {
+    test(`labelled fields share columns and align below wrapped labels in a ${layout} host`, async ({ page }) => {
+      await show(page, 'page\n  input label="Email address" name@company.com\n  select label=Role Editor\n  row\n    input label="Email address for invitations and workspace notifications" name@company.com\n    select label=Role Editor\n  row\n    select label=Team Engineering\n    select label=Region Europe', { host: "column", layout });
+      expect(await measure(page)).toEqual({
+        root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+      });
+      const fields = await page.locator(".wf-field").evaluateAll((fields) => fields.map((field) => {
+        const box = field.getBoundingClientRect();
+        const label = field.querySelector(".wf-field-label")!.getBoundingClientRect();
+        const control = field.querySelector(".wf-input, .wf-select")!.getBoundingClientRect();
+        const caret = field.querySelector(".wf-select-caret")?.getBoundingClientRect();
+        return {
+          x: box.x, width: box.width, labelTop: label.top, labelBottom: label.bottom,
+          controlTop: control.top, controlWidth: control.width, controlRight: control.right,
+          caretRight: caret?.right,
+        };
+      }));
+      expect(fields[0]!.width).toBe(fields[1]!.width);
+      for (const [left, right] of [[fields[2]!, fields[3]!], [fields[4]!, fields[5]!]] as const) {
+        expect(left.width).toBeCloseTo(right.width, 1);
+        expect(left.labelTop).toBe(right.labelTop);
+        expect(left.controlTop).toBe(right.controlTop);
+        expect(left.controlWidth).toBe(left.width);
+        expect(right.controlWidth).toBe(right.width);
+      }
+      for (const field of fields) {
+        expect(field.labelBottom).toBeLessThan(field.controlTop);
+        if (field.caretRight !== undefined) expect(field.controlRight - field.caretRight).toBeLessThan(11);
+      }
+      expect(fields[2]!.x).toBe(fields[4]!.x);
+      expect(fields[3]!.x).toBe(fields[5]!.x);
+      expect(await lines(page, ".wf-row .wf-field-label")).toBeGreaterThan(1);
+    });
+
+    test(`a long field label never changes its column width in a ${layout} host`, async ({ page }) => {
+      const widths = async (label: string) => {
+        await show(page, `page\n  row\n    input label="${label}" Hint\n    select label=Role Editor`, { host: "column", layout });
+        expect(await measure(page)).toEqual({
+          root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+        });
+        return page.locator(".wf-field").evaluateAll((fields) => fields.map((field) => field.getBoundingClientRect().width));
+      };
+      const short = await widths("Email");
+      expect(await widths("Email address for invitations and workspace notifications ".repeat(8))).toEqual(short);
+      expect(await widths("x".repeat(300))).toEqual(short);
+    });
+  }
+
   for (const [name, source] of [
     ["delete confirmation", deleteConfirmation],
     ["archived banner", archivedBanner],
@@ -327,6 +375,20 @@ test.describe("fit", () => {
 
 test.describe("theming", () => {
   for (const scheme of ["light", "dark"] as const) {
+    test(`field labels use ink above muted hints in ${scheme}`, async ({ page }) => {
+      const host = await show(page, 'page\n  input label="Email address" name@company.com\n  select label=Role Editor', { scheme });
+      const colours = () => page.evaluate(() => [".wf-root", ".wf-field-label", ".wf-input", ".wf-select"]
+        .map((selector) => getComputedStyle(document.querySelector(selector)!).color));
+      const [ink, label, hint, value] = await colours();
+      expect(label).toBe(ink);
+      expect(value).toBe(ink);
+      expect(hint).not.toBe(ink);
+      await host.evaluate((element) => element.style.setProperty("--wf-ink", "rgb(10, 20, 30)"));
+      const changed = await colours();
+      expect(changed[1]).toBe("rgb(10, 20, 30)");
+      expect(changed[2]).toBe(hint);
+    });
+
     test(`select shares input geometry and icon strokes in ${scheme}, including host overrides`, async ({ page }) => {
       const host = await show(page, "page\n  row\n    input Search\n    select Any tag\n  icon archive", { scheme });
       const appearance = () => page.evaluate(() => {

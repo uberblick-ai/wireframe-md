@@ -127,6 +127,47 @@ describe("samples", () => {
 });
 
 describe("kinds and variants", () => {
+  it("draws field names above their placeholders and values, alone and in a row", () => {
+    const source = 'page\n  input label="Email address" name@company.com\n  select label=Role Editor\n  row\n    input label="First name" First\n    select label=Team Engineering';
+    expect(drawn(source)).toEqual([
+      "div.wf-page",
+      "  div.wf-field",
+      "    div.wf-field-label Email address",
+      "    div.wf-input name@company.com",
+      "  div.wf-field",
+      "    div.wf-field-label Role",
+      "    span.wf-select Editor",
+      "      svg.wf-select-caret",
+      "        path",
+      "  div.wf-row",
+      "    div.wf-field",
+      "      div.wf-field-label First name",
+      "      div.wf-input First",
+      "    div.wf-field",
+      "      div.wf-field-label Team",
+      "      span.wf-select Engineering",
+      "        svg.wf-select-caret",
+      "          path",
+    ]);
+    expect([...render(source).querySelectorAll("[data-line]")].map((element) => element.getAttribute("data-line")))
+      .toEqual(["1", "2", "3", "4", "5", "6"]);
+  });
+
+  it("draws only the first label, including an empty one", () => {
+    const root = render('page\n  input label=Email label=Ignored Hint\n  select label= label=Ignored');
+    expect([...root.querySelectorAll(".wf-field-label")].map((label) => label.textContent)).toEqual(["Email", ""]);
+    expect(root.querySelector(".wf-input")?.textContent).toBe("Hint");
+    expect(root.querySelector(".wf-select-caret")).not.toBeNull();
+  });
+
+  it("keeps wrong-kind labels inert and still draws their nodes and children", () => {
+    expect(drawn('page label=Ignored\n  text label=Ignored Body')).toEqual(["div.wf-page", "  div.wf-text Body"]);
+    const root = render('page\n  input label="<img src=x onerror=alert(1)>" Hint\n    text Child');
+    expect(root.querySelector(".wf-field-label")?.textContent).toBe("<img src=x onerror=alert(1)>");
+    expect(root.querySelector(".wf-input > .wf-text")?.textContent).toBe("Child");
+    expect(root.querySelector("img, input, select, label, [style], [onclick], [tabindex]")).toBeNull();
+  });
+
   it("draws a dialog's label as its title, and none without one", () => {
     expect(drawn("dialog Title")).toEqual(["div.wf-dialog", "  div.wf-dialog-card", "    div.wf-dialog-title Title"]);
     expect(drawn("dialog\n  text Body")).toEqual(["div.wf-dialog", "  div.wf-dialog-card", "    div.wf-text Body"]);

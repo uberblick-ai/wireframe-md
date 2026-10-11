@@ -23,6 +23,16 @@ const samples = [
     source: documentList,
     intro: "The All documents page: its controls stay quieter than the list they filter.",
   },
+  {
+    name: "labelled-two-column-form",
+    source: readFileSync(new URL("../../examples/forms/3-complex-forms/two-column-form.wireframe", import.meta.url), "utf8"),
+    intro: "Field names sit above hints and chosen values, in aligned columns.",
+  },
+  {
+    name: "long-field-label",
+    source: readFileSync(new URL("../../examples/forms/1-basic-inputs/long-field-label.wireframe", import.meta.url), "utf8"),
+    intro: "A wrapped field label keeps the controls aligned without widening its column.",
+  },
 ];
 
 for (const { name, source, intro } of samples) {
@@ -36,3 +46,4 @@ for (const { name, source, intro } of samples) {
     }
   }
 }
+import { readFileSync } from "node:fs";

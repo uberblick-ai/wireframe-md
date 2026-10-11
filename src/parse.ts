@@ -184,8 +184,15 @@ function checkNode(
   else if (node.id !== undefined && !ID.test(node.id)) {
     warn(`invalid id ${quote(`#${node.id}`)}: expected letters, digits, - or _`);
   }
+  let hasFieldLabel = false;
   for (const { key } of node.attributes) {
-    warn(`unknown attribute ${quote(key)}: v0.1 has none (quote a label that starts with word=)`);
+    if (key !== "label") {
+      warn(`unknown attribute ${quote(key)}: expected label on input or select (quote a label that starts with word=)`);
+      continue;
+    }
+    if (hasFieldLabel) warn('repeated attribute "label": the first value is used');
+    hasFieldLabel = true;
+    if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
   }
   if (rule === undefined) return;
 

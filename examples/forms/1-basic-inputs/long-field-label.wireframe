@@ -1,0 +1,4 @@
+page
+  row
+    input label="Email address for invitations and workspace notifications" name@company.com
+    select label=Role Editor
