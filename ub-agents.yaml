@@ -83,7 +83,16 @@ agents:
     agent-timeout-minutes: 60
 
   implementer:
-    runtime: "claude:claude-opus-5-5:xhigh"
+    runtime: "codex:gpt-6.1-sol:xhigh"
+    runtime-args:
+      - --sandbox
+      - danger-full-access
+      - -c
+      - 'mcp_servers.wireframe-corpus.command="mise"'
+      - -c
+      - 'mcp_servers.wireframe-corpus.args=["exec", "--", "ub", "mcp", "serve"]'
+      - -c
+      - 'mcp_servers.wireframe-corpus.default_tools_approval_mode="approve"'
     trigger: [ready, needs-changes]
     outcomes:
       handed-off: {add: [needs-review]}
