@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { Locator, Page } from "@playwright/test";
 import ts from "typescript";
 
@@ -9,27 +10,16 @@ const ROOT = decodeURIComponent(new URL("../../", import.meta.url).pathname);
 // Geist, Uberblick's font, so the goldens look like a document and don't
 // depend on the fonts the machine has.
 const FONT = `${ROOT}node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2`;
+// The bare page and the document column, shared with the playground.
+const HOSTS = readFileSync(`${ROOT}test/screenshots/hosts.css`, "utf8");
 
 const PAGE = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <style>
-  @font-face { font-family: "Geist"; src: url("/geist.woff2") format("woff2"); font-weight: 100 900; }
   body { margin: 0; font-family: "Geist", sans-serif; }
-  /* A bare page in the system's colours. */
-  .standalone { padding: 16px; background: Canvas; color: CanvasText; }
-  /* An Uberblick document: its ground, and the editor's text styles, which a
-     wireframe inherits and must reset. */
-  .document { width: max-content; padding: 24px; background: light-dark(oklch(0.96 0.008 75), oklch(0.145 0 0)); }
-  .column {
-    width: 710px;
-    color: light-dark(oklch(0.3 0 0), oklch(0.92 0 0));
-    font-size: 16px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-  }
-  .column > p { margin: 0 0 0.7em; }
+${HOSTS}
 </style>
 </head>
 <body></body>

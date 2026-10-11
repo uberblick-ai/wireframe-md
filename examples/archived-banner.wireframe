@@ -1,0 +1,6 @@
+banner.warning
+  icon archive
+  text Archived. Read-only and hidden from the document list.
+  row.end
+    button Restore
+    button.link.danger Delete…
