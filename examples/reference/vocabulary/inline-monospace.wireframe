@@ -1,0 +1,17 @@
+page
+  text.title Run `npm test`
+  text Use `npm test` then `npm run build`.
+  text.small.muted rev `e9faf4df`
+  text.small.strong "Copy `document-id` to continue."
+  text.red Missing `revision-id`
+  text.amber Check `revision-id`
+  text.green Saved `revision-id`
+  text.blue Read `revision-id`
+  text An unmatched ` stays literal; an empty pair `` does too.
+  text Double ``ticks`` and **other Markdown** stay literal.
+  row
+    text.small.muted Run `npm test with enough words to wrap inside a narrow document column` before continuing.
+    button Next
+card
+  text.title Copy `document-id`
+  text.small.muted "Run `npm test` before sharing."

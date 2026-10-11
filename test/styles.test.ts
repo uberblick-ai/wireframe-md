@@ -59,8 +59,14 @@ describe("getEmbedStyles", () => {
     }
   });
 
-  it("loads nothing and sets no font family, which comes from the host", () => {
-    expect(css).not.toMatch(/url\(|@import|expression\(|javascript:|font-family|\bfont:/i);
+  it("loads nothing and changes font family only on inline mono spans", () => {
+    expect(css).not.toMatch(/url\(|@import|expression\(|javascript:/i);
+    expect(declarations.some(([property]) => property === "font")).toBe(false);
+    const fonts = rules.filter((rule) => rule.declarations.some(([property]) => property === "font-family"));
+    expect(fonts).toEqual([{
+      selectors: [".wf-root .wf-mono"],
+      declarations: [["font-family", "var(--_wf-mono-font)"]],
+    }]);
   });
 
   it("reads each public property, with a default", () => {
@@ -103,7 +109,7 @@ describe("getEmbedStyles", () => {
   });
 
   it("gives every colour a light and a dark default", () => {
-    const sizes = ["stroke", "focus-width", "radius", "radius-lg", "text-size", "title-size"];
+    const sizes = ["stroke", "focus-width", "radius", "radius-lg", "text-size", "title-size", "mono-font"];
     for (const [property, value] of publicDeclarations) {
       const name = property.slice("--_wf-".length);
       if (sizes.includes(name)) expect(value).not.toContain("light-dark(");

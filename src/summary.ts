@@ -1,4 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
+import { textRuns } from "./text.js";
 
 // Strongest first, as the stylesheet's later tone rules win.
 const TONES: readonly string[] = ["danger", "warning", "info", "success"];
@@ -17,9 +18,11 @@ export function summarizeWireframe(result: WireframeParseResult): string {
 
 function describe(node: WireframeNode): string {
   const title = node.kind === "card"
-    ? node.children.find((child) => child.kind === "text" && child.variants.includes("title"))?.label
+    ? node.children.find((child) => child.kind === "text" && child.variants.includes("title"))
     : undefined;
-  const text = node.label || title || (node.kind === "frame" ? undefined : node.children.find((child) => child.kind === "text" && child.label !== "")?.label);
+  const named = node.label !== "" ? node : title?.label ? title :
+    (node.kind === "frame" ? undefined : node.children.find((child) => child.kind === "text" && child.label !== ""));
+  const text = named?.kind === "text" ? [...textRuns(named.label)].map((run) => run.text).join("") : named?.label;
   return text ? `${name(node)} “${text}”` : name(node);
 }
 

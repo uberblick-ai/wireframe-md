@@ -809,10 +809,11 @@ test.describe("theming", () => {
     "--wf-radius-lg": "0px",
     "--wf-text-size": "20px",
     "--wf-title-size": "30px",
+    "--wf-mono-font": "serif",
   };
 
   test("each public property restyles the wireframe from an ancestor", async ({ page }) => {
-    const host = await show(page, vocabulary);
+    const host = await show(page, `${vocabulary}\npage\n  text Run \`npm test\``);
     const root = page.locator(".wf-root");
     const before = await root.screenshot();
     const unchanged: string[] = [];

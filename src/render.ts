@@ -1,5 +1,6 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
+import { textRuns } from "./text.js";
 import { CELL_SORT_VARIANTS, colourVariants, KINDS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
@@ -94,6 +95,13 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     }
     case "icon":
       element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline", node.variants[colourIndex]));
+      break;
+    case "text":
+      for (const run of textRuns(node.label)) {
+        element.append(run.mono
+          ? text(document, "span", ["wf-mono"], run.text)
+          : document.createTextNode(run.text));
+      }
       break;
     case "button": {
       // Icons precede the caption; every child still draws, including misplaced ones.

@@ -9,6 +9,14 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...[
+    ["web-ui-document-header", "pages/uberblick/document-header"],
+    ["text-inline-monospace", "reference/vocabulary/inline-monospace"],
+  ].map(([name, path]) => ({
+    name: name!,
+    source: readFileSync(new URL(`../../examples/${path}.wireframe`, import.meta.url), "utf8"),
+    intro: "Inline monospace keeps the line's size and colour; small metadata stays in the UI face around the id.",
+  })),
   {
     name: "icons-named-palette",
     source: readFileSync(new URL("../../examples/icons/2-colours/named-palette.wireframe", import.meta.url), "utf8"),
