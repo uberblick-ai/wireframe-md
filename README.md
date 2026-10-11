@@ -94,6 +94,12 @@ document.head.append(style);
 One node per line, `kind.variant Label`; two spaces of indentation make a
 child. A block can hold several roots, drawn one after another.
 
+Agents writing a block should read [AUTHORING.md](AUTHORING.md) first: the
+grammar, every kind and the common mistakes, each with the diagnostic it gets
+and its fix. The package ships it as `@uberblick/wireframe/AUTHORING.md`, so a
+host can resolve it from the installed package, for example with
+`import.meta.resolve("@uberblick/wireframe/AUTHORING.md")`.
+
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
 | `dialog` | at the top level | none | the title |

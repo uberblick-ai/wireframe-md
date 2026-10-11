@@ -20,10 +20,12 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./AUTHORING.md": "./AUTHORING.md"
   },
   "files": [
     "dist",
+    "AUTHORING.md",
     "CHANGELOG.md",
     "THIRD_PARTY_NOTICES.md"
   ],
