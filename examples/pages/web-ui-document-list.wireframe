@@ -1,0 +1,34 @@
+page
+  text.title All documents
+  text.muted 24 documents
+  input Search titles
+  row
+    toggle
+      option.current Documents
+      option Decisions
+    select Any tag
+  table
+    row.head
+      cell Title
+      cell Group
+      cell Tags
+      cell.end Changed
+      cell
+    row
+      cell Web UI system
+      cell Getting started
+      cell
+        chip web
+        chip spec
+        chip.more +2
+      cell.end 2 hours ago
+      cell
+        button.link pin
+    row
+      cell Card blocks
+      cell
+      cell
+        chip markdown
+      cell.end 3 days ago
+      cell
+        button.link pin

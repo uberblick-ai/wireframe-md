@@ -1,0 +1,18 @@
+page
+  table
+    row.head
+      cell File
+      cell.end Size
+      cell.end Changed
+    row
+      cell report.pdf
+      cell.end 1,204 KB
+      cell.end 11:05
+    row
+      cell notes.md
+      cell.end 18 KB
+      cell.end 09:41
+    row
+      cell diagram.png
+      cell.end 311 KB
+      cell.end Yesterday

@@ -1,0 +1,19 @@
+page
+  table
+    row.head
+      cell Title
+      cell Group
+      cell Tags
+      cell
+    row
+      cell Card blocks
+      cell
+      cell
+      cell
+    row
+      cell
+      cell Getting started
+      cell
+        chip web
+      cell
+        button.link pin

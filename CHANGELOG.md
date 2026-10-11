@@ -9,6 +9,16 @@ format, the vocabulary and the rendering may change in any minor version.
   ships in the package as `@uberblick/wireframe/AUTHORING.md`: the grammar,
   every kind, both samples and the common mistakes, each with the diagnostic it
   gets and its fix.
+- The vocabulary draws a page with a table, enough for the "Web UI: document
+  list" page: `page`, a third root, framed, whose title is a `text.title` line;
+  `input`, `select`, and `toggle` with its `option` lines (`.current`); `table`,
+  whose rows (`row.head` for the header) hold `cell` lines (`.end`); and `chip`
+  (`.more`). A `button` may also stand in a `cell`. A table row holds only
+  cells, and anything else in one, a `cell` anywhere else, `row.head` outside a
+  table and `row.end` inside one get a warning.
+- A misplaced button's warning now reads `button must be directly inside row or
+  cell`, and the lists in other placement and unknown-kind warnings name the new
+  kinds.
 
 ## 0.1.0
 

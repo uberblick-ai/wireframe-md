@@ -1,0 +1,11 @@
+page
+  row
+    chip infrastructure-and-operations
+    chip release
+  table
+    row
+      cell Hub latency
+      cell
+        chip infrastructure-and-operations
+        chip performance-and-reliability
+        chip.more +3

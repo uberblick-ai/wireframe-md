@@ -17,6 +17,12 @@ const SVG = "http://www.w3.org/2000/svg";
 // 16×16 stroke paths, keyed by the names the vocabulary allows.
 const ICON_PATHS: ReadonlyMap<string, string> = new Map([["archive", "M2 3h12v3H2zM3 6v7h10V6M6.5 9h3"]]);
 
+// The select's ▾, a filled 16×16 triangle. It belongs to select and is no icon name.
+const CARET_PATH = "M3.5 6h9L8 11z";
+
+// Kinds that sit in a line of text or a row; the rest are blocks.
+const INLINE: readonly string[] = ["button", "icon", "select", "option", "chip"];
+
 /**
  * Draw a parse result as static, inert DOM: one `.wf-root` element holding the
  * roots in source order. A node with a warning still draws where it was written.
@@ -47,10 +53,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   if (rule === undefined) return unknown(document, node);
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants.filter((variant) => rule.variants.includes(variant)).map((variant) => `wf-${variant}`);
-  const element = create(document, node.kind === "button" || node.kind === "icon" ? "span" : "div", [
-    `wf-${node.kind}`,
-    ...variants,
-  ]);
+  const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
 
   let body: HTMLElement = element;
@@ -64,8 +67,13 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     case "icon":
       element.append(icon(document, node.label));
       break;
+    case "select":
+      // The chosen value, then the caret.
+      element.textContent = node.label;
+      element.append(glyph(document, "wf-select-caret", CARET_PATH));
+      break;
     default:
-      // A banner or row takes no label. One written anyway has a warning and draws as text.
+      // A banner, page, row, toggle or table takes no label. One written anyway has a warning and draws as text.
       if (node.label !== "") {
         if (rule.label) element.textContent = node.label;
         else element.append(text(document, "span", ["wf-text"], node.label));
@@ -92,8 +100,13 @@ function unknown(document: Document, node: WireframeNode): HTMLElement {
 function icon(document: Document, name: string): Node {
   const path = ICON_PATHS.get(name);
   if (path === undefined) return text(document, "span", ["wf-icon-unknown"], name);
+  return glyph(document, "wf-icon-glyph", path);
+}
+
+/** A 16×16 inline SVG of one path from this file. */
+function glyph(document: Document, className: string, path: string): SVGSVGElement {
   const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("class", "wf-icon-glyph");
+  svg.setAttribute("class", className);
   svg.setAttribute("viewBox", "0 0 16 16");
   svg.setAttribute("aria-hidden", "true");
   const shape = document.createElementNS(SVG, "path");

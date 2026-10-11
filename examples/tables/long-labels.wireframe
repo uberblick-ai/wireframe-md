@@ -1,0 +1,14 @@
+page
+  table
+    row.head
+      cell Title
+      cell Group
+      cell.end Changed
+    row
+      cell Notes from the planning meeting about moving every workspace to the new sync hub before the end of the quarter
+      cell Infrastructure and operations
+      cell.end 2 hours ago
+    row
+      cell Card blocks
+      cell Getting started
+      cell.end 3 days ago

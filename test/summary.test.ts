@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseWireframe, summarizeWireframe } from "../src/index.js";
-import { archivedBanner, deleteConfirmation } from "./samples.js";
+import { archivedBanner, deleteConfirmation, documentList } from "./samples.js";
 
 const summary = (source: string): string => summarizeWireframe(parseWireframe(source));
 
@@ -10,6 +10,11 @@ describe("summarizeWireframe", () => {
     expect(summary(archivedBanner)).toBe(
       "Wireframe: warning banner “Archived. Read-only and hidden from the document list.”",
     );
+  });
+
+  it("names a page by its title, its first text", () => {
+    expect(summary(documentList)).toBe("Wireframe: page “All documents”");
+    expect(summary("page\n  input Search titles")).toBe("Wireframe: page");
   });
 
   it("names each root in order", () => {

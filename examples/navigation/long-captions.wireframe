@@ -1,0 +1,5 @@
+page
+  toggle
+    option.current Everything in this workspace
+    option Only documents I have edited this month
+    option Shared with me by someone else

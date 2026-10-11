@@ -1,5 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { ICONS, KINDS, LIMITS, ROOTS } from "./vocabulary.js";
+import { ICONS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -38,7 +38,7 @@ export function parseWireframe(source: string): WireframeParseResult {
     const parent = open[depth - 1];
     (parent === undefined ? nodes : parent.children).push(node);
     open.push(node);
-    checkNode(node, parent, diagnostics);
+    checkNode(node, parent, open[depth - 2], diagnostics);
   });
   return { nodes, diagnostics, renderable: diagnostics.every((d) => d.severity === "warning") };
 }
@@ -158,7 +158,12 @@ function readQuoted(content: string, start: number): { text: string; end: number
 }
 
 /** Warn about anything outside the vocabulary, or in the wrong place. */
-function checkNode(node: WireframeNode, parent: WireframeNode | undefined, diagnostics: WireframeDiagnostic[]): void {
+function checkNode(
+  node: WireframeNode,
+  parent: WireframeNode | undefined,
+  grandparent: WireframeNode | undefined,
+  diagnostics: WireframeDiagnostic[],
+): void {
   const warn = (message: string): void => {
     diagnostics.push({ line: node.line, severity: "warning", message });
   };
@@ -188,11 +193,32 @@ function checkNode(node: WireframeNode, parent: WireframeNode | undefined, diagn
   if (kind === "icon" && !ICONS.includes(node.label)) {
     warn(`${node.label === "" ? "icon needs a name" : `unknown icon ${quote(node.label)}`}: expected ${list(ICONS)}`);
   }
-  if (rule.place === "top" && parent !== undefined) warn(`${kind} must be at the top level`);
-  if (rule.place === "root" && !(parent !== undefined && ROOTS.includes(parent.kind))) {
-    warn(`${kind} must be directly inside ${list(ROOTS)}`);
+  if (rule.place.includes("top")) {
+    if (parent !== undefined) warn(`${kind} must be at the top level`);
+    return;
   }
-  if (rule.place === "row" && parent?.kind !== "row") warn(`${kind} must be inside row`);
+  const place = placeOf(parent, grandparent);
+  if (place === "table row" && kind !== "cell") warn(`${kind} in a table row: expected cell`);
+  else if (place === undefined || !rule.place.includes(place)) warn(`${kind} must be directly inside ${inside(rule.place)}`);
+  else if (kind === "row") {
+    // A table row takes .head, and a row anywhere else .end.
+    const [variant, expected] = place === "table" ? ["end", inside(["root"])] : ["head", inside(["table"])];
+    if (node.variants.includes(variant)) warn(`row.${variant} must be directly inside ${expected}`);
+  }
+}
+
+/** Where a node with this parent stands; undefined inside a kind that holds no known ones. */
+function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode | undefined): Place | undefined {
+  if (parent === undefined) return "top";
+  if (ROOTS.includes(parent.kind)) return "root";
+  if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell") return parent.kind;
+  return undefined;
+}
+
+/** Places as a message names them: `dialog, banner, page or row`. */
+function inside(places: readonly Place[]): string {
+  return list(places.flatMap((place) => (place === "root" ? ROOTS : place === "table row" ? ["a table row"] : [place])));
 }
 
 function error(line: number, message: string): WireframeDiagnostic {
