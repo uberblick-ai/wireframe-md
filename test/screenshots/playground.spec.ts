@@ -152,7 +152,8 @@ test("approval counts, source-only changes and persisted markup diffs", async ({
   await expect(input.locator(".pg-badge")).toHaveText("Approved");
   const entry = page.locator('a[href="#forms/1-basic-inputs"]');
   await expect(entry).toContainText("1 of 3 approved");
-  await expect(entry).toContainText("2 to review");
+  await expect(entry.locator(".pg-dot")).toHaveAttribute("data-state", "partial");
+  await expect(entry.locator(".pg-badge")).toHaveCount(0);
   const mapping = JSON.parse(readFileSync(join(folder, "approvals.json"), "utf8"));
   expect(mapping["forms/1-basic-inputs/input"].approved).toBe(true);
   expect(mapping["forms/1-basic-inputs/input"].fingerprint).toMatch(/^sha256:[0-9a-f]{64}$/);
@@ -236,15 +237,196 @@ test("Scratch adds new or existing folders, rejects duplicates, and guards unsav
   await page.locator("textarea").fill("page Draft");
   await expect(page.locator(".pg-scratch-summary")).toHaveText("Wireframe: page “Draft”");
   page.once("dialog", (dialog) => void dialog.dismiss());
+  await page.locator(".pg-group-head").filter({ hasText: "Forms" }).click();
   await page.locator('a[href="#forms/1-basic-inputs"]').click();
   await expect(page).toHaveURL(`${url}#scratch`);
 });
 
-test("collapsed families persist and unknown addresses are explicit", async ({ page }) => {
-  await page.locator(".pg-group-head").filter({ hasText: "Forms" }).click();
-  await expect(page.locator('a[href="#forms/1-basic-inputs"]')).toBeHidden();
+test("families default to collapsed and only hand openings are remembered", async ({ page }) => {
+  const forms = page.locator(".pg-group").filter({ has: page.locator('a[href="#forms/1-basic-inputs"]') });
+  const tables = page.locator(".pg-group").filter({ has: page.locator('a[href="#tables/1-basic-tables"]') });
+  const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem("wireframe-playground-opened") ?? "[]"));
+  // Old values cannot open a family, and an unaddressed first visit opens only
+  // the family containing the default first entry.
+  await page.evaluate(() => localStorage.setItem("wireframe-playground-collapsed", "[]"));
+  await page.goto(url);
+  await expect(page.locator("#pg-page-title")).toHaveText("Forms / Basic inputs");
+  await expect(forms).toHaveAttribute("open", "");
+  await expect(tables).not.toHaveAttribute("open");
+  expect(await stored()).toEqual([]);
+  await page.getByRole("link", { name: "Scratch", exact: true }).click();
+  await expect(page.locator(".pg-group[open]")).toHaveCount(0);
+  await tables.locator("summary").click();
+  expect(await stored()).toEqual(["tables"]);
   await page.reload();
-  await expect(page.locator('a[href="#forms/1-basic-inputs"]')).toBeHidden();
+  await expect(page.locator("#pg-page-title")).toHaveText("Scratch");
+  await expect(tables).toHaveAttribute("open", "");
+  await expect(forms).not.toHaveAttribute("open");
+  // The click handler persists before the browser's deferred toggle event.
+  await tables.locator("summary").click();
+  await page.reload();
+  await expect(page.locator("#pg-page-title")).toHaveText("Scratch");
+  await expect(tables).not.toHaveAttribute("open");
+  expect(await stored()).toEqual([]);
+});
+
+test("navigation opens the current family without storing it", async ({ page }) => {
+  const forms = page.locator(".pg-group").filter({ has: page.locator('a[href="#forms/1-basic-inputs"]') });
+  const tables = page.locator(".pg-group").filter({ has: page.locator('a[href="#tables/1-basic-tables"]') });
+  for (const target of ["tables/1-basic-tables", "tables/1-basic-tables/table", "tables/"]) {
+    await page.goto(`${url}#${target}`);
+    await expect(tables).toHaveAttribute("open", "");
+    await expect(forms).not.toHaveAttribute("open");
+    await page.reload();
+    await expect(tables).toHaveAttribute("open", "");
+    expect(await page.evaluate(() => localStorage.getItem("wireframe-playground-opened"))).toBeNull();
+  }
+  await page.getByRole("link", { name: "Overview of Forms", exact: true }).click();
+  await expect(forms).toHaveAttribute("open", "");
+  await expect(tables).not.toHaveAttribute("open");
+  await page.goBack();
+  await expect(tables).toHaveAttribute("open", "");
+  await expect(forms).not.toHaveAttribute("open");
+  await page.goForward();
+  await expect(forms).toHaveAttribute("open", "");
+  await expect(tables).not.toHaveAttribute("open");
+  // A hand opening survives navigation away from its family.
+  await tables.locator("summary").click();
+  await page.getByRole("link", { name: "Scratch", exact: true }).click();
+  await expect(tables).toHaveAttribute("open", "");
+  await expect(forms).not.toHaveAttribute("open");
+});
+
+test("a hand collapse holds through edits, saving and approval until another page is shown", async ({ page }) => {
+  const forms = page.locator(".pg-group").filter({ has: page.locator('a[href="#forms/1-basic-inputs"]') });
+  const input = page.locator('[id="forms/1-basic-inputs/input"]');
+  await forms.locator("summary").click();
+  await input.locator("textarea").fill(`${INPUT} changed`);
+  await expect(forms).not.toHaveAttribute("open");
+  await input.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(input.locator(".pg-dirty")).toBeHidden();
+  await expect(forms).not.toHaveAttribute("open");
+  await input.getByRole("button", { name: "Approve", exact: true }).click();
+  await expect(input.locator(".pg-badge")).toHaveText("Approved");
+  await expect(forms).not.toHaveAttribute("open");
+  await page.reload();
+  await expect(forms).toHaveAttribute("open", "");
+  await forms.locator("summary").click();
+  await page.getByRole("link", { name: "Overview of Forms", exact: true }).click();
+  await expect(forms).toHaveAttribute("open", "");
+});
+
+test("a later family is only opened while its page is shown", async ({ page }) => {
+  await page.getByRole("link", { name: "Scratch", exact: true }).click();
+  await page.locator("textarea").fill(INPUT);
+  await page.locator("#pg-new-family").fill("later-family");
+  await page.locator("#pg-new-entry").fill("1-basic");
+  await page.locator("#pg-new-name").fill("input");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  const later = page.locator(".pg-group").filter({ has: page.locator('a[href="#later-family/1-basic"]') });
+  await expect(later).toHaveAttribute("open", "");
+  await page.getByRole("link", { name: "Scratch", exact: true }).click();
+  await expect(page.locator(".pg-group[open]")).toHaveCount(0);
+  await page.reload();
+  await expect(later).not.toHaveAttribute("open");
+});
+
+test("sidebar dots show none, some, all and errors with accessible status and counts", async ({ page }) => {
+  const family = page.locator(".pg-group-head").filter({ hasText: "Forms" });
+  const entry = page.locator('a[href="#forms/1-basic-inputs"]');
+  for (const row of [family, entry]) {
+    await expect(row.locator(".pg-dot")).toHaveAttribute("data-state", "unapproved");
+    await expect(row.locator(".pg-dot")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(row.locator(".pg-dot")).toHaveCSS("border-style", "solid");
+    await expect(row).toHaveAccessibleName(/None approved; 0 of \d approved/);
+  }
+  const input = page.locator('[id="forms/1-basic-inputs/input"]');
+  for (const name of ["input", "long-labels", "select"]) {
+    await page.locator(`[id="forms/1-basic-inputs/${name}"]`).getByRole("button", { name: "Approve", exact: true }).click();
+    await expect(entry.locator(".pg-approved-count")).toHaveText(`${["input", "long-labels", "select"].indexOf(name) + 1} of 3 approved`);
+    if (name === "input") {
+      for (const row of [family, entry]) {
+        await expect(row.locator(".pg-dot")).toHaveAttribute("data-state", "partial");
+        await expect(row.locator(".pg-dot")).toHaveCSS("background-image", /linear-gradient\(.*50%.*50%\)/);
+        await expect(row).toHaveAccessibleName(/Partly approved; 1 of \d approved/);
+      }
+    }
+  }
+  await expect(entry.locator(".pg-dot")).toHaveAttribute("data-state", "approved");
+  await expect(entry).toHaveAccessibleName("Basic inputs: All approved; 3 of 3 approved");
+  await expect(family.locator(".pg-dot")).toHaveAttribute("data-state", "partial");
+  await page.locator('a[href="#forms/2-simple-forms"]').click();
+  await page.getByRole("button", { name: "Approve", exact: true }).click();
+  await expect(family.locator(".pg-dot")).toHaveAttribute("data-state", "approved");
+  await expect(family).toHaveAccessibleName("Forms: All approved; 4 of 4 approved");
+  const green = await family.locator(".pg-dot").evaluate((dot) => getComputedStyle(dot).backgroundColor);
+  expect(green).not.toBe("rgba(0, 0, 0, 0)");
+  await expect(family.locator(".pg-dot")).toHaveCSS("border-color", green);
+  // Changed approvals count as unapproved, even for an entry with no other examples.
+  await page.locator("textarea").fill("page\n  input Changed");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const simple = page.locator('a[href="#forms/2-simple-forms"]');
+  await expect(simple.locator(".pg-dot")).toHaveAttribute("data-state", "unapproved");
+  await expect(simple.locator(".pg-approved-count")).toHaveText("0 of 1 approved");
+  await expect(family.locator(".pg-dot")).toHaveAttribute("data-state", "partial");
+  await page.locator('a[href="#forms/1-basic-inputs"]').click();
+  await input.locator("textarea").fill('page\n  input "Unclosed');
+  for (const row of [family, entry]) {
+    await expect(row.locator(".pg-dot")).toHaveAttribute("data-state", "error");
+    await expect(row).toHaveAccessibleName(/Has errors; 2 of \d approved/);
+    const errorColour = await row.locator(".pg-dot").evaluate((dot) => getComputedStyle(dot).backgroundColor);
+    expect(errorColour).not.toBe(green);
+    expect(errorColour).not.toBe("rgba(0, 0, 0, 0)");
+    await expect(row.locator(".pg-dot")).toHaveCSS("border-color", errorColour);
+  }
+  await input.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await expect(family.locator(".pg-dot")).toHaveAttribute("data-state", "error");
+  await expect(entry.locator(".pg-dot")).toHaveAttribute("data-state", "error");
+  await page.getByRole("radio", { name: "Dark", exact: true }).check();
+  await expect(family.locator(".pg-dot")).toHaveCSS("border-color", await family.locator(".pg-dot").evaluate((dot) => getComputedStyle(dot).backgroundColor));
+});
+
+test("sidebar rows stay on one line and truncate long names without truncating counts", async ({ page }) => {
+  const longFamily = "a-family-with-a-very-long-name-that-cannot-fit-in-the-sidebar";
+  const longEntry = "an-entry-with-a-very-long-name-that-cannot-fit-in-the-sidebar";
+  const path = join(folder, `${longFamily}/${longEntry}/input.wireframe`);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, INPUT);
+  await page.goto(`${url}#${longFamily}/${longEntry}`);
+  await page.reload();
+  const family = page.locator(".pg-group-head").filter({ hasText: "A family with" });
+  const entry = page.locator(`a[href="#${longFamily}/${longEntry}"]`);
+  await expect(family).toHaveAttribute("title", "A family with a very long name that cannot fit in the sidebar: None approved; 0 of 1 approved");
+  await expect(entry).toHaveAttribute("title", "An entry with a very long name that cannot fit in the sidebar: None approved; 0 of 1 approved");
+  for (const row of [family, entry]) {
+    await expect(row).toHaveAccessibleName(await row.getAttribute("title") ?? "");
+    const name = row.locator(".pg-group-name, .pg-item-name");
+    await expect(name).toHaveCSS("text-overflow", "ellipsis");
+    await expect(name).toHaveCSS("white-space", "nowrap");
+    expect(await name.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+  }
+  // Measure every visible heading and entry, including the long names. Each
+  // dot, name and whole count must share the row's vertical centre and fit inside it.
+  const rows = page.locator(".pg-group-head:visible, .pg-items .pg-item:visible");
+  for (const row of await rows.all()) {
+    const layout = await row.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return [...node.children].map((child) => {
+        const box = child.getBoundingClientRect();
+        return { centre: box.top + box.height / 2, inside: box.left >= rect.left && box.right <= rect.right, whole: child.scrollWidth <= child.clientWidth, count: child.classList.contains("pg-approved-count") };
+      });
+    });
+    expect(Math.max(...layout.map(({ centre }) => centre)) - Math.min(...layout.map(({ centre }) => centre))).toBeLessThan(1);
+    expect(layout.every(({ inside }) => inside)).toBe(true);
+    expect(layout.find(({ count }) => count)?.whole).toBe(true);
+  }
+  await expect(page.locator("#pg-groups .pg-badge, #pg-groups .pg-count")).toHaveCount(0);
+  await page.getByRole("link", { name: `Overview of ${longFamily.replaceAll("-", " ").replace(/^a/, "A")}`, exact: true }).click();
+  await expect(page.locator("#pg-page-title")).toHaveText("A family with a very long name that cannot fit in the sidebar overview");
+});
+
+test("unknown addresses are explicit", async ({ page }) => {
   await page.goto(`${url}#forms/missing`);
   await expect(page.locator("#pg-page-title")).toHaveText("View not found");
   await expect(page.locator("#pg-notice")).toContainText("No entry or example");
