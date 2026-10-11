@@ -304,13 +304,42 @@ describe("warnings", () => {
   it("warns about unknown variants", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning, .danger or .success'),
-      warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title or .small'),
+      warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
       warning(3, 'unknown variant ".start" on row: expected .end or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
-      warning(2, 'unknown variant ".big" on icon: expected .filled'),
+      warning(2, 'unknown variant ".big" on icon: expected .filled, .red, .amber, .green or .blue'),
       warning(4, 'unknown variant ".ghost" on button: expected .primary, .danger, .link or .focus'),
+    ]);
+  });
+
+  it.each(["red", "amber", "green", "blue"])("accepts %s on icons and text with other variants in either order", (hue) => {
+    expect(warnings(`page\n  icon.filled.${hue} point\n  icon.${hue}.filled point\n  text.small.strong.${hue} State\n  text.${hue}.title.small State`)).toEqual([]);
+  });
+
+  it("warns about unknown hues and hues on other kinds", () => {
+    expect(warnings("page\n  icon.purple point\n  text.purple State\n  row\n    chip.red Tag\n    button.green Save\n    input.blue Hint\n    select.amber Value\n    toggle\n      option.red Choice\n  table\n    row\n      cell.blue State\nbanner.red\nframe.green Caption")).toEqual([
+      warning(2, 'unknown variant ".purple" on icon: expected .filled, .red, .amber, .green or .blue'),
+      warning(3, 'unknown variant ".purple" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
+      warning(5, 'unknown variant ".red" on chip: expected .more'),
+      warning(6, 'unknown variant ".green" on button: expected .primary, .danger, .link or .focus'),
+      warning(7, 'unknown variant ".blue": input takes no variants'),
+      warning(8, 'unknown variant ".amber": select takes no variants'),
+      warning(10, 'unknown variant ".red" on option: expected .current'),
+      warning(13, 'unknown variant ".blue" on cell: expected .end, .sortable, .ascending or .descending'),
+      warning(14, 'unknown variant ".red" on banner: expected .neutral, .info, .warning, .danger or .success'),
+      warning(15, 'unknown variant ".green": frame takes no variants'),
+    ]);
+  });
+
+  it("warns once for competing colours, including repeats and muted text", () => {
+    expect(warnings("page\n  icon.blue.filled.red.amber.green point\n  icon.red.red point\n  text.small.muted.green.red State\n  text.red.strong.muted State\n  text.muted.muted State")).toEqual([
+      warning(2, "icon takes one of .red, .amber, .green or .blue: the first is used"),
+      warning(3, "icon takes one of .red, .amber, .green or .blue: the first is used"),
+      warning(4, "text takes one of .muted, .red, .amber, .green or .blue: the first is used"),
+      warning(5, "text takes one of .muted, .red, .amber, .green or .blue: the first is used"),
+      warning(6, "text takes one of .muted, .red, .amber, .green or .blue: the first is used"),
     ]);
   });
 

@@ -1,6 +1,6 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
 import { resolveIcon } from "./icons.js";
-import { CELL_SORT_VARIANTS, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -197,6 +197,10 @@ function checkNode(
   }
   if (rule === undefined) return;
 
+  const colours = colourVariants(kind);
+  if (node.variants.filter((variant) => colours.includes(variant)).length > 1) {
+    warn(`${kind} takes one of ${list(colours.map((v) => `.${v}`))}: the first is used`);
+  }
   if (!rule.label && node.label !== "") warn(`${kind} takes no label`);
   if (kind === "icon") {
     const requested = node.variants.includes("filled") ? "filled" : "outline";

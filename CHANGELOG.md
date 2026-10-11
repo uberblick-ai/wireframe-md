@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Icons and text accept `.red`, `.amber`, `.green` and `.blue`, reusing the
+  existing danger, warning, success and info theme properties. Icons override
+  their context's colour and name the hue in their text alternative. Text keeps
+  its other variants; light amber text derives a darker shade for contrast.
+  Competing colours warn and draw the first, including `.muted` on text.
 - `button.link` captions are underlined in their variant colour at `--wf-stroke`
   thickness, including wrapped lines. Icons, icon-only links and other buttons
   draw as before; every mock action stays inert.

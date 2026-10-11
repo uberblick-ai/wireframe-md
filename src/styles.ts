@@ -23,6 +23,8 @@
 //   --wf-danger-ink    the caption on a filled button.primary.danger
 //   --wf-focus         button.focus's ring
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
+//   The named icon/text hues reuse danger (red), warning (amber), success (green)
+//   and info (blue). Light amber text mixes warning with ink for contrast.
 //   --wf-neutral-tint  a neutral banner's and a frame's fill; --wf-muted is the frame's left bar and caption
 //   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint,
@@ -594,6 +596,29 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-button > .wf-icon {
   color: inherit;
+}
+
+/* Named hues override an icon's context. Uncoloured icons still inherit it. */
+.wf-root :is(.wf-icon, .wf-text).wf-red {
+  color: var(--_wf-danger);
+}
+
+.wf-root .wf-icon.wf-amber {
+  color: var(--_wf-warning);
+}
+
+/* Keep the warning tone intact for icons and banners. Only light amber text
+   needs a darker shade to reach 4.5:1 against the default paper ground. */
+.wf-root .wf-text.wf-amber {
+  color: light-dark(color-mix(in oklab, var(--_wf-warning) 80%, var(--_wf-ink)), var(--_wf-warning));
+}
+
+.wf-root :is(.wf-icon, .wf-text).wf-green {
+  color: var(--_wf-success);
+}
+
+.wf-root :is(.wf-icon, .wf-text).wf-blue {
+  color: var(--_wf-info);
 }
 
 .wf-root .wf-button.wf-icon-only {

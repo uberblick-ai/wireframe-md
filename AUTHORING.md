@@ -93,10 +93,10 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
-| `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
+| `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
-| `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
+| `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value |
 | `toggle` | directly inside a root or a `row` | none | none: its choices are `option` lines |
@@ -132,6 +132,40 @@ own, uses a banner's tone and inherits a button's colour. Outline icons match
 the controls' stroke weight; filled icons draw solid shapes. Each icon's text
 alternative is its name with hyphens read as spaces, so `dots-vertical` is read
 as “dots vertical”. The root's accessible summary stays the same.
+
+Only `icon` and `text` accept the named colours `.red`, `.amber`, `.green` and
+`.blue`. They reuse the existing theme properties: red is `--wf-danger`, amber
+is `--wf-warning`, green is `--wf-success`, and blue is `--wf-info`. Hosts restyle
+the hues through those properties; no theme property is added. Icons use the
+tones unchanged, overriding their banner or button colour. Coloured text keeps
+its other variants, in any order, such as `text.small.amber` or
+`text.green.strong`. With the default theme, each text colour reaches 4.5:1
+contrast against paper in light and dark. Light amber text mixes 80% warning
+with 20% ink for contrast; dark amber text uses warning unchanged.
+
+Use one colour per node. Competing colours warn and the first written draws;
+on `text`, `.muted` counts as a colour too. Other hues and colours on other kinds
+get the usual unknown-variant warning and add no colour. A coloured icon's text
+alternative names its colour before its name: `icon.filled.red point` is read
+as “red point”. Text colour is not announced, and the summary stays the same.
+Pair every coloured state with words so colour is not its only meaning:
+
+```wireframe
+page
+  table
+    row.head
+      cell Document
+      cell Sync
+    row
+      cell Q3 launch plan
+      cell Synced
+        icon.filled.green point
+    row
+      cell Research notes
+      cell Offline
+        icon.filled.red point
+  text Offline. Changes are saved on this device.
+```
 
 A button holding an icon and no caption is an icon-only mock action. With a
 caption, the icon draws before it. `button.link` draws a bare icon; a plain button
@@ -664,7 +698,7 @@ Diagnostics:
 
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
-line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title or .small
+line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
 line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 

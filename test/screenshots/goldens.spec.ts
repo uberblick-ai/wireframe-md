@@ -10,6 +10,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 
 const samples = [
   {
+    name: "icons-named-palette",
+    source: readFileSync(new URL("../../examples/icons/2-colours/named-palette.wireframe", import.meta.url), "utf8"),
+    intro: "Named colours reuse the theme tones; every coloured state also has words.",
+  },
+  {
     name: "icons-pins-and-actions",
     source: readFileSync(new URL("../../examples/icons/1-styles/pins-and-actions.wireframe", import.meta.url), "utf8"),
     intro: "Outline and filled icons stand alone, in cells and in inert actions with or without captions.",
