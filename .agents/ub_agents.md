@@ -33,8 +33,12 @@ Implementation PR bodies start with `Closes #N`.
 ## Human decisions
 
 `@uberblick-ai/maintainers` answers scope and policy questions. Decision records
-marked `decided` in the corpus are settled answers. A new keyword,
-attribute or syntax rule is a scope question unless the issue already settles it.
+marked `decided` in the corpus are settled answers. In 0.x, a keyword,
+attribute or syntax rule that the issue's samples need is in scope: change the
+corpus requirement (for now "Format v0.1") and the code in the same PR and name
+the change in the PR body (decision record "Formats and syntax may change
+throughout 0.x"). Anything beyond what the issue's samples need stays a scope
+question.
 An issue's author may answer only if they have write access. Use the responsible
 role's correction or handoff route when that role must act next.
 
