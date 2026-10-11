@@ -77,4 +77,42 @@ for (const scheme of ["light", "dark"] as const) {
     await expect(bare).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(page.locator(".wf-button.wf-icon-only:not(.wf-link)")).toHaveCSS("border-top-style", "solid");
   });
+
+  for (const host of ["standalone", "column"] as const) {
+    test(`cell icons and action captions align vertically in ${scheme} on ${host}`, async ({ page }) => {
+      await open(page);
+      const actions = ["button.link", "button", "button.link Archive", "button Archive", "button.link Remove"];
+      const rows = actions.map((action, index) =>
+        `    row\n      cell Name\n        icon pin\n        chip web\n        ${action}${index === 4 ? "" : "\n          icon pin"}`);
+      const container = await show(page, `page\n  table\n${rows.join("\n")}`, { scheme, host });
+      for (const fontSize of [16, 20]) {
+        await container.evaluate((element, size) => element.style.setProperty("--wf-text-size", `${size}px`), fontSize);
+        const cells = await page.locator(".wf-cell").evaluateAll((elements) => elements.map((cell) => {
+          const centre = (box: DOMRect) => box.top + box.height / 2;
+          const textCentre = (node: Node) => {
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return centre(range.getBoundingClientRect());
+          };
+          const button = cell.querySelector(".wf-button")!;
+          return {
+            text: textCentre(cell.firstChild!),
+            icon: centre(cell.querySelector(":scope > .wf-icon")!.getBoundingClientRect()),
+            chip: centre(cell.querySelector(".wf-chip")!.getBoundingClientRect()),
+            button: centre(button.getBoundingClientRect()),
+            buttonIcon: button.querySelector("svg") === null ? null : centre(button.querySelector("svg")!.getBoundingClientRect()),
+            caption: button.lastChild!.nodeType === Node.TEXT_NODE ? textCentre(button.lastChild!) : null,
+          };
+        }));
+        for (const [index, cell] of cells.entries()) {
+          // The text range includes ascenders and descenders; allow the small
+          // difference from CSS's x-height centre, but reject an SVG baseline.
+          for (const [kind, centre] of Object.entries(cell)) {
+            if (centre === null) continue;
+            expect(Math.abs(centre - cell.text), `${actions[index]} ${kind} at ${fontSize}px`).toBeLessThanOrEqual(fontSize / 8);
+          }
+        }
+      }
+    });
+  }
 }

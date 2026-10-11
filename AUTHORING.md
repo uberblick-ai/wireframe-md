@@ -95,7 +95,7 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
-| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption |
+| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value |
@@ -665,11 +665,10 @@ line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .titl
 line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
-Fixed with the catalog name `lock`:
+Fixed without an icon, since this banner is not about archiving:
 
 ```wireframe
 banner.warning
-  icon lock
   text.muted Read-only. Ask the owner for access.
   row.end
     button.link Request access

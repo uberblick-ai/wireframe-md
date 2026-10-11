@@ -92,12 +92,17 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     case "icon":
       element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline"));
       break;
-    case "button":
+    case "button": {
       // Icons precede the caption; every child still draws, including misplaced ones.
-      if (node.label === "" && node.children.some((child) => child.kind === "icon")) element.classList.add("wf-icon-only");
-      for (const child of node.children.filter((child) => child.kind === "icon")) element.append(draw(document, child));
+      const icons = node.children.filter((child) => child.kind === "icon");
+      if (icons.length > 0) {
+        element.classList.add("wf-has-icon");
+        if (node.label === "") element.classList.add("wf-icon-only");
+      }
+      for (const child of icons) element.append(draw(document, child));
       if (node.label !== "") element.append(document.createTextNode(node.label));
       break;
+    }
     case "select":
       // The chosen value, then the chevron-down.
       element.textContent = node.label;

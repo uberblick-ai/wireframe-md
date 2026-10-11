@@ -550,6 +550,12 @@ const STYLES = `.wf-root {
   margin-inline-end: 0.375em;
 }
 
+/* An icon's block SVG supplies the inline-flex button's baseline. Centre the
+   button beside cell text instead of resting the SVG's bottom on that baseline. */
+.wf-root .wf-cell > .wf-button.wf-has-icon {
+  vertical-align: middle;
+}
+
 /* A small neutral tag. .more, the count of the rest, is text with no box. */
 .wf-root .wf-chip {
   display: inline-flex;

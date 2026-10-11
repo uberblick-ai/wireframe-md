@@ -9,6 +9,7 @@ format, the vocabulary and the rendering may change in any minor version.
   directly inside roots, cells and buttons. Buttons may draw an icon alone or
   before their caption, staying inert. Icons have name-based text alternatives,
   inherit their context's colour and warn with a fallback for missing styles.
+  Icon-only and captioned icon buttons align with text and chips in table cells.
   The package bundles generated drawings and Tabler's MIT notice, with no runtime
   dependency or network lookup. `icon archive` now uses Tabler's drawing.
 - Table cells accept `.sortable`, `.ascending` and `.descending` to draw stroked
