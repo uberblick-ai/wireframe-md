@@ -133,7 +133,7 @@ export class ExampleEditor {
     const rendered = renderWireframe(this.result);
     if (rendered !== null) this.lastGood = rendered;
     this.showPreview();
-    const count = this.textarea.value.split("\n").length;
+    const count = this.textarea.value.replace(/\n$/, "").split("\n").length;
     // 20px lines plus one line of breathing room; past 40 lines, scroll.
     this.editor.style.height = `${(Math.min(count, 40) + 1) * 20}px`;
     const marks = new Map<number, string>();

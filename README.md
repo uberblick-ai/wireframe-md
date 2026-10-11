@@ -256,9 +256,9 @@ entries are supported, but have no previous markup to diff. `approved: false`
 is treated as unapproved. Commit the mapping with the examples.
 
 Each example is approved, changed since approval, not yet approved, or has
-errors. Entries and families show a status dot, an "N to review" badge when
-needed, and partial counts such as "3 of 5 approved" (families also keep their
-example count). Changes to the source, parser, renderer or stylesheet that
+errors. Entries show a status dot; entries and families show an "N to review"
+badge when needed and partial counts such as "3 of 5 approved" (families also
+keep their example count). Changes to the source, parser, renderer or stylesheet that
 alter an approval fingerprint flag the example. One approval covers both
 schemes and hosts; look at each before approving.
 

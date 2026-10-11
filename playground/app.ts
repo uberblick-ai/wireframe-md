@@ -79,8 +79,11 @@ function showSidebar(): void {
     const heading = element("summary", "pg-group-head");
     heading.append(element("span", "pg-group-name", folderLabel(key)), element("span", "pg-count", String(members.length)));
     reviewCounts(members, heading);
-    details.addEventListener("toggle", () => {
-      if (!details.isConnected) return;
+    // Persist in the activation itself: the native toggle event is deferred,
+    // so an immediate reload could otherwise lose the last collapse.
+    heading.addEventListener("click", (event) => {
+      event.preventDefault();
+      details.open = !details.open;
       const stored = collapsedFamilies();
       if (details.open) stored.delete(key);
       else stored.add(key);
@@ -224,6 +227,7 @@ function mayLeave(next: Route): boolean {
 function navigate(target: string): void {
   const next = resolve(target);
   if (!mayLeave(next)) return;
+  if (`#${target}` === acceptedHash) { show(next); return; }
   historyIndex += 1; acceptedHash = `#${target}`;
   history.pushState({ playgroundIndex: historyIndex }, "", acceptedHash); show(next);
 }
@@ -231,7 +235,10 @@ function navigate(target: string): void {
 /** Cancelled Back/Forward restores the history position, preserving both views. */
 function fromHistory(): void {
   if (returning) { if (location.hash === acceptedHash) returning = false; return; }
-  if (location.hash === acceptedHash) return;
+  if (location.hash === acceptedHash) {
+    if (typeof history.state?.playgroundIndex === "number") historyIndex = history.state.playgroundIndex;
+    return;
+  }
   const next = resolve(addressed());
   const index: number = typeof history.state?.playgroundIndex === "number" ? history.state.playgroundIndex : historyIndex + 1;
   if (!mayLeave(next)) { returning = true; history.go(historyIndex - index); return; }
@@ -254,6 +261,7 @@ async function add(): Promise<void> {
   const name = `${newFamily.value}/${newEntry.value}/${newName.value}`;
   if (!validName(name)) { say("Use lowercase letters and digits joined by hyphens, at most 64 characters for each family, entry and name.", true); return; }
   adding = true;
+  scratch.textarea.readOnly = true;
   const button = addForm.querySelector("button"); if (button !== null) button.disabled = true;
   try {
     const created = await request<{ name: string; source: string }>("POST", "/api/examples", { name, source: scratch.textarea.value });
@@ -263,7 +271,7 @@ async function add(): Promise<void> {
     // Add saved the draft; navigate without a discard prompt for that source.
     adding = false; editors = []; navigate(name); say(`Added examples/${name}.wireframe.`);
   } catch (error) { say(`Not added: ${error instanceof Error ? error.message : error}`, true); }
-  finally { adding = false; if (button !== null) button.disabled = false; }
+  finally { adding = false; scratch.textarea.readOnly = false; if (button !== null) button.disabled = false; }
 }
 
 function choose<T extends string>(name: string, values: readonly T[], fallback: T, apply: (value: T) => void): void {
