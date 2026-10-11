@@ -13,21 +13,17 @@ dialog Every kind and variant
     button.link.danger Link danger
     button.focus Focus
 banner
-  icon archive
   text Neutral banner
 banner.info
-  icon archive
   text Info banner
   row.end
     button.primary Primary
 banner.warning
-  icon archive
   text Warning banner
 banner.success
   icon archive
   text Restored from the archive. Back in the document list.
 banner.danger
-  icon archive
   text Danger banner
   row.end
     button.link.danger Delete…

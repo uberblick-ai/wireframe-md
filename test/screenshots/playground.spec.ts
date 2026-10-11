@@ -47,6 +47,7 @@ test("the Banners entry shows every saved example without diagnostics", async ({
     if (file.endsWith(".wireframe")) writeFileSync(join(destination, file), readFileSync(new URL(file, sources)));
   }
   await page.goto(`${url}#badges-and-banners/2-banners`);
+  await page.reload();
   await expect(page.locator("#pg-page-title")).toHaveText("Badges & banners / Banners");
   await expect(page.locator(".pg-example h3")).toHaveText([
     "archived-banner", "banner-with-actions", "danger-banner", "info-banner", "neutral-banner",
