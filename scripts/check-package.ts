@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -59,9 +59,14 @@ function run(command: string, args: string[], cwd: string): { stdout: string; st
   return { stdout, stderr };
 }
 
+// Packs into an empty directory and takes the one tarball there, since the shape
+// of `npm pack --json` differs between npm 11 and 12.
 function pack(into: string): string {
-  const [{ filename }] = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", into], root).stdout);
-  return join(into, filename);
+  run("npm", ["pack", "--pack-destination", into], root);
+  const tarballs = readdirSync(into).filter((name) => name.endsWith(".tgz"));
+  const [tarball] = tarballs;
+  if (tarball === undefined || tarballs.length > 1) throw new Error(`npm pack left ${tarballs.length} tarballs in ${into}, expected one`);
+  return join(into, tarball);
 }
 
 function checkTarball(tarball: string): void {

@@ -82,8 +82,10 @@ jobs:
       - run: mise run build
 
       # Pack once: the package check installs this tarball, and the publish job
-      # publishes the same file.
-      - run: npm pack --pack-destination "$RUNNER_TEMP/package"
+      # publishes the same file. npm pack doesn't create its destination.
+      - run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          npm pack --pack-destination "$RUNNER_TEMP/package"
       - run: mise run check-package "$RUNNER_TEMP"/package/*.tgz
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
