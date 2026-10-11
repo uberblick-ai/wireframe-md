@@ -1,6 +1,6 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
-import { CELL_SORT_VARIANTS, KINDS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, KINDS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -60,9 +60,12 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     ? node.variants.findIndex((variant) => CELL_SORT_VARIANTS.includes(variant))
     : -1;
   const sort = node.variants[sortIndex];
+  const colours = colourVariants(node.kind);
+  const colourIndex = node.variants.findIndex((variant) => colours.includes(variant));
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants
     .filter((variant, index) => rule.variants.includes(variant) &&
+      (!colours.includes(variant) || index === colourIndex) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
@@ -90,7 +93,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       break;
     }
     case "icon":
-      element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline"));
+      element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline", node.variants[colourIndex]));
       break;
     case "button": {
       // Icons precede the caption; every child still draws, including misplaced ones.
@@ -157,14 +160,14 @@ function unknown(document: Document, node: WireframeNode): HTMLElement {
 }
 
 /** An allowlisted icon as an inline SVG; any other name draws as a dashed box showing it. */
-function icon(document: Document, name: string, requested: IconStyle): Node {
+function icon(document: Document, name: string, requested: IconStyle, colour?: string): Node {
   const drawing = resolveIcon(name, requested);
   if (drawing === undefined) return text(document, "span", ["wf-icon-unknown"], name);
   const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("class", `wf-icon-glyph wf-icon-${drawing.style}`);
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", name.replaceAll("-", " "));
+  svg.setAttribute("aria-label", `${colour === undefined ? "" : `${colour} `}${name.replaceAll("-", " ")}`);
   for (const [d, paint] of drawing.paths) {
     const shape = document.createElementNS(SVG, "path");
     shape.setAttribute("d", d);

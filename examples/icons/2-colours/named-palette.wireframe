@@ -1,0 +1,42 @@
+page
+  text.title Named colours
+  text Pair coloured states with words.
+  table
+    row.head
+      cell Colour
+      cell Outline
+      cell Filled
+    row
+      cell Red · Offline
+      cell
+        icon.red point
+      cell
+        icon.filled.red point
+    row
+      cell Amber · Pending
+      cell
+        icon.amber point
+      cell
+        icon.amber.filled point
+    row
+      cell Green · Synced
+      cell
+        icon.green point
+      cell
+        icon.filled.green point
+    row
+      cell Blue · Information
+      cell
+        icon.blue point
+      cell
+        icon.blue.filled point
+  text.red Offline. Changes are saved on this device.
+  text.small.amber Pending. Waiting for a connection.
+  text.strong.green Synced. All changes are saved.
+  text.blue Information. Sync runs automatically.
+banner.warning
+  icon.filled.green point
+  text The green icon overrides the warning tone.
+  row.end
+    button.primary Sync
+      icon.filled.blue point

@@ -158,12 +158,12 @@ inherits.
 | `--wf-shadow` | the dialog card's `box-shadow` | `0 6px 20px oklch(0 0 0 / 10%)` | `0 6px 20px oklch(0 0 0 / 45%)` |
 | `--wf-primary` | `button.primary`'s fill, and `button.link.primary`'s caption | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
 | `--wf-primary-ink` | `button.primary`'s caption | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
-| `--wf-danger` | the destructive colour: `button.danger`, and `banner.danger`'s icon and border | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
+| `--wf-danger` | the destructive colour: `button.danger`, and `banner.danger`'s icon and border; red icons and text | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
 | `--wf-danger-ink` | the caption on a filled `button.primary.danger` | `oklch(1 0 0)` | `oklch(0.145 0 0)` |
 | `--wf-focus` | `button.focus`'s ring | `oklch(0.72 0.16 65)` | `oklch(0.8 0.18 65)` |
-| `--wf-info` | `banner.info`'s icon and border | `oklch(0.55 0.15 250)` | `oklch(0.75 0.12 250)` |
-| `--wf-warning` | `banner.warning`'s icon and border | `oklch(0.66 0.13 70)` | `oklch(0.78 0.14 75)` |
-| `--wf-success` | `banner.success`'s icon and border | `oklch(0.55 0.15 150)` | `oklch(0.75 0.14 150)` |
+| `--wf-info` | `banner.info`'s icon and border; blue icons and text | `oklch(0.55 0.15 250)` | `oklch(0.75 0.12 250)` |
+| `--wf-warning` | `banner.warning`'s icon and border; amber icons and text (light text mixes 80% warning with 20% ink) | `oklch(0.66 0.13 70)` | `oklch(0.78 0.14 75)` |
+| `--wf-success` | `banner.success`'s icon and border; green icons and text | `oklch(0.55 0.15 150)` | `oklch(0.75 0.14 150)` |
 | `--wf-neutral-tint` | a neutral banner's and a frame's fill | `oklch(0.985 0.002 75)` | `oklch(0.2 0.004 65)` |
 | `--wf-info-tint` | `banner.info`'s fill | `oklch(0.965 0.02 250)` | `oklch(0.24 0.035 250)` |
 | `--wf-warning-tint` | `banner.warning`'s fill | `oklch(0.975 0.022 85)` | `oklch(0.24 0.035 75)` |

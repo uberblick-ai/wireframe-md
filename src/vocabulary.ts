@@ -25,6 +25,13 @@ export interface KindRule {
 }
 
 export const CELL_SORT_VARIANTS: readonly string[] = ["sortable", "ascending", "descending"];
+export const HUE_VARIANTS: readonly string[] = ["red", "amber", "green", "blue"];
+const TEXT_COLOURS: readonly string[] = ["muted", ...HUE_VARIANTS];
+
+/** Muted competes with hues on text; other kinds keep their semantic variants. */
+export function colourVariants(kind: string): readonly string[] {
+  return kind === "icon" ? HUE_VARIANTS : kind === "text" ? TEXT_COLOURS : [];
+}
 
 // A Map, so a kind such as `constructor` cannot find an Object.prototype member.
 export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
@@ -34,12 +41,12 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["page", { place: ["top"], variants: [], label: false }],
   ["frame", { place: ["top"], variants: [], label: true }],
   ["card", { place: ["top", "root"], variants: [], label: false }],
-  ["text", { place: ["root", "card", "row"], variants: ["muted", "strong", "title", "small"], label: true }],
+  ["text", { place: ["root", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS], label: true }],
   // Inside a table, a row is a table row of cells: .head there, .end outside one.
   ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.
-  ["icon", { place: ["root", "cell", "button"], variants: ["filled"], label: true }],
+  ["icon", { place: ["root", "cell", "button"], variants: ["filled", ...HUE_VARIANTS], label: true }],
   // The label is the placeholder.
   ["input", { place: ["root", "row"], variants: [], label: true }],
   // The label is the chosen value.

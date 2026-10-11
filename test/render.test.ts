@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseWireframe, renderWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
+import { parseWireframe, renderWireframe, summarizeWireframe, type WireframeNode, type WireframeParseResult } from "../src/index.js";
 import { ICONS } from "../src/vocabulary.js";
 import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading, vocabulary } from "./samples.js";
 
@@ -174,6 +174,36 @@ describe("samples", () => {
 });
 
 describe("kinds and variants", () => {
+  it.each(["red", "amber", "green", "blue"])("draws %s icons and text without changing their other variants or summary", (hue) => {
+    const source = `page\n  icon.${hue} dots-vertical\n  icon.filled.${hue} point\n  text.small.strong.${hue} State`;
+    const root = render(source);
+    expect(root.querySelector(".wf-icon-outline")?.getAttribute("aria-label")).toBe(`${hue} dots vertical`);
+    expect(root.querySelector(".wf-icon-filled")?.getAttribute("aria-label")).toBe(`${hue} point`);
+    const text = root.querySelector(".wf-text")!;
+    expect(text.className).toBe(`wf-text wf-small wf-strong wf-${hue}`);
+    expect(text.hasAttribute("aria-label")).toBe(false);
+    expect(summarizeWireframe(parseWireframe(source))).toBe(summarizeWireframe(parseWireframe("page\n  icon dots-vertical\n  icon.filled point\n  text.small.strong State")));
+  });
+
+  it("draws only the first colour in source order, keeping non-colour variants", () => {
+    for (const hue of ["red", "amber", "green", "blue"]) {
+      const root = render(`page\n  icon.${hue}.filled.blue.red.amber.green point\n  text.small.${hue}.strong.muted.blue.red.amber.green State`);
+      expect(root.querySelector(".wf-icon")?.className).toBe(`wf-icon wf-${hue} wf-filled`);
+      expect(root.querySelector(".wf-icon-glyph")?.getAttribute("aria-label")).toBe(`${hue} point`);
+      expect(root.querySelector(".wf-text")?.className).toBe(`wf-text wf-small wf-${hue} wf-strong`);
+    }
+    expect(render("page\n  text.muted.strong.red State").querySelector(".wf-text")?.className).toBe("wf-text wf-muted wf-strong");
+  });
+
+  it("adds no colour for an unknown or misplaced hue", () => {
+    const root = render("page\n  icon.purple point\n  text.purple State\n  row\n    chip.red Tag\n    button.green Save");
+    expect(root.querySelector(".wf-icon")?.className).toBe("wf-icon");
+    expect(root.querySelector(".wf-icon-glyph")?.getAttribute("aria-label")).toBe("point");
+    expect(root.querySelector(".wf-text")?.className).toBe("wf-text");
+    expect(root.querySelector(".wf-chip")?.className).toBe("wf-chip");
+    expect(root.querySelector(".wf-button")?.className).toBe("wf-button");
+  });
+
   it("draws title-only cards at the top level and small text with other variants", () => {
     expect(drawn("card\n  text.title Title\ncard\n  text.small.strong Small bold text")).toEqual([
       "div.wf-card", "  div.wf-text.wf-title Title",
