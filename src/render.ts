@@ -100,7 +100,11 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
         if (node.label === "") element.classList.add("wf-icon-only");
       }
       for (const child of icons) element.append(draw(document, child));
-      if (node.label !== "") element.append(document.createTextNode(node.label));
+      if (node.label !== "") {
+        element.append(node.variants.includes("link")
+          ? text(document, "span", ["wf-button-caption"], node.label)
+          : document.createTextNode(node.label));
+      }
       break;
     }
     case "select":

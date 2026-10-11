@@ -50,8 +50,10 @@ describe("samples", () => {
       "  div.wf-frame-caption",
       "    div.wf-frame-label Figma · Payment, mobile",
       "    div.wf-frame-actions",
-      "      span.wf-button.wf-link Expand",
-      "      span.wf-button.wf-link Open in Figma",
+      "      span.wf-button.wf-link",
+      "        span.wf-button-caption Expand",
+      "      span.wf-button.wf-link",
+      "        span.wf-button-caption Open in Figma",
       "  div.wf-card",
       "    div.wf-text.wf-muted (the frame, live from Figma)",
       "    div.wf-text Click to interact",
@@ -89,7 +91,8 @@ describe("samples", () => {
       "  div.wf-text Archived. Read-only and hidden from the document list.",
       "  div.wf-row.wf-end",
       "    span.wf-button Restore",
-      "    span.wf-button.wf-link.wf-danger Delete…",
+      "    span.wf-button.wf-link.wf-danger",
+      "      span.wf-button-caption Delete…",
     ]);
   });
 
@@ -193,7 +196,7 @@ describe("kinds and variants", () => {
       "div.wf-frame", "  div.wf-frame-caption", "    div.wf-frame-label Caption",
     ]);
     expect(drawn("frame\n  button.link Copy")).toEqual([
-      "div.wf-frame", "  div.wf-frame-caption", "    div.wf-frame-actions", "      span.wf-button.wf-link Copy",
+      "div.wf-frame", "  div.wf-frame-caption", "    div.wf-frame-actions", "      span.wf-button.wf-link", "        span.wf-button-caption Copy",
     ]);
   });
 
@@ -333,7 +336,8 @@ describe("kinds and variants", () => {
       "      span.wf-button Go",
       "      span.wf-button.wf-primary Go",
       "      span.wf-button.wf-danger Go",
-      "      span.wf-button.wf-link Go",
+      "      span.wf-button.wf-link",
+      "        span.wf-button-caption Go",
       "      span.wf-button.wf-focus Go",
       "      span.wf-button.wf-primary.wf-danger Go",
     ]);
@@ -428,7 +432,8 @@ describe("kinds and variants", () => {
       "    div.wf-row",
       "      div.wf-cell Tags",
       "        span.wf-chip spec",
-      "        span.wf-button.wf-link pin",
+      "        span.wf-button.wf-link",
+      "          span.wf-button-caption pin",
     ]);
   });
 

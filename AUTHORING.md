@@ -95,7 +95,7 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
-| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: a text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
+| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `row` | none | the chosen value |
@@ -109,7 +109,10 @@ A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-wi
 strip with its icon, text and buttons on one line. A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
-`button.link.danger` a destructive text button.
+`button.link.danger` an underlined destructive text button. A `.link` caption's
+underline follows its colour and uses `--wf-stroke` for its thickness, including
+on every wrapped line. Icons and the gap before the caption are not underlined;
+an icon-only `.link` stays a bare icon.
 
 `banner.success` marks a positive outcome, such as Saved or Restored. Its fill is
 a green tint, its icon uses the green tone and that tone is mixed into its border,

@@ -101,7 +101,8 @@ for (const scheme of ["light", "dark"] as const) {
             chip: centre(cell.querySelector(".wf-chip")!.getBoundingClientRect()),
             button: centre(button.getBoundingClientRect()),
             buttonIcon: button.querySelector("svg") === null ? null : centre(button.querySelector("svg")!.getBoundingClientRect()),
-            caption: button.lastChild!.nodeType === Node.TEXT_NODE ? textCentre(button.lastChild!) : null,
+            caption: button.lastChild!.nodeType === Node.TEXT_NODE || button.lastChild === button.querySelector(".wf-button-caption")
+              ? textCentre(button.lastChild!) : null,
           };
         }));
         for (const [index, cell] of cells.entries()) {
