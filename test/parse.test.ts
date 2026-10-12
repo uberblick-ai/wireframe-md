@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });

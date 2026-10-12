@@ -72,6 +72,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
+  if (node.kind === "divider") element.setAttribute("role", "separator");
   if (node.kind === "page") {
     const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
     // Border-box sizing includes padding; min-content still widens a page for
@@ -137,7 +138,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       break;
     }
     default:
-      // A banner, page, card, row, toggle or table takes no label. One written anyway warns and draws as text.
+      // A kind that takes no label still draws one written anyway as text.
       if (node.label !== "") {
         if (rule.label) element.textContent = node.label;
         else element.append(text(document, "span", ["wf-text"], node.label));

@@ -1,0 +1,26 @@
+page
+  text.title Page sections
+  text Navigation above
+  divider
+  text Account below
+dialog Confirm changes
+  text Review your changes before saving.
+  divider
+  text.small.muted Changes apply to this workspace.
+  row.end
+    button Cancel
+    button.primary Save
+frame Workspace overview
+  text Navigation above
+  divider
+  text Account below
+page width=256
+  text.strong Überblick
+  text Dashboard
+  text All documents
+  text Decisions
+  divider
+  text Workspace settings
+  row
+    button.link Alex · Account
+      icon user

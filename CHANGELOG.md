@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `divider` draws an inert horizontal separator directly inside a dialog, page
+  or frame. It spans the content width using `--wf-line` and `--wf-stroke`, with
+  the container's usual gaps. It takes only an optional `#id`; misplaced or
+  unsupported source warns and still draws.
+
 - `page width=256` gives a page an optional width in CSS pixels, including its
   border and padding and capped at its parent's space. Text wraps and content
   that cannot fit still scrolls inside the wireframe. Widths are digits from 1
