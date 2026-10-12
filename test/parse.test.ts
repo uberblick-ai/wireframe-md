@@ -355,9 +355,9 @@ describe("warnings", () => {
 
   it("warns about every unknown attribute", () => {
     expect(warnings("banner tone=warning\n  text a=1 b=2 Hi")).toEqual([
-      warning(1, 'unknown attribute "tone": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "b": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(1, 'unknown attribute "tone": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "b": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
     ]);
   });
 
@@ -447,7 +447,7 @@ describe("warnings", () => {
 
   it("still warns about other attributes on a labelled field", () => {
     expect(warnings('page\n  input label=Email size=20 name@company.com')).toEqual([
-      warning(2, 'unknown attribute "size": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "size": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
     ]);
   });
 
@@ -681,7 +681,7 @@ describe("errors", () => {
     expect(errors('dialog\n  text "Hello\n  text a="b c\n  text "end\\"')).toEqual([
       error(2, 'unterminated quote: expected a closing "'),
       error(3, 'unterminated quote: expected a closing "'),
-      warning(3, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(3, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
       error(4, 'unterminated quote: expected a closing "'),
     ]);
     expect(parseWireframe('text "Hello').nodes[0]?.label).toBe("Hello");
@@ -693,7 +693,7 @@ describe("errors", () => {
     ]);
     expect(errors('dialog\n  text a="b"c Label')).toEqual([
       error(2, "expected a space after the closing quote"),
-      warning(2, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
     ]);
   });
 
