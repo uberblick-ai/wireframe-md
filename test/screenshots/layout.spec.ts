@@ -119,9 +119,13 @@ function measure(page: Page): Promise<Fit> {
     const inside = (inner: Element, outer: Element): boolean => {
       const a = inner.getBoundingClientRect();
       const b = outer.getBoundingClientRect();
-      return a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5;
+      const css = getComputedStyle(outer);
+      const clips = (overflow: string) => ["auto", "scroll", "hidden", "clip"].includes(overflow);
+      return (clips(css.overflowX) || (a.left >= b.left - 0.5 && a.right <= b.right + 0.5)) &&
+        (clips(css.overflowY) || (a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5));
     };
-    // Every drawn box holds its children, except the root, which scrolls.
+    // Compare visible bounds: native scrollports and clipped status slots
+    // contain their drawing even when the child's uncut box extends farther.
     const escaped = [...root.querySelectorAll(":scope * > *")]
       .filter((element) => element.parentElement !== root && !inside(element, element.parentElement!))
       .map((element) => element.getAttribute("class") ?? element.localName);
@@ -1001,27 +1005,53 @@ test.describe("phone screens", () => {
             const screen = phone.querySelector(".wf-phone-screen")!.getBoundingClientRect();
             const box = phone.getBoundingClientRect();
             const style = getComputedStyle(root);
+            const island = phone.querySelector(".wf-phone-island")!.getBoundingClientRect();
+            const slots = [".wf-phone-time", ".wf-phone-indicators"].flatMap((selector) => {
+              const slot = phone.querySelector(selector)!;
+              const clip = slot.getBoundingClientRect();
+              return [...slot.children].map((child) => {
+                const item = child.getBoundingClientRect();
+                return { left: Math.max(item.left, clip.left), right: Math.min(item.right, clip.right) };
+              });
+            }).filter((item) => item.right > item.left);
             return {
               screen: { width: screen.width, height: screen.height },
               width: box.width,
               available: root.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight),
               startGap: box.left - root.getBoundingClientRect().left - Number.parseFloat(style.paddingLeft),
               documentWidth: document.documentElement.clientWidth, documentScrollWidth: document.documentElement.scrollWidth,
+              bezel: [screen.left - box.left, box.right - screen.right, screen.top - box.top, box.bottom - screen.bottom],
+              radius: getComputedStyle(phone).borderTopLeftRadius,
+              screenRadius: getComputedStyle(phone.querySelector(".wf-phone-screen")!).borderTopLeftRadius,
+              island: { left: island.left, right: island.right }, slots,
             };
           });
-          expect(geometry.screen.height).toBe(640);
+          expect(geometry.screen.height).toBe(852);
           expect(geometry.startGap).toBe(0);
           expect(geometry.width).toBeLessThanOrEqual(geometry.available);
           expect(geometry.documentScrollWidth).toBe(geometry.documentWidth);
-          if (width === 710) expect(geometry.screen.width).toBe(360);
+          expect(geometry.bezel).toEqual([8, 8, 8, 8]);
+          expect(geometry.radius).toBe("60px");
+          expect(geometry.screenRadius).toBe("52px");
+          for (const item of geometry.slots) {
+            expect(item.right <= geometry.island.left || item.left >= geometry.island.right).toBe(true);
+          }
+          for (let i = 1; i < geometry.slots.length; i++) {
+            expect(geometry.slots[i]!.left).toBeGreaterThanOrEqual(geometry.slots[i - 1]!.right);
+          }
+          if (width === 710) expect(geometry.screen.width).toBe(393);
           else {
             expect(geometry.width).toBe(geometry.available);
             expect(geometry.screen.width).toBeLessThan(200);
           }
           await page.locator(".column").evaluate((host) => host.style.setProperty("--wf-text-size", "20px"));
-          expect((await page.locator(".wf-phone-screen").boundingBox())!.height).toBe(640);
+          expect((await page.locator(".wf-phone-screen").boundingBox())!.height).toBe(852);
           expect((await page.locator(".wf-phone-screen").boundingBox())!.width).toBe(geometry.screen.width);
           expect(await page.locator(".wf-input").evaluate((node) => getComputedStyle(node).fontSize)).toBe("20px");
+          expect((await page.locator(".wf-phone-status").boundingBox())!.height).toBe(54);
+          expect((await page.locator(".wf-phone-home").boundingBox())!.height).toBe(34);
+          expect(await page.locator(".wf-phone-time").evaluate((node) => getComputedStyle(node).fontSize)).toBe("15px");
+          expect((await page.locator(".wf-phone-indicators svg").first().boundingBox())!.width).toBe(20);
         });
       }
     }
@@ -1031,12 +1061,12 @@ test.describe("phone screens", () => {
       const shortBox = (await page.locator(".wf-phone").boundingBox())!;
       expect(await focusable(page)).toEqual([]);
       await show(page, long, { host: "column", scheme });
-      const screen = page.locator(".wf-phone-screen");
+      const screen = page.locator(".wf-phone-viewport");
       const longBox = (await page.locator(".wf-phone").boundingBox())!;
       expect({ width: longBox.width, height: longBox.height }).toEqual({ width: shortBox.width, height: shortBox.height });
-      expect(await screen.evaluate((node) => node.scrollHeight)).toBeGreaterThan(640);
+      expect(await screen.evaluate((node) => node.scrollHeight)).toBeGreaterThan(764);
       expect(await screen.evaluate((node) => node.scrollTop)).toBe(0);
-      expect(await focusable(page)).toEqual(["wf-phone-screen"]);
+      expect(await focusable(page)).toEqual(["wf-phone-viewport"]);
       await page.keyboard.press("PageDown");
       await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
       await page.keyboard.press("Control+End");
@@ -1045,26 +1075,72 @@ test.describe("phone screens", () => {
       await screen.evaluate((node) => { node.scrollTop = 0; });
       await page.keyboard.press("ArrowDown");
       await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
-      const ring = await screen.evaluate((node) => {
+      const ring = await page.locator(".wf-phone-screen").evaluate((node) => {
         const css = getComputedStyle(node);
         const box = node.getBoundingClientRect();
         const phone = node.parentElement!.getBoundingClientRect();
         const outset = Number.parseFloat(css.outlineWidth) + Number.parseFloat(css.outlineOffset);
         return {
-          visible: css.outlineStyle === "solid" && outset > 0 && node.matches(":focus-visible"),
+          visible: css.outlineStyle === "solid" && outset > 0 && node.matches(":has(> .wf-phone-viewport:focus-visible)"),
           fits: box.left - outset >= phone.left && box.right + outset <= phone.right && box.top - outset >= phone.top && box.bottom + outset <= phone.bottom,
         };
       });
       expect(ring).toEqual({ visible: true, fits: true });
+      expect(await screen.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe("none");
+    });
+
+    test(`phone bands keep decoration fixed and text clear in both scroll directions in ${scheme}`, async ({ page }) => {
+      const source = `phone\n  text First line\n  row\n${"    button Option\n".repeat(25)}${"  text More content\n".repeat(40)}  text Last line`;
+      await show(page, source, { host: "column", scheme });
+      const viewport = page.locator(".wf-phone-viewport");
+      const bounds = async (selector: string) => page.locator(selector).evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom, left: box.left, width: box.width, height: box.height };
+      });
+      const status = await bounds(".wf-phone-status");
+      const island = await bounds(".wf-phone-island");
+      const home = await bounds(".wf-phone-home");
+      const time = await bounds(".wf-phone-time");
+      const icons = await bounds(".wf-phone-indicators");
+      const screen = await bounds(".wf-phone-screen");
+      expect(status.height).toBe(54);
+      expect(home.height).toBe(34);
+      expect(island).toMatchObject({ width: 126, height: 37, top: screen.top + 11 });
+      expect(island.left + island.width / 2).toBe(screen.left + screen.width / 2);
+      expect((await bounds(".wf-phone-home-indicator"))).toMatchObject({ width: 134, height: 5 });
+      expect((await bounds(".wf-phone-content > .wf-text:first-child")).top).toBeGreaterThanOrEqual(status.bottom);
+      expect((await bounds(".wf-phone-content > .wf-text:first-child")).top).toBeGreaterThan(island.bottom);
+      expect(await viewport.evaluate((node) => node.clientHeight)).toBe(764);
+      for (const end of [false, true]) {
+        await viewport.evaluate((node, end) => {
+          node.scrollTop = end ? node.scrollHeight : 100;
+          node.scrollLeft = end ? node.scrollWidth : 100;
+        }, end);
+        expect(await viewport.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+        expect(await viewport.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
+        expect(await bounds(".wf-phone-status")).toEqual(status);
+        expect(await bounds(".wf-phone-island")).toEqual(island);
+        expect(await bounds(".wf-phone-home")).toEqual(home);
+        expect(await bounds(".wf-phone-time")).toEqual(time);
+        expect(await bounds(".wf-phone-indicators")).toEqual(icons);
+      }
+      expect((await bounds(".wf-phone-content > .wf-text:last-child")).bottom).toBeLessThan(home.top);
+      // Both default island paints are opaque, darker than their paper ground.
+      const paint = await page.locator(".wf-phone-island").evaluate((node) => ({
+        island: getComputedStyle(node).backgroundColor,
+        paper: getComputedStyle(node.closest(".wf-phone-screen")!).backgroundColor,
+      }));
+      expect(paint.island).toBe("oklch(0.145 0 0)");
+      expect(paint.island).not.toBe(paint.paper);
     });
 
     test(`wide rows scroll only inside the phone screen in ${scheme}`, async ({ page }) => {
       await show(page, `phone\n  row.end\n${"    button Option\n".repeat(25)}`, { host: "column", scheme });
-      const screen = page.locator(".wf-phone-screen");
-      expect(await screen.evaluate((node) => node.scrollWidth)).toBeGreaterThan(360);
+      const screen = page.locator(".wf-phone-viewport");
+      expect(await screen.evaluate((node) => node.scrollWidth)).toBeGreaterThan(393);
       const root = page.locator(".wf-root");
       expect(await root.evaluate((node) => node.scrollWidth)).toBe(await root.evaluate((node) => node.clientWidth));
-      expect(await focusable(page)).toEqual(["wf-phone-screen"]);
+      expect(await focusable(page)).toEqual(["wf-phone-viewport"]);
       await page.keyboard.press("ArrowRight");
       await expect.poll(() => screen.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
       await screen.evaluate((node) => { node.scrollLeft = node.scrollWidth; });
@@ -1077,14 +1153,15 @@ test.describe("phone screens", () => {
     test(`wheel scrolling chains to the document at either end in ${scheme}`, async ({ page }) => {
       await show(page, long, { host: "column", scheme });
       await page.locator("#host").evaluate((host) => { host.style.paddingBottom = "2000px"; });
-      const screen = page.locator(".wf-phone-screen");
+      const screen = page.locator(".wf-phone-viewport");
       await screen.hover();
+      const initialDocumentScroll = await page.evaluate(() => window.scrollY);
       await page.mouse.wheel(0, 200);
       await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
-      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      expect(await page.evaluate(() => window.scrollY)).toBe(initialDocumentScroll);
       await screen.evaluate((node) => { node.scrollTop = node.scrollHeight; });
       await page.mouse.wheel(0, 200);
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(initialDocumentScroll);
       const documentScroll = await page.evaluate(() => window.scrollY);
       await screen.evaluate((node) => { node.scrollTop = 0; });
       await screen.hover();
@@ -1098,17 +1175,21 @@ test.describe("phone screens", () => {
       await page.locator(".column").evaluate((host) => {
         host.style.setProperty("--wf-paper", "rgb(10, 20, 30)");
         host.style.setProperty("--wf-muted", "rgb(40, 50, 60)");
+        host.style.setProperty("--wf-ink", "rgb(70, 80, 90)");
+        host.style.setProperty("--wf-danger-ink", "rgb(15, 25, 35)");
         host.style.setProperty("--wf-stroke", "2px");
         host.style.setProperty("--wf-radius-lg", "12px");
       });
       const styles = await page.locator(".wf-phone").evaluate((phone) => {
         const css = getComputedStyle(phone);
         const screen = getComputedStyle(phone.querySelector(".wf-phone-screen")!);
-        const speaker = getComputedStyle(phone.querySelector(".wf-phone-speaker")!);
-        return { border: css.borderTopWidth, colour: css.borderTopColor, radius: css.borderTopLeftRadius, screen: screen.backgroundColor, speaker: speaker.backgroundColor };
+        const island = getComputedStyle(phone.querySelector(".wf-phone-island")!);
+        const ink = getComputedStyle(phone.querySelector(".wf-phone-time")!);
+        const home = getComputedStyle(phone.querySelector(".wf-phone-home-indicator")!);
+        return { border: css.borderTopWidth, colour: css.borderTopColor, radius: css.borderTopLeftRadius, screen: screen.backgroundColor, screenRadius: screen.borderTopLeftRadius, island: island.backgroundColor, ink: ink.color, home: home.backgroundColor };
       });
-      expect(styles).toEqual({ border: "6px", colour: "rgb(40, 50, 60)", radius: "36px", screen: "rgb(10, 20, 30)", speaker: "rgb(40, 50, 60)" });
-      expect((await page.locator(".wf-phone-screen").boundingBox())!.width).toBe(360);
+      expect(styles).toEqual({ border: "6px", colour: "rgb(40, 50, 60)", radius: "72px", screen: "rgb(10, 20, 30)", screenRadius: "61px", island: scheme === "light" ? "rgb(70, 80, 90)" : "rgb(15, 25, 35)", ink: "rgb(70, 80, 90)", home: "rgb(70, 80, 90)" });
+      expect((await page.locator(".wf-phone-screen").boundingBox())!.width).toBe(393);
     });
   }
 });

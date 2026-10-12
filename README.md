@@ -19,6 +19,11 @@ dialog Delete “Q3 launch draft”?
 Throughout 0.x the format may change in any minor version;
 [CHANGELOG.md](CHANGELOG.md) says what changed.
 
+`phone` draws a greyscale iPhone-like frame around a 393 × 852 CSS px screen,
+with an even bezel, deep corners, a dark island, time and status icons, and a
+home indicator. Content scrolls between fixed top and bottom bands; the screen
+narrows to fit its parent. See [Phones in AUTHORING.md](AUTHORING.md#phones).
+
 ## Install
 
 ```sh
