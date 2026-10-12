@@ -528,7 +528,7 @@ const STYLES = `.wf-root {
   width: 48px;
 }
 
-.wf-root .wf-row > .wf-image.wf-round {
+.wf-root .wf-row > .wf-image.wf-round:not(.wf-sized) {
   width: 40px;
 }
 

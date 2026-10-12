@@ -59,6 +59,12 @@ describe("getEmbedStyles", () => {
     }
   });
 
+  it("keeps every element out of viewport-fixed positioning", () => {
+    for (const [property, value] of declarations) {
+      if (property === "position") expect(value).not.toBe("fixed");
+    }
+  });
+
   it("loads nothing and changes font family only on inline mono spans", () => {
     expect(css).not.toMatch(/url\(|@import|expression\(|javascript:/i);
     expect(declarations.some(([property]) => property === "font")).toBe(false);

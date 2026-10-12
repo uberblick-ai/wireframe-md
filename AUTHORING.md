@@ -466,7 +466,8 @@ the mark. The label never determines the box's width or height.
 
 Inside a root, dock or card, an image fills the available width at 16:9;
 `.square` makes it 1:1. Inside a non-table row it is 48 px wide beside text.
-`.round` is always a 40 px circle, including at the start of a root or card.
+`.round` is a 40 px circle by default, including at the start of a root or card.
+A valid `width=` overrides the default, and the ratio determines the height.
 Use only one shape variant: `.square.round` warns and uses the first.
 
 `width=` on a card or image uses the page's rule: digits from 1 to 9999 CSS px,

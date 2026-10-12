@@ -111,6 +111,27 @@ for (const scheme of ["light", "dark"] as const) {
     expect(await page.locator(".wf-root").evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
   });
 
+  test(`round images in rows honor widths and retain default sizing in ${scheme}`, async ({ page }) => {
+    await show(page, 'page width=256\n  row\n    image.round Default\n    text Default avatar\n  row\n    image.round width=60 Sized\n    text Sized avatar\n  row\n    image.round width=0 width=60 Invalid\n    text Invalid first width\n  card\n    row\n      image.round width=60 Card\n      text Card avatar', { scheme, host: "column" });
+    const sizes = () => page.locator(".wf-image.wf-round").evaluateAll((nodes) => nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return [box.width, box.height];
+    }));
+    expect(await sizes()).toEqual([[40, 40], [60, 60], [40, 40], [60, 60]]);
+    await expect(page.locator(".wf-page")).toHaveScreenshot(`images-round-row-width-${scheme}.png`);
+    await page.locator(".wf-root").evaluate((node) => (node as HTMLElement).style.setProperty("--wf-text-size", "24px"));
+    expect(await sizes()).toEqual([[40, 40], [60, 60], [40, 40], [60, 60]]);
+
+    await show(page, 'page width=120\n  row\n    image.round width=9999 Capped', { scheme, host: "column" });
+    const available = (await page.locator(".wf-row").boundingBox())!.width;
+    expect(available).toBeLessThan(120);
+    expect(await sizes()).toEqual([[available, available]]);
+    expect(await page.locator(".wf-root").evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+
+    await show(page, 'phone\n  row\n    image.round width=60 Phone\n    text Phone avatar\n  dock\n    row\n      image.round width=60 Dock\n      text Dock avatar', { scheme, host: "column" });
+    expect(await sizes()).toEqual([[60, 60], [60, 60]]);
+  });
+
   test(`dock stays full width during native horizontal screen scrolling in ${scheme}`, async ({ page }) => {
     await show(page, `phone\n  row\n${"    button Wide\n".repeat(25)}  dock\n    text Bottom`, { scheme });
     const dock = page.locator(".wf-phone-viewport > .wf-dock");
