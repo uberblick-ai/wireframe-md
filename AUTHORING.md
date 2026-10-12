@@ -116,7 +116,7 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | --- | --- | --- | --- |
 | `dialog` | at the top level | none | the title |
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red; `.success`: a positive outcome, tinted green | none: its text goes on a `text` line |
-| `page` | at the top level | none | none: its title goes on a `text.title` line |
+| `page` | at the top level | `.browser`: browser toolbar; `.window`: macOS title bar; plain by default | the address on `.browser`, the window title on `.window`; none on a plain page; its content title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
@@ -380,7 +380,7 @@ page
 
 A `page` may take one `width=` in CSS pixels: a whole number from 1 to 9999,
 written in digits only, with no unit, sign or decimal point. It combines with
-an `#id`, and the page still takes no label.
+an `#id` and either chrome variant. A plain page takes no label.
 
 ```wireframe
 page#sidebar width=256
@@ -404,6 +404,107 @@ These warnings still render:
 | `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
 | `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
 | `page format=PDF` | `unknown attribute "format": expected label on input or select, or width on page, card or image (quote a label that starts with word=)` | unchanged |
+
+## Page wrappers
+
+A `page` draws content in a plain bordered box, a browser (`page.browser`) or a
+macOS app window (`page.window`). All three hold the same children, with the
+same placement rules, optional `width=` and `text.title` for the content title.
+`frame` keeps its block caption and actions; `phone` keeps its device screen.
+
+`page.browser` draws one toolbar strip with back, forward and reload marks,
+then a rounded address field showing the line's label. It has no tabs or window
+controls. The address is plain text drawn as written: it is never a link,
+loaded or checked. Without a label the field is empty.
+
+```wireframe
+page.browser acme.example/pricing
+  row.between
+    text.strong Acme
+    toggle
+      option Product
+      option.current Pricing
+      option Docs
+  text.title Pricing that grows with your team
+  text.muted Start free. Upgrade when you need more.
+  row
+    card
+      text.title Free
+      text $0 per month
+      row
+        button Start free
+    card
+      text.title Team
+      text $12 per seat a month
+      row
+        button.primary Try Team
+    card
+      text.title Enterprise
+      text Custom pricing
+      row
+        button Contact sales
+  divider
+  row.between
+    text.small.muted © 2026 Acme
+    text.small.muted Privacy · Terms
+```
+
+`page.window` draws one title-bar strip with three traffic-light circles at the
+start and the line's label centred in the whole window. The circles reuse
+`--wf-danger`, `--wf-warning` and `--wf-success`. Without a label there is no
+title. All chrome uses the existing `--wf-*` properties in light and dark.
+Chrome is decorative and inert: the marks and circles are hidden from
+assistive technology, and nothing in the strip takes focus.
+
+```wireframe
+page.window width=480 Settings
+  toggle
+    option.current General
+      icon settings
+    option Accounts
+      icon user
+    option Sync
+      icon refresh
+  input label=Name Uberblick
+  select label=Appearance Match system
+  divider
+  row.end
+    button Cancel
+    button.primary Save
+```
+
+A plain page keeps its general wrapper behavior, with no chrome:
+
+```wireframe
+page width=360
+  text.title Sign in
+  input label=Email you@company.com
+  input label=Password Password
+  row.end
+    button.primary Continue
+```
+
+Below the strip, content draws exactly as in a plain page. Page height follows
+content, with no fixed viewport or internal scrolling. The page fills the
+available width or uses `width=N` under [Page widths](#page-widths). Content
+that cannot fit can still widen it and scroll inside the wireframe, never the
+document. The strip spans that wider page too. A long chrome label stays on one
+line, cut with an ellipsis, and never widens the page. In a narrow parent the
+address field and title shrink while the marks and circles keep their size.
+
+The accessible summary names the variant, then its label, or its first direct
+text when there is no label: `Wireframe: browser “acme.example/pricing”` and
+`Wireframe: window “Settings”`. A plain page keeps `Wireframe: page “Sign in”`.
+With neither a label nor direct text, the summary is `Wireframe: browser`,
+`Wireframe: window` or `Wireframe: page`.
+
+These warnings still draw:
+
+| Source | Diagnostic | Drawing |
+| --- | --- | --- |
+| `page.browser.window` | `page takes one of .browser or .window: the first is used` | browser chrome; reversing the variants draws window chrome |
+| `page.x` | `unknown variant ".x" on page: expected .browser or .window` | plain page |
+| `page Sign in` | `page takes no label` | plain page with the unsupported label drawn as text; use `text.title` |
 
 ## Phones
 

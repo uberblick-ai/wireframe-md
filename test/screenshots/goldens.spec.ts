@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...["browser", "window", "general"].map((name) => ({
+    name: `pages-wrappers-${name}`,
+    source: readFileSync(new URL(`../../examples/pages/1-wrappers/${name}.wireframe`, import.meta.url), "utf8"),
+    intro: "Pages draw web content in a browser, app content in a macOS window, or content in a plain bordered box.",
+  })),
   ...[
     ["phones-workspace-general", "phones/uberblick/workspace-general"],
     ["phones-short-screen", "phones/1-screens/short-screen"],

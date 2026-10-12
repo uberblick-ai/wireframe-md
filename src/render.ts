@@ -2,7 +2,7 @@ import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
-import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -64,7 +64,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   const sort = node.variants[sortIndex];
   const colours = colourVariants(node.kind);
   const colourIndex = node.variants.findIndex((variant) => colours.includes(variant));
-  const exclusive = node.kind === "row" ? ROW_LAYOUT_VARIANTS : node.kind === "image" ? IMAGE_SHAPE_VARIANTS : [];
+  const exclusive = node.kind === "row" ? ROW_LAYOUT_VARIANTS : node.kind === "image" ? IMAGE_SHAPE_VARIANTS : node.kind === "page" ? PAGE_CHROME_VARIANTS : [];
   const exclusiveIndex = node.variants.findIndex((variant) => exclusive.includes(variant));
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants
@@ -93,6 +93,31 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   let actions: HTMLElement | undefined;
   let phoneViewport: HTMLElement | undefined;
   switch (node.kind) {
+    case "page": {
+      const chrome = node.variants[exclusiveIndex];
+      if (chrome === undefined) {
+        // An unsupported plain-page label still draws as before.
+        if (node.label !== "") element.append(text(document, "span", ["wf-text"], node.label));
+        break;
+      }
+      const strip = create(document, "div", ["wf-page-chrome"]);
+      const marks = create(document, "div", ["wf-page-marks"]);
+      marks.setAttribute("aria-hidden", "true");
+      if (chrome === "browser") {
+        // Fixed drawings, never source URLs or interactive controls.
+        for (const path of ["M13 8H3m5-5L3 8l5 5", "M3 8h10M8 3l5 5-5 5", "M13 6a5 5 0 1 0 0 4M13 2v4H9"]) {
+          marks.append(glyph(document, "wf-browser-mark", path));
+        }
+      } else {
+        for (const tone of ["danger", "warning", "success"]) {
+          marks.append(create(document, "span", ["wf-window-light", `wf-${tone}`]));
+        }
+      }
+      strip.append(marks, text(document, "div", [chrome === "browser" ? "wf-browser-address" : "wf-window-title"], node.label));
+      body = create(document, "div", ["wf-page-content"]);
+      element.append(strip, body);
+      break;
+    }
     case "phone": {
       // Device decoration stays outside the native scrolling viewport.
       const screen = create(document, "div", ["wf-phone-screen"]);

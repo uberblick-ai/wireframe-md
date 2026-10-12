@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Pages support decorative browser chrome with an address (`page.browser`) and
+  macOS window chrome with a centred title (`page.window`). Both keep the page's
+  content, width and fit rules, use the existing theme properties and remain
+  inert. Long chrome labels ellipsize; accessible summaries name the variant.
+
 ## 0.3.0
 
 Wireframes gain a broader visual vocabulary: Tabler icons, named colours, inline

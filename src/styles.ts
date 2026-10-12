@@ -122,7 +122,7 @@ const STYLES = `.wf-root {
    content needs: a row of many buttons, a wide table or a long word widens its
    box, and the root scrolls. */
 .wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown),
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content, .wf-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
   justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
@@ -208,7 +208,8 @@ const STYLES = `.wf-root {
 }
 
 /* A screen in a frame. Its title is a text.title line. */
-.wf-root .wf-page {
+.wf-root .wf-page,
+.wf-root .wf-page-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -216,9 +217,101 @@ const STYLES = `.wf-root {
   box-sizing: border-box;
   margin: 0;
   padding: 1.5em 1.75em 1.75em;
+}
+
+.wf-root .wf-page {
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius-lg);
   background: var(--_wf-paper);
+}
+
+/* Chrome and content share the page's width, including its min-content growth.
+   The label's intrinsic width is zero, so only body content can widen it. */
+.wf-root .wf-page:is(.wf-browser, .wf-window) {
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+}
+
+.wf-root .wf-page-content {
+  min-width: min-content;
+}
+
+.wf-root .wf-page-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 2.75em;
+  padding: 0.625em 0.75em;
+  border-bottom: var(--_wf-stroke) solid var(--_wf-line);
+  border-top-left-radius: calc(var(--_wf-radius-lg) - var(--_wf-stroke));
+  border-top-right-radius: calc(var(--_wf-radius-lg) - var(--_wf-stroke));
+  background: var(--_wf-neutral-tint);
+}
+
+.wf-root .wf-page-marks {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--_wf-muted);
+}
+
+.wf-root .wf-browser-mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.wf-root :is(.wf-browser-address, .wf-window-title) {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wf-root .wf-browser-address {
+  flex: 1 1 0;
+  padding: 0.25em 0.75em;
+  border: var(--_wf-stroke) solid var(--_wf-line);
+  border-radius: var(--_wf-radius);
+  background: var(--_wf-paper);
+}
+
+/* Equal side tracks keep the title centred in the whole window. */
+.wf-root .wf-window > .wf-page-chrome {
+  display: grid;
+  grid-template-columns: 3em minmax(0, 1fr) 3em;
+}
+
+.wf-root .wf-window .wf-page-marks {
+  gap: 0.375em;
+}
+
+.wf-root .wf-window-title {
+  text-align: center;
+  font-weight: 500;
+}
+
+.wf-root .wf-window-light {
+  flex: none;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+}
+
+.wf-root .wf-window-light.wf-danger {
+  background: var(--_wf-danger);
+}
+
+.wf-root .wf-window-light.wf-warning {
+  background: var(--_wf-warning);
+}
+
+.wf-root .wf-window-light.wf-success {
+  background: var(--_wf-success);
 }
 
 /* A fixed screen inside a device bezel. Pixel geometry never scales with type;
@@ -447,7 +540,7 @@ const STYLES = `.wf-root {
 }
 
 .wf-root .wf-card,
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-card {
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-card {
   min-width: 0;
   max-width: 100%;
 }
@@ -553,7 +646,7 @@ const STYLES = `.wf-root {
 
 /* Misplaced dividers keep a visible line even in otherwise empty content. */
 .wf-root > .wf-divider,
-.wf-root :not(:is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content)) > .wf-divider {
+.wf-root :not(:is(.wf-dialog-card, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content)) > .wf-divider {
   min-width: 1em;
 }
 
@@ -625,7 +718,7 @@ const STYLES = `.wf-root {
 /* A scroll row alone owns its overflow, leaving all surrounding widths fixed.
    Native scroll focus and chaining need no tabindex or event handler. */
 .wf-root .wf-row.wf-scroll,
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-row.wf-scroll {
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-row.wf-scroll {
   min-width: 0;
   box-sizing: border-box;
   width: 100%;
@@ -1001,6 +1094,7 @@ const STYLES = `.wf-root {
 }
 
 .wf-root .wf-select-caret,
+.wf-root .wf-browser-mark,
 .wf-root .wf-cell-sort {
   fill: none;
   stroke: currentColor;
