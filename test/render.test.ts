@@ -213,7 +213,7 @@ describe("kinds and variants", () => {
 
   it("still draws misplaced card children, nested cards, unknown variants and icons", () => {
     const source = "card.big\n  row\n    card\n      text.title Nested\n  icon unknown\n  text.highlight Body";
-    expect(parseWireframe(source).diagnostics).toHaveLength(6);
+    expect(parseWireframe(source).diagnostics).toHaveLength(4);
     expect(drawn(source)).toEqual([
       "div.wf-card", "  div.wf-row", "    div.wf-card", "      div.wf-text.wf-title Nested",
       "  span.wf-icon", "    span.wf-icon-unknown unknown", "  div.wf-text Body",
@@ -655,7 +655,7 @@ describe("page widths", () => {
     for (const value of ["240px", "50%", "0", "10000", "12.5", "-1", "", "256;position:fixed", "url(https://example.com)"]) {
       expect(render(`page width="${value}"`).outerHTML).toBe(render("page").outerHTML);
     }
-    for (const kind of ["dialog", "banner", "frame", "card", "text", "row", "button", "input", "select", "toggle", "option", "table", "cell", "chip", "icon", "box"]) {
+    for (const kind of ["dialog", "banner", "frame", "text", "row", "button", "input", "select", "toggle", "option", "table", "cell", "chip", "icon", "box"]) {
       expect(render(`${kind} width=256`).outerHTML).toBe(render(kind).outerHTML);
     }
   });

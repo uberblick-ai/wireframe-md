@@ -2,7 +2,7 @@ import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
-import { CELL_SORT_VARIANTS, colourVariants, KINDS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -64,30 +64,41 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   const sort = node.variants[sortIndex];
   const colours = colourVariants(node.kind);
   const colourIndex = node.variants.findIndex((variant) => colours.includes(variant));
+  const exclusive = node.kind === "row" ? ROW_LAYOUT_VARIANTS : node.kind === "image" ? IMAGE_SHAPE_VARIANTS : [];
+  const exclusiveIndex = node.variants.findIndex((variant) => exclusive.includes(variant));
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants
     .filter((variant, index) => rule.variants.includes(variant) &&
       (!colours.includes(variant) || index === colourIndex) &&
+      (!exclusive.includes(variant) || index === exclusiveIndex) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
   if (node.kind === "divider") element.setAttribute("role", "separator");
-  if (node.kind === "page") {
+  if (["page", "card", "image"].includes(node.kind)) {
     const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
     // Border-box sizing includes padding; min-content still widens a page for
     // content that cannot wrap. The root owns that overflow, as for fluid pages.
-    if (width !== undefined) element.style.width = `min(${width}px, 100%)`;
+    if (width !== undefined) {
+      if (node.kind === "page") element.style.width = `min(${width}px, 100%)`;
+      else {
+        element.classList.add("wf-sized");
+        element.style.setProperty("--_wf-width", `${width}px`);
+      }
+    }
   }
 
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;
+  let phoneScreen: HTMLElement | undefined;
   switch (node.kind) {
     case "phone": {
       // Device decoration stays outside the native scrolling viewport.
       const speaker = create(document, "div", ["wf-phone-speaker"]);
       speaker.setAttribute("aria-hidden", "true");
       const screen = create(document, "div", ["wf-phone-screen"]);
+      phoneScreen = screen;
       body = create(document, "div", ["wf-phone-content"]);
       screen.append(body);
       element.append(speaker, screen);
@@ -116,6 +127,19 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     case "icon":
       element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline", node.variants[colourIndex]));
       break;
+    case "image": {
+      element.setAttribute("role", "img");
+      element.setAttribute("aria-label", node.label || "image");
+      const placeholder = create(document, "div", ["wf-image-placeholder"]);
+      const mark = icon(document, "photo", "outline") as SVGElement;
+      mark.removeAttribute("role");
+      mark.removeAttribute("aria-label");
+      mark.setAttribute("aria-hidden", "true");
+      placeholder.append(mark);
+      if (node.label !== "") placeholder.append(text(document, "span", ["wf-image-caption"], node.label));
+      element.append(placeholder);
+      break;
+    }
     case "text":
       for (const run of textRuns(node.label)) {
         element.append(run.mono
@@ -123,17 +147,19 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
           : document.createTextNode(run.text));
       }
       break;
-    case "button": {
+    case "button":
+    case "option": {
       // Icons precede the caption; every child still draws, including misplaced ones.
       const icons = node.children.filter((child) => child.kind === "icon");
       if (icons.length > 0) {
         element.classList.add("wf-has-icon");
-        if (node.label === "") element.classList.add("wf-icon-only");
+        if (node.kind === "button" && node.label === "") element.classList.add("wf-icon-only");
       }
       for (const child of icons) element.append(draw(document, child));
       if (node.label !== "") {
-        element.append(node.variants.includes("link")
-          ? text(document, "span", ["wf-button-caption"], node.label)
+        element.append((node.kind === "option" && icons.length > 0) || node.variants.includes("link")
+          // A separate caption permits a dock's tab bar to stack icon and text.
+          ? text(document, "span", [node.kind === "option" ? "wf-option-caption" : "wf-button-caption"], node.label)
           : document.createTextNode(node.label));
       }
       break;
@@ -158,8 +184,12 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   }
   // Children of any kind draw inside it, even where they are misplaced.
   for (const child of node.children) {
-    if (node.kind === "button" && child.kind === "icon") continue;
-    (child.kind === "button" && actions !== undefined ? actions : body).append(draw(document, child));
+    if ((node.kind === "button" || node.kind === "option") && child.kind === "icon") continue;
+    // Only the valid final dock gets a sticky track. Misplaced docks retain
+    // their source position in the content, including the first of two docks.
+    const target = phoneScreen !== undefined && child.kind === "dock" && child === node.children.at(-1)
+      ? phoneScreen : child.kind === "button" && actions !== undefined ? actions : body;
+    target.append(draw(document, child));
   }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");

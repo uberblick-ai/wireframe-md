@@ -125,11 +125,13 @@ describe("AUTHORING.md", () => {
       page: "a `page`",
       frame: "a `frame`",
       phone: "a `phone`",
+      dock: "a `dock`",
       card: "a `card`",
       row: "a `row`",
       table: "a `table`",
       "table row": "a table `row`",
       toggle: "a `toggle`",
+      option: "an `option`",
       cell: "a `cell`",
       button: "a `button`",
     };

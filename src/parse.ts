@@ -1,7 +1,7 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
 import { widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
-import { CELL_SORT_VARIANTS, colourVariants, KINDS, LIMITS, type Place, ROOTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, type Place, ROOTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -42,6 +42,19 @@ export function parseWireframe(source: string): WireframeParseResult {
     open.push(node);
     checkNode(node, parent, open[depth - 2], diagnostics);
   });
+  // Last-child validation needs the completed tree. Keep diagnostics in line order.
+  const checkDocks = (children: WireframeNode[]): void => {
+    for (const node of children) {
+      if (node.kind === "phone") {
+        for (const child of node.children.slice(0, -1)) {
+          if (child.kind === "dock") diagnostics.push({ line: child.line, severity: "warning", message: "dock must be its phone's last child" });
+        }
+      }
+      checkDocks(node.children);
+    }
+  };
+  checkDocks(nodes);
+  diagnostics.sort((a, b) => a.line - b.line);
   return { nodes, diagnostics, renderable: diagnostics.every((d) => d.severity === "warning") };
 }
 
@@ -189,15 +202,15 @@ function checkNode(
   const seenAttributes = new Set<string>();
   for (const { key, value } of node.attributes) {
     if (key !== "label" && key !== "width") {
-      warn(`unknown attribute ${quote(key)}: expected label on input or select, or width on page (quote a label that starts with word=)`);
+      warn(`unknown attribute ${quote(key)}: expected label on input or select, or width on page, card or image (quote a label that starts with word=)`);
       continue;
     }
     if (seenAttributes.has(key)) warn(`repeated attribute ${quote(key)}: the first value is used`);
     seenAttributes.add(key);
     if (key === "label") {
       if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
-    } else if (kind !== "page") {
-      warn('attribute "width" is only allowed on page');
+    } else if (!["page", "card", "image"].includes(kind)) {
+      warn('attribute "width" is only allowed on page, card or image');
     } else if (widthPixels(value) === undefined) {
       warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240`);
     }
@@ -209,7 +222,14 @@ function checkNode(
     warn(`${kind} takes one of ${list(colours.map((v) => `.${v}`))}: the first is used`);
   }
   if (!rule.label && node.label !== "") warn(`${kind} takes no label`);
+  const exclusive = kind === "row" ? ROW_LAYOUT_VARIANTS : kind === "image" ? IMAGE_SHAPE_VARIANTS : [];
+  if (node.variants.filter((variant) => exclusive.includes(variant)).length > 1) {
+    warn(`${kind} takes one of ${list(exclusive.map((variant) => `.${variant}`))}: the first is used`);
+  }
   if (kind === "icon") {
+    if (parent?.kind === "option" && parent.children.filter((child) => child.kind === "icon").length > 1) {
+      warn("option takes only one icon");
+    }
     const requested = node.variants.includes("filled") ? "filled" : "outline";
     const drawing = resolveIcon(node.label, requested);
     if (drawing === undefined) {
@@ -226,9 +246,9 @@ function checkNode(
   }
   // A divider belongs only to stacking roots, including in a table row where
   // its own placement warning takes precedence over the expected-cell warning.
-  if (kind === "divider") {
+  if (kind === "divider" || kind === "dock") {
     if (!rule.place.some((place) => place === parent?.kind)) {
-      warn(`divider must be directly inside ${inside(rule.place)}`);
+      warn(`${kind} must be directly inside ${inside(rule.place)}`);
     }
     return;
   }
@@ -246,9 +266,11 @@ function checkNode(
     warn(`${kind} must be ${top}directly inside ${inside(rule.place.filter((place) => place !== "top"))}`);
   }
   else if (kind === "row") {
-    // A table row takes .head, and a row anywhere else .end.
-    const [variant, expected] = place === "table" ? ["end", inside(["root"])] : ["head", inside(["table"])];
-    if (node.variants.includes(variant)) warn(`row.${variant} must be directly inside ${expected}`);
+    const misplaced = place === "table" ? ROW_LAYOUT_VARIANTS : ["head"];
+    const expected = place === "table" ? inside(["root", "dock", "card"]) : "table";
+    for (const variant of misplaced) {
+      if (node.variants.includes(variant)) warn(`row.${variant} must be directly inside ${expected}`);
+    }
   }
 }
 
@@ -258,7 +280,7 @@ function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode |
   if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option") return parent.kind;
   return undefined;
 }
 

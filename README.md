@@ -106,15 +106,18 @@ host can resolve it from the installed package, for example with
 | `banner` | at the top level | `.neutral` (default), `.info`, `.warning`, `.danger` | none; its text goes on a `text` line |
 | `page` | at the top level | none | none; its title goes on a `text.title` line |
 | `phone` | at the top level | none | none; its title goes on a `text.title` line |
-| `text` | directly inside a root, a `card` or a non-table `row` | `.muted`, `.strong`, `.title`, `.small` | the text |
-| `row` | directly inside a root, or a `table` as a table row of cells | `.end` aligns its children right; `.head` is a table's header row | none |
+| `dock` | directly inside a `phone`, as its last child | none | none |
+| `card` | at the top level, directly inside a root, a `dock` or a non-table `row` | none | none; it holds text, images and rows; optional `width=` |
+| `image` | directly inside a root, a `dock`, a `card` or a non-table `row` | `.square`, `.round` | what the image shows; optional `width=` |
+| `text` | directly inside a root, a `dock`, a `card` or a non-table `row` | `.muted`, `.strong`, `.title`, `.small` | the text |
+| `row` | directly inside a root, a `dock`, a `card`, or a `table` as a table row of cells | `.end` aligns right; `.between` spreads children; `.scroll` scrolls sideways; `.head` is a table's header row | none |
 | `button` | directly inside a `row` or a `cell` | `.primary`, `.danger`, `.link`, `.focus` | the caption |
-| `icon` | directly inside a root, a `cell` or a `button` | `.filled`, outline by default | its exact Tabler name, such as `pin` or `archive` |
-| `input` | directly inside a root or a `row` | none | the placeholder |
-| `select` | directly inside a root or a `row` | none | the chosen value, in a bordered closed select with a chevron-down |
-| `toggle` | directly inside a root or a `row` | none | none; its options are `option` lines |
-| `option` | directly inside a `toggle` | `.current` | the caption |
-| `table` | directly inside a root | none | none |
+| `icon` | directly inside a root, a `dock`, a `cell`, a `button` or an `option` | `.filled`, outline by default | its exact Tabler name, such as `pin` or `archive` |
+| `input` | directly inside a root, a `dock` or a `row` | none | the placeholder |
+| `select` | directly inside a root, a `dock` or a `row` | none | the chosen value, in a bordered closed select with a chevron-down |
+| `toggle` | directly inside a root, a `dock` or a `row` | none | none; its options are `option` lines |
+| `option` | directly inside a `toggle` | `.current` | the caption; it may hold one icon |
+| `table` | directly inside a root or a `dock` | none | none |
 | `cell` | directly inside a table row | `.end` right-aligns, with tabular figures; `.sortable`, `.ascending`, `.descending` draw sort arrows | its text, or none |
 | `chip` | directly inside a `row` or a `cell` | `.more` is the count of the rest | the tag, or the count |
 
@@ -124,8 +127,25 @@ wireframe's start edge. The outline fits narrower parents; the screen narrows
 and stays 640 px tall. Content scrolls inside the screen in either direction,
 without growing the phone or scaling the content. Native wheel and touch
 scrolling continue to the document at either end. An overflowing screen takes
-one Tab stop with a visible focus ring; a fitting screen adds none. Mock controls
+one Tab stop with a visible focus ring when no scroll row inside takes focus; a
+fitting screen adds none. Mock controls
 stay inert. A phone takes no label, variants or attributes; `#id` is optional.
+
+`image` draws a neutral placeholder at 16:9, `.square` at 1:1, or `.round` as a
+small avatar; rows use small images beside text. Labels are text alternatives
+and appear as clipped captions only when the box has room. `width=` on cards
+and images takes 1–9999 CSS px, capped outside scroll rows and exact inside them.
+`row.scroll` keeps children at their own widths and scrolls without widening
+the screen. Unsized cards are 144 px there and share the room in other rows.
+An overflowing row takes one native Tab stop with a focus ring; Up, Down and
+Page keys still scroll its screen. Scrolling chains at either end.
+
+A final `dock` stays opaque across the phone's bottom edge, reserving enough
+scroll room for content to clear it. Its direct `toggle` is a tab bar with equal
+option widths, icons above captions and no separators. An option accepts one
+icon, inheriting its colour unless the icon has a hue. Image labels and dock
+contents do not name roots in summaries. See [AUTHORING.md](AUTHORING.md) for
+placement rules and misuse diagnostics.
 
 A `select` shares the input's border, radius, height and padding, with no fill,
 its value in ink and a muted stroked chevron-down at the end. The chevron belongs

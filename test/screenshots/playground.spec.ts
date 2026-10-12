@@ -118,15 +118,17 @@ test("editors fit every line up to the cap and keep gutters aligned when scrolli
   expect(await gutter.evaluate((editor) => editor.scrollTop)).toBe(0);
 });
 
-test("every committed example fits without editor overflow", async ({ page }) => {
+test("committed examples fit the editor until its documented 40-line cap", async ({ page }) => {
   const textarea = page.locator('[id="forms/1-basic-inputs/input"] textarea');
   const examples = join(import.meta.dirname, "../../examples");
   const files = readdirSync(examples, { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith(".wireframe"));
   expect(files.length).toBeGreaterThan(0);
   for (const path of files) {
-    await textarea.fill(readFileSync(join(examples, path), "utf8"));
+    const source = readFileSync(join(examples, path), "utf8");
+    await textarea.fill(source);
     const size = await textarea.evaluate((editor) => ({ client: editor.clientHeight, scroll: editor.scrollHeight }));
-    expect(size.scroll, path).toBeLessThanOrEqual(size.client);
+    if (source.split("\n").length > 40) expect(size.scroll, path).toBeGreaterThan(size.client);
+    else expect(size.scroll, path).toBeLessThanOrEqual(size.client);
   }
 });
 

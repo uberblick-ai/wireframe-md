@@ -12,9 +12,9 @@ export const LIMITS = {
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
  * a root, a row, a table, a table row (a row directly inside a table), a toggle
- * or a cell. A frame is a root that also allows caption buttons; a card holds text.
+ * or a cell. A dock holds the phone vocabulary; a card holds text, images and rows.
  */
-export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "card" | "row" | "table" | "table row" | "toggle" | "cell" | "button";
+export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "table" | "table row" | "toggle" | "option" | "cell" | "button";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -25,6 +25,8 @@ export interface KindRule {
 }
 
 export const CELL_SORT_VARIANTS: readonly string[] = ["sortable", "ascending", "descending"];
+export const ROW_LAYOUT_VARIANTS: readonly string[] = ["end", "between", "scroll"];
+export const IMAGE_SHAPE_VARIANTS: readonly string[] = ["square", "round"];
 export const HUE_VARIANTS: readonly string[] = ["red", "amber", "green", "blue"];
 const TEXT_COLOURS: readonly string[] = ["muted", ...HUE_VARIANTS];
 
@@ -41,27 +43,29 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["page", { place: ["top"], variants: [], label: false }],
   ["frame", { place: ["top"], variants: [], label: true }],
   ["phone", { place: ["top"], variants: [], label: false }],
-  ["card", { place: ["top", "root"], variants: [], label: false }],
-  ["text", { place: ["root", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS], label: true }],
+  ["dock", { place: ["phone"], variants: [], label: false }],
+  ["card", { place: ["top", "root", "dock", "row"], variants: [], label: false }],
+  ["image", { place: ["root", "dock", "card", "row"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
+  ["text", { place: ["root", "dock", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS], label: true }],
   // Inside a table, a row is a table row of cells: .head there, .end outside one.
-  ["row", { place: ["root", "table"], variants: ["end", "head"], label: false }],
-  ["divider", { place: ["dialog", "page", "frame", "phone"], variants: [], label: false }],
+  ["row", { place: ["root", "dock", "card", "table"], variants: ["end", "between", "scroll", "head"], label: false }],
+  ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.
-  ["icon", { place: ["root", "cell", "button"], variants: ["filled", ...HUE_VARIANTS], label: true }],
+  ["icon", { place: ["root", "dock", "cell", "button", "option"], variants: ["filled", ...HUE_VARIANTS], label: true }],
   // The label is the placeholder.
-  ["input", { place: ["root", "row"], variants: [], label: true }],
+  ["input", { place: ["root", "dock", "row"], variants: [], label: true }],
   // The label is the chosen value.
-  ["select", { place: ["root", "row"], variants: [], label: true }],
-  ["toggle", { place: ["root", "row"], variants: [], label: false }],
+  ["select", { place: ["root", "dock", "row"], variants: [], label: true }],
+  ["toggle", { place: ["root", "dock", "row"], variants: [], label: false }],
   ["option", { place: ["toggle"], variants: ["current"], label: true }],
-  ["table", { place: ["root"], variants: [], label: false }],
+  ["table", { place: ["root", "dock"], variants: [], label: false }],
   ["cell", { place: ["table row"], variants: ["end", ...CELL_SORT_VARIANTS], label: true }],
   ["chip", { place: ["row", "cell"], variants: ["more"], label: true }],
 ]);
 
 // Placement roots hold the general vocabulary. A card may also stand at the
-// top level, but it still holds only text.
+// top level, but it is not a placement root.
 export const ROOTS: readonly string[] = [...KINDS]
   .filter(([, rule]) => rule.place.length === 1 && rule.place.includes("top"))
   .map(([kind]) => kind);

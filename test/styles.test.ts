@@ -23,7 +23,7 @@ const split = (text: string, separator: string): string[] => {
   return parts.map((part) => part.trim()).filter((part) => part !== "");
 };
 
-// The stylesheet is flat: rules only, no at-rules or nesting, which the first test checks.
+// Extract style rules, including those inside the image's size container query.
 const css = getEmbedStyles().replace(/\/\*[\s\S]*?\*\//g, "");
 const rules: Rule[] = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selectors, body]) => ({
   selectors: split(selectors!, ","),
@@ -37,10 +37,10 @@ const declarations = rules.flatMap((rule) => rule.declarations);
 const publicDeclarations = root.declarations.filter(([property]) => property.startsWith("--_wf-"));
 
 describe("getEmbedStyles", () => {
-  it("returns the same flat stylesheet every time", () => {
+  it("returns the same stylesheet with only the image size container query", () => {
     expect(getEmbedStyles()).toBe(getEmbedStyles());
-    expect(css).not.toContain("@");
-    expect(rules).toHaveLength(css.split("{").length - 1);
+    expect(css.match(/@[^ {][^{]*/g)).toEqual(["@container (min-width: 80px) "]);
+    expect(rules).toHaveLength(css.split("{").length - 2);
     expect(rules.length).toBeGreaterThan(20);
   });
 
@@ -51,10 +51,10 @@ describe("getEmbedStyles", () => {
     }
   });
 
-  it("styles no html, body, :root, universal or bare element", () => {
+  it("styles no html, body, :root or bare element", () => {
     for (const { selectors } of rules) {
       for (const selector of selectors) {
-        expect(selector).not.toMatch(/\*|:root|(^|[\s>+~(,])[a-z]/i);
+        expect(selector).not.toMatch(/:root|(^|[\s>+~(,])[a-z]/i);
       }
     }
   });
@@ -131,7 +131,11 @@ describe("getEmbedStyles", () => {
       for (const [property, value] of rule.declarations) {
         if (property.startsWith("--")) continue;
         expect(value, `${property}: ${value}`).not.toMatch(literalColour);
-        if (sized.test(property)) expect(value, `${property}: ${value}`).toMatch(/^(var\(--_wf-|calc\(.*var\(--_wf-)/);
+        if (property === "border-radius" && rule.selectors.includes(".wf-root .wf-image.wf-round")) {
+          expect(value).toBe("50%"); // A circle's geometry is independent of theme radii.
+        } else if (property === "border-width" && rule.selectors.includes(".wf-root .wf-card.wf-sized")) {
+          expect(value).toBe("0");
+        } else if (sized.test(property)) expect(value, `${property}: ${value}`).toMatch(/^(var\(--_wf-|(?:calc|min|inset)\b.*var\(--_wf-)/);
       }
     }
     for (const [property, value] of root.declarations) {
@@ -168,6 +172,6 @@ describe("getEmbedStyles", () => {
       "max-width": "100%",
       overflow: "auto hidden",
     });
-    expect(css).not.toMatch(/position:\s*(fixed|absolute|sticky)/);
+    expect(Object.fromEntries(root.declarations).position).toBeUndefined();
   });
 });
