@@ -9,6 +9,14 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...[
+    ["phones-workspace-general", "phones/uberblick/workspace-general"],
+    ["phones-short-screen", "phones/1-screens/short-screen"],
+  ].map(([name, path]) => ({
+    name: name!,
+    source: readFileSync(new URL(`../../examples/${path}.wireframe`, import.meta.url), "utf8"),
+    intro: "A phone keeps its screen height; workspace labels sit above their values and tall content scrolls inside.",
+  })),
   {
     name: "dividers-stacked-content",
     source: readFileSync(new URL("../../examples/blocks/3-dividers/stacked-content.wireframe", import.meta.url), "utf8"),

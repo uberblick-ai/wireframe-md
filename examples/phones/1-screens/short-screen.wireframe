@@ -1,0 +1,8 @@
+phone
+  text.title General
+  input label=Name Uberblick
+  row.end
+    button Save
+  divider
+  text.muted Hub
+  text hub.uberblick.ai

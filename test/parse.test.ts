@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, phone, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -233,7 +233,7 @@ describe("warnings", () => {
   it("warns about a nested frame, cards outside roots and caption buttons in other roots", () => {
     expect(warnings("frame Outer\n  frame Inner\n  row\n    card\ncard")).toEqual([
       warning(2, "frame must be at the top level"),
-      warning(4, "card must be at the top level or directly inside dialog, banner, page or frame"),
+      warning(4, "card must be at the top level or directly inside dialog, banner, page, frame or phone"),
     ]);
     for (const kind of ["dialog", "banner", "page"]) {
       expect(warnings(`${kind}\n  button Open`)).toEqual([
@@ -254,19 +254,19 @@ describe("warnings", () => {
       }
     }
     expect(warnings("frame\n  card\n    row")).toEqual([
-      warning(3, "row must be directly inside dialog, banner, page, frame or table"),
+      warning(3, "row must be directly inside dialog, banner, page, frame, phone or table"),
     ]);
   });
 
   it("warns about a card inside any non-root, including another card", () => {
     for (const parent of KINDS.keys()) {
-      if (["dialog", "banner", "page", "frame"].includes(parent)) continue;
+      if (["dialog", "banner", "page", "frame", "phone"].includes(parent)) continue;
       expect(warnings(`${parent}\n  card`)).toContainEqual(
-        warning(2, "card must be at the top level or directly inside dialog, banner, page or frame"),
+        warning(2, "card must be at the top level or directly inside dialog, banner, page, frame or phone"),
       );
     }
     expect(warnings("card\n  row")).toEqual([
-      warning(2, "row must be directly inside dialog, banner, page, frame or table"),
+      warning(2, "row must be directly inside dialog, banner, page, frame, phone or table"),
     ]);
   });
 
@@ -287,7 +287,7 @@ describe("warnings", () => {
     ]);
     expect(result.diagnostics).toEqual([
       warning(2, `unknown kind "box": expected ${KIND_LIST}`),
-      warning(3, "text must be directly inside dialog, banner, page, frame, card or row"),
+      warning(3, "text must be directly inside dialog, banner, page, frame, phone, card or row"),
     ]);
   });
 
@@ -481,13 +481,13 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog, banner, page, frame, card or row"),
-      warning(2, "row must be directly inside dialog, banner, page, frame or table"),
-      warning(3, "icon must be directly inside dialog, banner, page, frame, cell or button"),
+      warning(1, "text must be directly inside dialog, banner, page, frame, phone, card or row"),
+      warning(2, "row must be directly inside dialog, banner, page, frame, phone or table"),
+      warning(3, "icon must be directly inside dialog, banner, page, frame, phone, cell or button"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(4, "row must be directly inside dialog, banner, page, frame or table"),
-      warning(5, "icon must be directly inside dialog, banner, page, frame, cell or button"),
+      warning(4, "row must be directly inside dialog, banner, page, frame, phone or table"),
+      warning(5, "icon must be directly inside dialog, banner, page, frame, phone, cell or button"),
     ]);
   });
 
@@ -508,14 +508,14 @@ describe("warnings", () => {
 
   it("warns about an input, select or toggle outside a root or a row", () => {
     expect(warnings("input Search\nselect Any\ntoggle")).toEqual([
-      warning(1, "input must be directly inside dialog, banner, page, frame or row"),
-      warning(2, "select must be directly inside dialog, banner, page, frame or row"),
-      warning(3, "toggle must be directly inside dialog, banner, page, frame or row"),
+      warning(1, "input must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(2, "select must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(3, "toggle must be directly inside dialog, banner, page, frame, phone or row"),
     ]);
     expect(warnings("page\n  table\n    input Search\n    row\n      cell\n        select Any\n        toggle")).toEqual([
-      warning(3, "input must be directly inside dialog, banner, page, frame or row"),
-      warning(6, "select must be directly inside dialog, banner, page, frame or row"),
-      warning(7, "toggle must be directly inside dialog, banner, page, frame or row"),
+      warning(3, "input must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(6, "select must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(7, "toggle must be directly inside dialog, banner, page, frame, phone or row"),
     ]);
     expect(warnings("page\n  input Search\n  select Any\n  toggle\n  row\n    input A\n    select B\n    toggle")).toEqual([]);
   });
@@ -530,8 +530,8 @@ describe("warnings", () => {
 
   it("warns about a table outside a root, and a label on a table", () => {
     expect(warnings("table\npage\n  row\n    table\n  table Documents")).toEqual([
-      warning(1, "table must be directly inside dialog, banner, page or frame"),
-      warning(4, "table must be directly inside dialog, banner, page or frame"),
+      warning(1, "table must be directly inside dialog, banner, page, frame or phone"),
+      warning(4, "table must be directly inside dialog, banner, page, frame or phone"),
       warning(5, "table takes no label"),
     ]);
   });
@@ -600,7 +600,7 @@ describe("warnings", () => {
   it("warns about row.head outside a table and row.end inside one", () => {
     expect(warnings("page\n  row.head\n  table\n    row.end\n      cell A\n    row.head\n      cell B")).toEqual([
       warning(2, "row.head must be directly inside table"),
-      warning(4, "row.end must be directly inside dialog, banner, page or frame"),
+      warning(4, "row.end must be directly inside dialog, banner, page, frame or phone"),
     ]);
   });
 
@@ -663,7 +663,7 @@ describe("errors", () => {
       error(2, "indentation must be a multiple of two spaces, found 3"),
       error(3, "indentation must be a multiple of two spaces, found 1"),
       // Recovered at depth 0, a row is out of place too.
-      warning(3, "row must be directly inside dialog, banner, page, frame or table"),
+      warning(3, "row must be directly inside dialog, banner, page, frame, phone or table"),
     ]);
   });
 
