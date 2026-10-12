@@ -1,5 +1,7 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
+import { widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
+import { textRuns } from "./text.js";
 import { CELL_SORT_VARIANTS, colourVariants, KINDS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
@@ -70,10 +72,29 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
+  if (node.kind === "divider") element.setAttribute("role", "separator");
+  if (node.kind === "page") {
+    const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
+    // Border-box sizing includes padding; min-content still widens a page for
+    // content that cannot wrap. The root owns that overflow, as for fluid pages.
+    if (width !== undefined) element.style.width = `min(${width}px, 100%)`;
+  }
 
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;
   switch (node.kind) {
+    case "phone": {
+      // Device decoration stays outside the native scrolling viewport.
+      const speaker = create(document, "div", ["wf-phone-speaker"]);
+      speaker.setAttribute("aria-hidden", "true");
+      const screen = create(document, "div", ["wf-phone-screen"]);
+      body = create(document, "div", ["wf-phone-content"]);
+      screen.append(body);
+      element.append(speaker, screen);
+      // Unsupported labels still draw, inside the screen with all other source.
+      if (node.label !== "") body.append(text(document, "span", ["wf-text"], node.label));
+      break;
+    }
     case "dialog":
       // The node's element is the scrim; the card inside it holds the title and children.
       body = create(document, "div", ["wf-dialog-card"]);
@@ -94,6 +115,13 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     }
     case "icon":
       element.append(icon(document, node.label, node.variants.includes("filled") ? "filled" : "outline", node.variants[colourIndex]));
+      break;
+    case "text":
+      for (const run of textRuns(node.label)) {
+        element.append(run.mono
+          ? text(document, "span", ["wf-mono"], run.text)
+          : document.createTextNode(run.text));
+      }
       break;
     case "button": {
       // Icons precede the caption; every child still draws, including misplaced ones.
@@ -122,7 +150,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
       break;
     }
     default:
-      // A banner, page, card, row, toggle or table takes no label. One written anyway warns and draws as text.
+      // A kind that takes no label still draws one written anyway as text.
       if (node.label !== "") {
         if (rule.label) element.textContent = node.label;
         else element.append(text(document, "span", ["wf-text"], node.label));

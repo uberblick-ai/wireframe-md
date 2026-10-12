@@ -5,6 +5,18 @@ import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPriva
 const summary = (source: string): string => summarizeWireframe(parseWireframe(source));
 
 describe("summarizeWireframe", () => {
+  it("omits only paired markers from the text line that names a root", () => {
+    expect(summary("card\n  text Run `npm test`")).toBe("Wireframe: card “Run npm test”");
+    expect(summary("card\n  text Body\n  text.title Run `npm test` and `npm run build`")).toBe("Wireframe: card “Run npm test and npm run build”");
+    expect(summary("page\n  text.title rev `e9faf4df`")).toBe("Wireframe: page “rev e9faf4df”");
+    expect(summary("banner\n  text Saved `revision`")).toBe("Wireframe: banner “Saved revision”");
+    expect(summary("dialog\n  text Run `npm test`")).toBe("Wireframe: dialog “Run npm test”");
+    expect(summary("text Run `npm test`")).toBe("Wireframe: text “Run npm test”");
+    expect(summary("card\n  text.title\n  text Run `npm test`")).toBe("Wireframe: card “Run npm test”");
+    expect(summary("card\n  text Run `npm test` with `unmatched and ``empty``")).toBe("Wireframe: card “Run npm test with `unmatched and ``empty``”");
+    expect(summary("dialog Run `npm test`\n  text `Body`\nframe `caption`\npage `invalid label`")).toBe("Wireframe: dialog “Run `npm test`”; frame “`caption`”; page “`invalid label`”");
+  });
+
   it("names a top-level card by its first title, or its first text without a title", () => {
     expect(summary(cardBlock)).toBe("Wireframe: card “Let the launcher install dependencies”");
     expect(summary("card\n  text Label\n  text.title First title\n  text.title Second title")).toBe("Wireframe: card “First title”");

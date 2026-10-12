@@ -42,6 +42,12 @@ describe("examples", () => {
     expect(parseWireframe(cardBlock).diagnostics).toEqual([]);
   });
 
+  it("holds the sidebar sketch with its optional pixel width and no diagnostics", () => {
+    const source = readFileSync(new URL("pages/uberblick/sidebar.wireframe", folder), "utf8");
+    expect(source.startsWith("page width=256\n")).toBe(true);
+    expect(parseWireframe(source).diagnostics).toEqual([]);
+  });
+
   it("holds both assigned Figma sources without diagnostics", () => {
     for (const [name, source] of [["reading", figmaReading], ["private", figmaPrivate]]) {
       expect(readFileSync(new URL(`pages/uberblick/figma-block-${name}.wireframe`, folder), "utf8")).toBe(`${source}\n`);
@@ -74,5 +80,18 @@ describe("examples", () => {
   it("holds the banner examples without diagnostics", () => {
     const banners = examples.filter((file) => file.startsWith("badges-and-banners/2-banners/"));
     for (const file of banners) expect(parseWireframe(readFileSync(new URL(file, folder), "utf8")).diagnostics).toEqual([]);
+  });
+
+  it("holds the divider showcase without diagnostics", () => {
+    const source = readFileSync(new URL("blocks/3-dividers/stacked-content.wireframe", folder), "utf8");
+    expect(parseWireframe(source).diagnostics).toEqual([]);
+  });
+
+  it("holds the short and workspace General phone examples without diagnostics", () => {
+    for (const name of ["phones/1-screens/short-screen", "phones/uberblick/workspace-general"]) {
+      const source = readFileSync(new URL(`${name}.wireframe`, folder), "utf8");
+      expect(source.startsWith("phone\n  text.title General\n")).toBe(true);
+      expect(parseWireframe(source).diagnostics).toEqual([]);
+    }
   });
 });

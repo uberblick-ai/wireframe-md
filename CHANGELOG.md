@@ -5,6 +5,34 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `phone` draws a rounded device outline with a 360 × 640 CSS px screen that
+  scrolls internally and fits narrower parents without growing or scaling.
+  It holds the same content as a page, with no label, variants or attributes.
+  Native scrolling chains to the document; an overflowing screen takes one
+  keyboard stop with a visible focus ring. Summaries and placement warnings
+  include phones, and the examples show short and tall screens in both themes.
+
+- A static showcase build in `site/` pairs curated example sources with light
+  and dark renders, including full-page designs. Deployment requires matching
+  human playground approvals; a separate preview build marks examples awaiting
+  review. The site stays outside the npm package.
+
+- `divider` draws an inert horizontal separator directly inside a dialog, page
+  or frame. It spans the content width using `--wf-line` and `--wf-stroke`, with
+  the container's usual gaps. It takes only an optional `#id`; misplaced or
+  unsupported source warns and still draws.
+
+- `page width=256` gives a page an optional width in CSS pixels, including its
+  border and padding and capped at its parent's space. Text wraps and content
+  that cannot fit still scrolls inside the wireframe. Widths are digits from 1
+  to 9999; invalid, misplaced and repeated widths warn. Pages without a width
+  stay fluid. The Uberblick sidebar joins the page examples.
+
+- Paired single backticks in `text` labels draw inline monospace spans, including
+  small metadata in rows. Spans keep the line's size, weight, colour and wrapping
+  and use the new `--wf-mono-font` host property with a system monospace default.
+  Summaries omit paired markers. Unmatched or empty pairs and all non-text
+  labels keep their backticks as written, without new diagnostics.
 - Icons and text accept `.red`, `.amber`, `.green` and `.blue`, reusing the
   existing danger, warning, success and info theme properties. Icons override
   their context's colour and name the hue in their text alternative. Text keeps

@@ -6,36 +6,40 @@
 // pointing them at its own tokens. The root reads each one into a private
 // `--_wf-*` property with a default, so its own declarations never shadow the
 // host's. Colour defaults pair a light and a dark value in light-dark(), which
-// follows the color-scheme the root inherits. The font family is inherited too.
+// follows the color-scheme the root inherits. The UI font family is inherited;
+// only inline monospace spans use --wf-mono-font.
 //
 // Public properties:
 //   --wf-ink           text, and the secondary button's caption
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
 //                      an input's placeholder, a select's chevron-down, options but the current one, a table's
 //                      header row, cell.sortable's arrows and chip.more
-//   --wf-paper         cards, a page and the secondary button's fill
+//   --wf-paper         cards, a page, a phone screen and the secondary button's fill
 //   --wf-line          borders: cards, a page, buttons, inputs, selects, the banner's base and unknown boxes;
-//                      a table's rules; mixed into a chip's fill
+//                      a table's rules and dividers; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
 //   --wf-danger        the destructive colour: button.danger and banner.danger's icon
 //   --wf-danger-ink    the caption on a filled button.primary.danger
-//   --wf-focus         button.focus's ring
+//   --wf-focus         button.focus's ring and a keyboard-focused phone screen
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
-//   --wf-neutral-tint  a neutral banner's and a frame's fill; --wf-muted is the frame's left bar and caption
+//   --wf-neutral-tint  a neutral banner's, frame's and phone bezel's fill;
+//                      --wf-muted is the frame's bar and caption and the phone's outline and speaker
 //   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint,
 //   --wf-success-tint                          a banner's fill
 //   --wf-stroke        border width; icon, select chevron and cell sort strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
-//   --wf-radius-lg     the dialog's card and scrim, and a page
+//   --wf-radius-lg     the dialog's card and scrim, a page and a phone screen;
+//                      a phone's outline uses three times it
 //   --wf-text-size     the base type size; spacing, chips and text.small scale with it
 //   --wf-title-size    the dialog's title and a card's direct text.title; other text.title is one and a half
 //                      times it, unless combined with .small
+//   --wf-mono-font     the font family of paired-backtick spans on text lines
 
 const STYLES = `.wf-root {
   --_wf-ink: var(--wf-ink, light-dark(oklch(0.145 0 0), oklch(0.985 0 0)));
@@ -63,6 +67,7 @@ const STYLES = `.wf-root {
   --_wf-radius-lg: var(--wf-radius-lg, 10px);
   --_wf-text-size: var(--wf-text-size, 0.875rem);
   --_wf-title-size: var(--wf-title-size, 1rem);
+  --_wf-mono-font: var(--wf-mono-font, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
 
   /* Roots stack one after another. Content wider than the host's box scrolls
      inside the root, never the page. A minmax(0, 1fr) column gives the root no
@@ -116,7 +121,7 @@ const STYLES = `.wf-root {
    content needs: a row of many buttons, a wide table or a long word widens its
    box, and the root scrolls. */
 .wf-root > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown),
-.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-card, .wf-unknown) > :is(.wf-dialog, .wf-banner, .wf-page, .wf-frame, .wf-card, .wf-text, .wf-row, .wf-input, .wf-select, .wf-table, .wf-unknown) {
   justify-self: stretch;
   align-self: stretch;
   min-width: min-content;
@@ -215,6 +220,66 @@ const STYLES = `.wf-root {
   background: var(--_wf-paper);
 }
 
+/* A fixed screen inside a device bezel. Pixel geometry never scales with type;
+   min-width: 0 lets even wide content stay inside the screen's scroller. */
+.wf-root .wf-phone {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: start;
+  flex: none;
+  gap: 10px;
+  box-sizing: border-box;
+  width: calc(360px + 16px + 6 * var(--_wf-stroke));
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 8px 16px;
+  border: calc(3 * var(--_wf-stroke)) solid var(--_wf-muted);
+  border-radius: calc(3 * var(--_wf-radius-lg));
+  background: var(--_wf-neutral-tint);
+}
+
+.wf-root .wf-phone-speaker {
+  align-self: center;
+  flex: none;
+  width: 48px;
+  max-width: 100%;
+  height: 4px;
+  border-radius: var(--_wf-radius);
+  background: var(--_wf-muted);
+}
+
+.wf-root .wf-phone-screen {
+  flex: none;
+  width: 100%;
+  height: 640px;
+  min-width: 0;
+  margin: 0;
+  border-radius: var(--_wf-radius-lg);
+  background: var(--_wf-paper);
+  overflow: auto;
+  overscroll-behavior: auto;
+}
+
+/* Browsers focus overflowing scroll containers as one stop, like wf-root.
+   Leave the bezel unclipped so the screen's ring stays visible outside it. */
+.wf-root .wf-phone-screen:focus-visible {
+  outline: var(--_wf-focus-width) solid var(--_wf-focus);
+  outline-offset: var(--_wf-focus-width);
+}
+
+.wf-root .wf-phone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.875em;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: min-content;
+  padding: 1.5em 1.25em 1.75em;
+}
+
 /* The neutral shared block frame. Only its left edge has a border. */
 .wf-root .wf-frame {
   display: flex;
@@ -280,8 +345,36 @@ const STYLES = `.wf-root {
   background: var(--_wf-paper);
 }
 
+/* Stretch to the content width without an intrinsic width or extra spacing. */
+.wf-root .wf-divider {
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border-style: none;
+  border-top: var(--_wf-stroke) solid var(--_wf-line);
+}
+
+/* Misplaced dividers keep a visible line even in otherwise empty content. */
+.wf-root > .wf-divider,
+.wf-root :not(:is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content)) > .wf-divider {
+  min-width: 1em;
+}
+
+/* In horizontal containers, centre the fallback line and use available room. */
+.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
+  align-self: center;
+  flex: 1 1 auto;
+}
+
 .wf-root .wf-text {
   margin: 0;
+}
+
+/* Inline spans change only the face; size, weight, colour and wrapping inherit. */
+.wf-root .wf-mono {
+  font-family: var(--_wf-mono-font);
 }
 
 .wf-root .wf-text.wf-muted {

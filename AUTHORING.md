@@ -38,13 +38,15 @@ kind.variant#id key=value Label
   change the drawing.
 - **key=value** is an attribute between the first word and the line's label.
   v0.1 defines `label` on `input` and `select`: `label=Role` or
-  `label="Work email"`. Values with spaces use quotes and the same escapes as a
+  `label="Work email"`, and `width` on `page`: `width=256`.
+  Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
-  Other attributes get a warning. A repeated `label=` warns and uses the first
-  value; `label=` on any other kind warns and doesn't change its drawing.
-- **Label** is the rest of the line, as plain text, without trailing spaces.
-  Markdown isn't formatted, so `*draft*` shows its asterisks. Typographic quotes
-  such as “ ” and ’ are plain text.
+  Other attributes get a warning. A repeated `label=` or `width=` warns and uses
+  the first value; either on another kind warns and doesn't change its drawing.
+- **Label** is the rest of the line, without trailing spaces. On `text` lines,
+  paired single backticks mark inline monospace spans; every other kind keeps
+  its backticks as written. Other Markdown isn't formatted, so `*draft*` shows
+  its asterisks. Typographic quotes such as “ ” and ’ are plain text.
 
 **Quotes.** A label needs quotes only where it would be read as an attribute: when
 it starts with `word=`, meaning a letter, then letters, digits, `-` or `_`, then
@@ -57,6 +59,30 @@ dialog "width=2 is the default"
   text "\"Draft\" pages stay private."
   text Outside quotes, \ and “curly quotes” are plain text.
 ```
+
+**Inline monospace.** On `text` lines only, single backticks pair from the left
+and draw the text between them in monospace, without the markers. Several spans
+may share a label, quoted or unquoted. An unmatched single backtick, an empty
+pair or a run of two or more backticks stays literal, without a diagnostic.
+This works inside roots, cards and non-table rows, with every text variant.
+Use mono for text people copy, such as a revision id or a command.
+
+```wireframe
+page
+  row
+    text.small.muted Edited 3 minutes ago
+    text.small.muted rev `e9faf4df`
+  text "Run `npm test` then `npm run build`."
+```
+
+Each span changes only the font family: it keeps the line's size, weight and
+colour, has no box, background or padding, and wraps between words like the
+rest of the line. Its contents draw as text, never markup. The host sets
+`--wf-mono-font` on an ancestor, for example to Geist Mono; the default is
+`ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`. Other text keeps the
+host's UI font. When a text line names a root in the accessible summary, its
+paired markers are omitted and the span is not announced: a `card` holding
+`` text Run `npm test` `` is summarized as `Wireframe: card “Run npm test”`.
 
 **Indentation.** Two spaces make a child. Indent with spaces only, in steps of two,
 at most one level deeper than the line above. The first line has none. A line may
@@ -83,7 +109,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 
 ## Kinds
 
-`dialog`, `banner`, `page` and `frame` are roots: they stand at the top level and hold the
+`dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
 rest. A `card` may also stand at the top level, but holds only text lines.
 
 | Kind | Where | Variants | Label |
@@ -92,9 +118,11 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red; `.success`: a positive outcome, tinted green | none: its text goes on a `text` line |
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
+| `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
+| `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
@@ -113,6 +141,35 @@ secondary button. `button.primary.danger` is a filled destructive button, and
 underline follows its colour and uses `--wf-stroke` for its thickness, including
 on every wrapped line. Icons and the gap before the caption are not underlined;
 an icon-only `.link` stays a bare icon.
+
+`divider` draws a horizontal line directly inside a `dialog`, `page`, `frame` or `phone`.
+It takes no variants, label, attributes or children; an optional `#id` works as
+on any kind. A `row` arranges content side by side; a divider holds no content.
+Banners lay out on one line and cards hold only text, so neither takes a divider.
+
+The line uses `--wf-line`, like table rules, at `--wf-stroke` thickness. It spans
+the container's full content width inside its padding, with no margin: the
+container's usual gap supplies the space above and below. It never widens the
+container or wireframe, and follows the wider width when other content widens
+the container. The defaults are visible in light and dark; hosts restyle it
+through those two properties. It is an inert separator for assistive technology
+and adds nothing to its root's accessible summary.
+
+```wireframe
+page width=256
+  text Dashboard
+  text All documents
+  divider
+  text Workspace settings
+  row
+    text user card
+```
+
+In any other place, including the top level, a banner, card, row, table or cell,
+it warns `divider must be directly inside dialog, page, frame or phone` and still draws
+a visible line where written. A label, variant, attribute or child gives the
+usual warning and fallback drawing: a label draws as text, an unknown variant
+or attribute adds no styling, and a child still draws where written.
 
 `banner.success` marks a positive outcome, such as Saved or Restored. Its fill is
 a green tint, its icon uses the green tone and that tone is mixed into its border,
@@ -315,6 +372,75 @@ page
           icon pin
 ```
 
+## Page widths
+
+A `page` may take one `width=` in CSS pixels: a whole number from 1 to 9999,
+written in digits only, with no unit, sign or decimal point. It combines with
+an `#id`, and the page still takes no label.
+
+```wireframe
+page#sidebar width=256
+  text Dashboard
+  text All documents
+```
+
+The width includes the page's border and padding. The page sits at the
+wireframe's start edge and is capped at its parent's available space; without
+`width=`, it stays fluid. CSS pixels do not scale with `--wf-text-size`. Text
+wraps inside the narrower page. Content that cannot fit, such as an unbreakable
+row of buttons, still widens the page and scrolls inside the wireframe, never
+the document. Nothing is scaled or clipped, and the accessible summary stays
+the same.
+
+These warnings still render:
+
+| Source | Diagnostic | Drawing |
+| --- | --- | --- |
+| `dialog width=256` (any kind other than `page`, whatever the value) | `attribute "width" is only allowed on page` | unchanged |
+| `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
+| `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
+| `page format=PDF` | `unknown attribute "format": expected label on input or select, or width on page (quote a label that starts with word=)` | unchanged |
+
+## Phones
+
+A `phone` is a root at the top level. It holds the same text, rows, dividers,
+cards, controls, tables and icons as a page, stacked at the screen's full width.
+It takes no label, variants or attributes; `#id` is optional. Put its title on
+a `text.title` line. Buttons belong in rows or cells, as on a page.
+
+```wireframe
+phone
+  text.title General
+  input label=Name Uberblick
+  row.end
+    button Save
+  divider
+  text.muted Hub
+  text hub.uberblick.ai
+```
+
+The rounded outline has a thick bezel and a decorative speaker outside the
+screen. The screen is 360 × 640 CSS px on `--wf-paper`, at the wireframe's start
+edge. Its size does not scale with `--wf-text-size` and content is never scaled.
+Short content leaves the screen at full height; tall content scrolls vertically
+inside it. Wide content scrolls sideways inside the screen and never widens the
+phone. In a narrower parent the whole phone fits the available width, and the
+screen narrows while staying 640 px tall.
+
+Scrolling is native: wheel and touch scrolling continue to the document at
+either end. An overflowing screen is one Tab stop, with a visible focus ring,
+so arrow and Page keys scroll it. A fitting screen adds no Tab stop and no mock
+control takes focus. The summary uses the first direct text, like a page:
+`Wireframe: phone “General”`, or `Wireframe: phone` without text.
+
+A phone below the top level warns `phone must be at the top level` and still
+draws as a phone. A label warns `phone takes no label` and still draws inside
+the screen. A variant warns `unknown variant ".x": phone takes no variants`.
+Attributes get the existing warnings. Other roots inside a phone also keep
+their top-level warnings and still draw; write them as separate roots instead.
+Screen-size options, other device frames, fixed headers and phone-specific
+layouts are outside the vocabulary.
+
 ## Figma blocks
 
 The reading and private states from Uberblick's "Figma blocks" page. `·` separates
@@ -389,8 +515,8 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=` on the wrong kind, a repeated
-  `label=` and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=` or `width=` on the wrong
+  kind, a repeated `label=` or `width=`, an invalid width and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
@@ -552,7 +678,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": expected label on input or select (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select, or width on page (quote a label that starts with word=)
 ```
 
 Fixed:
@@ -656,7 +782,7 @@ page
 
 ### A root inside another node
 
-`dialog`, `banner`, `page` and `frame` stand only at the top level. Wrong:
+`dialog`, `banner`, `page`, `frame` and `phone` stand only at the top level. Wrong:
 
 ```text
 dialog Delete “Q3 launch draft”?
@@ -699,7 +825,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

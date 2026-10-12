@@ -9,7 +9,7 @@ export interface WireframeNode {
   variants: string[];
   /** The `#id`, present only when the line has one. */
   id?: string;
-  /** `key=value` pairs in source order. v0.1 defines `label` on input and select. */
+  /** `key=value` pairs in source order: `label` on input/select, `width` on page. */
   attributes: WireframeAttribute[];
   /** The rest of the line as plain text, without its quotes. Empty when there is none. */
   label: string;

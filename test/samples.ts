@@ -124,6 +124,7 @@ export const vocabulary = [
   "    button.link.danger Delete…",
   "page",
   "  text.title Page title",
+  "  divider",
   "  input Placeholder",
   "  select Value",
   '  input label="Email address" name@company.com',
@@ -185,4 +186,5 @@ export const PROPERTIES = [
   "--wf-radius-lg",
   "--wf-text-size",
   "--wf-title-size",
+  "--wf-mono-font",
 ] as const;

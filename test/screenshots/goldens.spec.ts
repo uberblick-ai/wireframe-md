@@ -9,6 +9,32 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...[
+    ["phones-workspace-general", "phones/uberblick/workspace-general"],
+    ["phones-short-screen", "phones/1-screens/short-screen"],
+  ].map(([name, path]) => ({
+    name: name!,
+    source: readFileSync(new URL(`../../examples/${path}.wireframe`, import.meta.url), "utf8"),
+    intro: "A phone keeps its screen height; workspace labels sit above their values and tall content scrolls inside.",
+  })),
+  {
+    name: "dividers-stacked-content",
+    source: readFileSync(new URL("../../examples/blocks/3-dividers/stacked-content.wireframe", import.meta.url), "utf8"),
+    intro: "Dividers separate stacked content in a page, dialog and frame, including a 256 px workspace sidebar.",
+  },
+  {
+    name: "web-ui-sidebar",
+    source: readFileSync(new URL("../../examples/pages/uberblick/sidebar.wireframe", import.meta.url), "utf8"),
+    intro: "The workspace sidebar keeps its navigation in a 256 px panel at the start of the document column.",
+  },
+  ...[
+    ["web-ui-document-header", "pages/uberblick/document-header"],
+    ["text-inline-monospace", "reference/vocabulary/inline-monospace"],
+  ].map(([name, path]) => ({
+    name: name!,
+    source: readFileSync(new URL(`../../examples/${path}.wireframe`, import.meta.url), "utf8"),
+    intro: "Inline monospace keeps the line's size and colour; small metadata stays in the UI face around the id.",
+  })),
   {
     name: "icons-named-palette",
     source: readFileSync(new URL("../../examples/icons/2-colours/named-palette.wireframe", import.meta.url), "utf8"),

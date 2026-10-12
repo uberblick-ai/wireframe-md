@@ -1,7 +1,9 @@
 # Theming @uberblick/wireframe
 
-A wireframe takes the font family from its host and resets the other text
-styles a host passes down. Its colours, strokes, radii and type sizes come from
+A wireframe takes the UI font family from its host and resets the other text
+styles a host passes down. Paired single backticks on `text` labels draw inline
+monospace spans using `--wf-mono-font`, keeping the line's size, weight and
+colour. Its colours, strokes, radii, type sizes and mono face come from
 `--wf-*` custom properties, which a host sets on any ancestor. Every colour has
 a light and a dark default, picked by the `color-scheme` the wireframe
 inherits.
@@ -28,7 +30,7 @@ inherits.
 | `--wf-danger-tint` | `banner.danger`'s fill | `oklch(0.96 0.025 27.325)` | `oklch(0.25 0.04 22.216)` |
 | `--wf-success-tint` | `banner.success`'s fill | `oklch(0.965 0.025 150)` | `oklch(0.24 0.035 150)` |
 
-The sizes are the same in light and dark.
+The sizes and mono face are the same in light and dark.
 
 | Property | Controls | Default |
 | --- | --- | --- |
@@ -38,6 +40,7 @@ The sizes are the same in light and dark.
 | `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
 | `--wf-text-size` | the base type size; spacing, chips and `text.small` scale with it | `0.875rem` |
 | `--wf-title-size` | the dialog's title and a card's direct `text.title`; other `text.title` is one and a half times it, unless combined with `.small` | `1rem` |
+| `--wf-mono-font` | the font family of paired-backtick spans on `text` lines | `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace` |
 
 ## Mapping a host's tokens
 
