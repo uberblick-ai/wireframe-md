@@ -100,17 +100,21 @@ for (const scheme of ["light", "dark"] as const) {
               root: root.clientWidth, scroll: root.scrollWidth,
               page: wrapper.getBoundingClientRect().width,
               strip: strip.getBoundingClientRect().width,
+              stripHeight: strip.getBoundingClientRect().height,
               labelWidth: label.getBoundingClientRect().width,
               labelRight: label.getBoundingClientRect().right,
               stripRight: strip.getBoundingClientRect().right,
               textWidth: range.getBoundingClientRect().width,
               whiteSpace: css.whiteSpace, overflow: css.overflow, ellipsis: css.textOverflow,
-              lines: range.getClientRects().length,
+              lines: new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size,
               marks: [...strip.firstElementChild!.children].map((mark) => mark.getBoundingClientRect().width),
             };
           });
           await show(page, `page.${variant}${attribute} Short\n  text Body`, { scheme, host: "column", width });
           const short = await sizes();
+          await show(page, `page.${variant}${attribute}\n  text Body`, { scheme, host: "column", width });
+          const empty = await sizes();
+          expect(empty.stripHeight).toBe(short.stripHeight);
           await show(page, `page.${variant}${attribute} ${"x".repeat(2000)}\n  text Body`, { scheme, host: "column", width });
           const long = await sizes();
           expect(long.page).toBe(short.page);

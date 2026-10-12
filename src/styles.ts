@@ -274,6 +274,9 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-browser-address {
   flex: 1 1 0;
+  contain: inline-size;
+  box-sizing: border-box;
+  min-height: calc(1.9em + 2 * var(--_wf-stroke));
   padding: 0.25em 0.75em;
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius);
