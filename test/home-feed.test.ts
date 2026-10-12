@@ -73,6 +73,13 @@ describe("home screen vocabulary", () => {
     ]);
   });
 
+  it("lists the new image and row variants in unknown-variant warnings", () => {
+    expect(warnings("page\n  image.wide Cover\n  row.start")).toEqual([
+      '2: unknown variant ".wide" on image: expected .square or .round',
+      '3: unknown variant ".start" on row: expected .end, .between, .scroll or .head',
+    ]);
+  });
+
   it("warns about dock placement, last children and unsupported syntax while retaining source", () => {
     expect(warnings("dock.x Label\n  text Body")).toEqual([
       '1: unknown variant ".x": dock takes no variants',

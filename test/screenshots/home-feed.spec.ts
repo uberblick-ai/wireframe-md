@@ -51,6 +51,11 @@ for (const scheme of ["light", "dark"] as const) {
       return { left: box.left, right: box.right, screenLeft: screen.left, screenRight: screen.right, firstLeft: first.left, widths: [...node.children].map((child) => child.getBoundingClientRect().width), lastRight: last.right };
     }));
     const header = (await page.locator(".wf-phone-content > .wf-row.wf-between").boundingBox())!;
+    const avatar = (await page.locator(".wf-row.wf-between > .wf-image.wf-round").boundingBox())!;
+    expect(avatar.x + avatar.width).toBeCloseTo(header.x + header.width, 1);
+    expect(avatar.width).toBe(40);
+    const promo = (await page.locator(".wf-phone-content > .wf-card:last-child > .wf-image").boundingBox())!;
+    expect(promo.width / promo.height).toBeCloseTo(16 / 9, 1);
     for (const [index, row] of geometry.entries()) {
       expect(row.left).toBeCloseTo(row.screenLeft, 1);
       expect(row.right).toBeCloseTo(row.screenRight, 1);
@@ -118,5 +123,16 @@ for (const scheme of ["light", "dark"] as const) {
       await page.locator(".wf-root").evaluate((node) => (node as HTMLElement).style.setProperty("--wf-text-size", "24px"));
       expect(await row.locator(":scope > *").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width))).toEqual(widths);
     }
+  });
+
+  test(`a short screen with a fitting scroll row and dock adds no keyboard stops in ${scheme}`, async ({ page }) => {
+    await show(page, 'phone\n  row.scroll\n    card width=96\n      image.square Cover\n    card width=96\n      image.square Cover\n  dock\n    toggle\n      option.current Home\n        icon home\n      option Search\n        icon search', { scheme });
+    expect(await page.locator(".wf-phone-screen").evaluate((node) => node.scrollHeight - node.clientHeight)).toBe(0);
+    const screen = (await page.locator(".wf-phone-screen").boundingBox())!;
+    const dock = (await page.locator(".wf-dock").boundingBox())!;
+    expect(dock.y + dock.height).toBeCloseTo(screen.y + screen.height, 1);
+    await page.keyboard.press("Tab");
+    await expect(page.locator(".wf-root :focus")).toHaveCount(0);
+    await expect(page.locator(".wf-root:focus")).toHaveCount(0);
   });
 }
