@@ -35,3 +35,11 @@ run = "pnpm playground"
 [tasks.screenshots]
 description = "Browser checks and golden screenshots (needs `pnpm exec playwright install chromium`; goldens come from CI)"
 run = "pnpm screenshots"
+
+[tasks.site]
+description = "Build the static showcase into site/out; require current human approvals"
+run = "pnpm site"
+
+[tasks.site-preview]
+description = "Build the showcase for review into site/preview, marking unapproved examples"
+run = "pnpm site:preview"

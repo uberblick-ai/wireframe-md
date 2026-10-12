@@ -1,0 +1,30 @@
+/* Shared fonts, tokens and shell come from https://uberblick.ai/shared.css.
+   Site rules affect the surrounding navigation and comparison layout only. */
+.showcase .wrap { max-width: 1280px; }
+.showcase-intro { display: grid; gap: 16px; max-width: var(--measure); padding: 48px 0 32px; }
+.showcase-nav { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 16px 0; border-block: 1px solid var(--rule); }
+.showcase-nav a { font-size: 14px; }
+.showcase-section { padding-top: 48px; scroll-margin-top: 24px; }
+.showcase-section > p { margin-top: 8px; }
+.showcase-example { margin-top: 32px; }
+.showcase-example h3 { margin-bottom: 12px; }
+.showcase-example h3 a { text-decoration: none; }
+.showcase-comparison { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; align-items: start; }
+.showcase-source { min-width: 0; }
+.showcase-source pre { max-height: 720px; }
+.showcase-renders { display: grid; gap: 16px; min-width: 0; }
+.showcase-render { margin: 0; min-width: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: Canvas; color: CanvasText; }
+.showcase-render figcaption { padding: 8px 16px; border-bottom: 1px solid var(--rule); font: 400 12px/16px var(--font-sans); }
+.showcase-light { color-scheme: light; }
+.showcase-dark { color-scheme: dark; }
+/* Match the playground's standalone host: default renderer colours on Canvas,
+   16px padding and Geist inherited from shared.css. No --wf-* token overrides. */
+.showcase-ground { min-width: 0; padding: 16px; background: Canvas; color: CanvasText; }
+.showcase-status { margin-bottom: 12px; font-size: 13px; overflow-wrap: anywhere; }
+.showcase-status[data-status="approved"] { color: var(--muted); }
+.showcase-preview { padding: 16px; background: var(--brand-subtle); border-left: 3px solid var(--brand); }
+.showcase-diagnostics { font-size: 13px; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .showcase-comparison { grid-template-columns: minmax(0, 1fr); }
+  .showcase-intro { padding-top: 32px; }
+}
