@@ -27,5 +27,5 @@ phone
   text 2 hours ago
   divider
   row
-    icon chevron-right
-    text Connection details
+    button.link Connection details
+      icon chevron-right
