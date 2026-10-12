@@ -1,0 +1,49 @@
+phone
+  row.between
+    text.title Home
+    image.round Profile photo
+  row
+    text.strong Your library
+    button.link
+      icon chevron-right
+  row.scroll
+    card width=96
+      image.square Cover
+    card width=96
+      image.square Cover
+    card width=96
+      image.square Cover
+    card width=96
+      image.square Cover
+  row
+    text.strong New near you
+    button.link
+      icon chevron-right
+  row.scroll
+    card width=144
+      image.square Cover
+      text First collection
+    card width=144
+      image.square Cover
+      text Second collection
+    card width=144
+      image.square Cover
+      text Third collection
+  card
+    image Promo artwork
+  dock
+    card
+      row
+        image.square Cover
+        text Now playing · 32:44
+        button.link
+          icon.filled player-play
+    toggle
+      option.current Home
+        icon home
+      option Library
+        icon books
+      option Activity
+        icon bell
+      option Search
+        icon search

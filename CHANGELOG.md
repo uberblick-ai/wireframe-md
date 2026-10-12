@@ -5,6 +5,15 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Phone home screens support `image` placeholders (`.square`, `.round`),
+  `row.between`, native sideways `row.scroll`, cards in rows, and a final opaque
+  bottom `dock`. Cards hold images and rows and share `width=` with pages and
+  images. Options accept one icon; a dock's direct toggle draws a tab bar with
+  equal-width options. Layout variants and shapes use the first when competing.
+  A valid image width overrides its default size, including round avatars in
+  rows. Image labels and dock contents leave summaries unchanged. The home-feed
+  example shows the additions in light and dark, using existing theme properties.
+
 - `phone` draws a greyscale iPhone-like frame with an even thin bezel, deep
   concentric corners and a 393 × 852 CSS px screen. A fixed 54 px top band holds
   a dark island pill, time, reception, Wi-Fi and battery; a 34 px bottom band

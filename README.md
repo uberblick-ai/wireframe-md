@@ -51,6 +51,18 @@ figure.setAttribute("aria-label", summarizeWireframe(result));
 static, inert DOM, and every style rule sits under `.wf-root`. Without a CSS
 bundler, `getEmbedStyles()` returns the same stylesheet as a string.
 
+## Home screens
+
+| Kind | Addition |
+| --- | --- |
+| `image` | Labelled placeholders; `.square`, `.round` and pixel `width=` |
+| `row` | `.between` spreads children; `.scroll` scrolls cards sideways |
+| `card` | Holds text, images and rows; pixel `width=` works in rows |
+| `dock` | One final phone child, pinned above the home indicator |
+| `option` | One icon; a dock's direct `toggle` draws equal-width tabs |
+
+See [Images, card rows and docks in AUTHORING.md](AUTHORING.md#images-card-rows-and-docks).
+
 ## More
 
 - [AUTHORING.md](AUTHORING.md): the format, every kind and the common mistakes.

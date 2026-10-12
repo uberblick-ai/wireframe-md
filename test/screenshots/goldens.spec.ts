@@ -12,6 +12,7 @@ const samples = [
   ...[
     ["phones-workspace-general", "phones/uberblick/workspace-general"],
     ["phones-short-screen", "phones/1-screens/short-screen"],
+    ["phones-home-feed", "phones/1-screens/home-feed"],
   ].map(([name, path]) => ({
     name: name!,
     source: readFileSync(new URL(`../../examples/${path}.wireframe`, import.meta.url), "utf8"),

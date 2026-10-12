@@ -44,8 +44,8 @@ describe("phone", () => {
     expect(parsed.diagnostics).toEqual([
       { line: 1, severity: "warning", message: 'unknown variant ".x": phone takes no variants' },
       { line: 1, severity: "warning", message: 'attribute "label" is only allowed on input or select' },
-      { line: 1, severity: "warning", message: 'attribute "width" is only allowed on page' },
-      { line: 1, severity: "warning", message: 'unknown attribute "model": expected label on input or select, or width on page (quote a label that starts with word=)' },
+      { line: 1, severity: "warning", message: 'attribute "width" is only allowed on page, card or image' },
+      { line: 1, severity: "warning", message: 'unknown attribute "model": expected label on input or select, or width on page, card or image (quote a label that starts with word=)' },
       { line: 1, severity: "warning", message: "phone takes no label" },
     ]);
     const root = renderWireframe(parsed)!;

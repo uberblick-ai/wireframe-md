@@ -27,7 +27,7 @@ describe("divider", () => {
 
   it.each([
     ["top level", "\ndivider", 2],
-    ...[...KINDS.keys(), "unknown"].filter((kind) => !["dialog", "page", "frame", "phone"].includes(kind))
+    ...[...KINDS.keys(), "unknown"].filter((kind) => !["dialog", "page", "frame", "phone", "dock"].includes(kind))
       .map((kind) => [kind, `${kind}\n  divider`, 2]),
     ["table row", "page\n  table\n    row\n      divider", 4],
     ["cell", "page\n  table\n    row\n      cell\n        divider", 5],
@@ -35,7 +35,7 @@ describe("divider", () => {
     const parsed = parseWireframe(source as string);
     expect(parsed.renderable).toBe(true);
     expect(parsed.diagnostics.filter((diagnostic) => diagnostic.line === line)).toEqual([{
-      line, severity: "warning", message: "divider must be directly inside dialog, page, frame or phone",
+      line, severity: "warning", message: "divider must be directly inside dialog, page, frame, phone or dock",
     }]);
     expect(renderWireframe(parsed)!.querySelector(`.wf-divider[data-line="${line}"]`)).not.toBeNull();
   });
@@ -46,10 +46,10 @@ describe("divider", () => {
     expect(parsed.diagnostics).toEqual([
       { line: 2, severity: "warning", message: 'unknown variant ".dashed": divider takes no variants' },
       { line: 2, severity: "warning", message: 'attribute "label" is only allowed on input or select' },
-      { line: 2, severity: "warning", message: 'attribute "width" is only allowed on page' },
-      { line: 2, severity: "warning", message: 'unknown attribute "tone": expected label on input or select, or width on page (quote a label that starts with word=)' },
+      { line: 2, severity: "warning", message: 'attribute "width" is only allowed on page, card or image' },
+      { line: 2, severity: "warning", message: 'unknown attribute "tone": expected label on input or select, or width on page, card or image (quote a label that starts with word=)' },
       { line: 2, severity: "warning", message: "divider takes no label" },
-      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, card or row" },
+      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card or row" },
     ]);
     const divider = renderWireframe(parsed)!.querySelector(".wf-divider")!;
     expect(divider.className).toBe("wf-divider");

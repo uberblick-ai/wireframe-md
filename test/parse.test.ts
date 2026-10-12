@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, phone, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -233,7 +233,6 @@ describe("warnings", () => {
   it("warns about a nested frame, cards outside roots and caption buttons in other roots", () => {
     expect(warnings("frame Outer\n  frame Inner\n  row\n    card\ncard")).toEqual([
       warning(2, "frame must be at the top level"),
-      warning(4, "card must be at the top level or directly inside dialog, banner, page, frame or phone"),
     ]);
     for (const kind of ["dialog", "banner", "page"]) {
       expect(warnings(`${kind}\n  button Open`)).toEqual([
@@ -242,10 +241,10 @@ describe("warnings", () => {
     }
   });
 
-  it("warns about every known kind except text directly inside a card", () => {
+  it("warns about every known kind except text, image and row directly inside a card", () => {
     for (const prefix of ["card\n  ", "frame\n  card\n    "]) {
       for (const kind of KINDS.keys()) {
-        if (kind === "text") continue;
+        if (["text", "image", "row"].includes(kind)) continue;
         const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : ""}`);
         expect(diagnostics).toHaveLength(1);
         expect(diagnostics[0]).toMatchObject({ line: prefix.split("\n").length, severity: "warning" });
@@ -253,21 +252,17 @@ describe("warnings", () => {
         expect(diagnostics[0]!.message).toMatch(/must be (at the top level|directly inside)/);
       }
     }
-    expect(warnings("frame\n  card\n    row")).toEqual([
-      warning(3, "row must be directly inside dialog, banner, page, frame, phone or table"),
-    ]);
+    expect(warnings("frame\n  card\n    row")).toEqual([]);
   });
 
   it("warns about a card inside any non-root, including another card", () => {
     for (const parent of KINDS.keys()) {
-      if (["dialog", "banner", "page", "frame", "phone"].includes(parent)) continue;
+      if (["dialog", "banner", "page", "frame", "phone", "dock", "row"].includes(parent)) continue;
       expect(warnings(`${parent}\n  card`)).toContainEqual(
-        warning(2, "card must be at the top level or directly inside dialog, banner, page, frame or phone"),
+        warning(2, "card must be at the top level or directly inside dialog, banner, page, frame, phone, dock or row"),
       );
     }
-    expect(warnings("card\n  row")).toEqual([
-      warning(2, "row must be directly inside dialog, banner, page, frame, phone or table"),
-    ]);
+    expect(warnings("card\n  row")).toEqual([]);
   });
 
   it("warns about frame and card variants, a card label and an unknown icon", () => {
@@ -287,7 +282,7 @@ describe("warnings", () => {
     ]);
     expect(result.diagnostics).toEqual([
       warning(2, `unknown kind "box": expected ${KIND_LIST}`),
-      warning(3, "text must be directly inside dialog, banner, page, frame, phone, card or row"),
+      warning(3, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
     ]);
   });
 
@@ -305,7 +300,7 @@ describe("warnings", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning, .danger or .success'),
       warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
-      warning(3, 'unknown variant ".start" on row: expected .end or .head'),
+      warning(3, 'unknown variant ".start" on row: expected .end, .between, .scroll or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
@@ -360,9 +355,9 @@ describe("warnings", () => {
 
   it("warns about every unknown attribute", () => {
     expect(warnings("banner tone=warning\n  text a=1 b=2 Hi")).toEqual([
-      warning(1, 'unknown attribute "tone": expected label on input or select, or width on page (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "b": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(1, 'unknown attribute "tone": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "b": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
     ]);
   });
 
@@ -390,10 +385,10 @@ describe("warnings", () => {
   });
 
   it("warns only about width's placement on every other kind, whatever the value", () => {
-    for (const kind of [...KINDS.keys(), "box"].filter((kind) => kind !== "page")) {
+    for (const kind of [...KINDS.keys(), "box"].filter((kind) => !["page", "card", "image"].includes(kind))) {
       for (const value of ["256", "240px", ""]) {
         const diagnostics = warnings(`\n${kind} width=${value}`);
-        expect(diagnostics).toContainEqual(warning(2, 'attribute "width" is only allowed on page'));
+        expect(diagnostics).toContainEqual(warning(2, 'attribute "width" is only allowed on page, card or image'));
         expect(diagnostics.filter((diagnostic) => /invalid width|unknown attribute/.test(diagnostic.message))).toEqual([]);
       }
     }
@@ -413,9 +408,9 @@ describe("warnings", () => {
       warning(1, 'repeated attribute "width": the first value is used'),
     ]);
     expect(warnings("dialog width=256 width=400")).toEqual([
-      warning(1, 'attribute "width" is only allowed on page'),
+      warning(1, 'attribute "width" is only allowed on page, card or image'),
       warning(1, 'repeated attribute "width": the first value is used'),
-      warning(1, 'attribute "width" is only allowed on page'),
+      warning(1, 'attribute "width" is only allowed on page, card or image'),
     ]);
   });
 
@@ -452,7 +447,7 @@ describe("warnings", () => {
 
   it("still warns about other attributes on a labelled field", () => {
     expect(warnings('page\n  input label=Email size=20 name@company.com')).toEqual([
-      warning(2, 'unknown attribute "size": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "size": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
     ]);
   });
 
@@ -481,13 +476,13 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog, banner, page, frame, phone, card or row"),
-      warning(2, "row must be directly inside dialog, banner, page, frame, phone or table"),
-      warning(3, "icon must be directly inside dialog, banner, page, frame, phone, cell or button"),
+      warning(1, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
+      warning(2, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
+      warning(3, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(4, "row must be directly inside dialog, banner, page, frame, phone or table"),
-      warning(5, "icon must be directly inside dialog, banner, page, frame, phone, cell or button"),
+      warning(4, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
+      warning(5, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
     ]);
   });
 
@@ -508,14 +503,14 @@ describe("warnings", () => {
 
   it("warns about an input, select or toggle outside a root or a row", () => {
     expect(warnings("input Search\nselect Any\ntoggle")).toEqual([
-      warning(1, "input must be directly inside dialog, banner, page, frame, phone or row"),
-      warning(2, "select must be directly inside dialog, banner, page, frame, phone or row"),
-      warning(3, "toggle must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(1, "input must be directly inside dialog, banner, page, frame, phone, dock or row"),
+      warning(2, "select must be directly inside dialog, banner, page, frame, phone, dock or row"),
+      warning(3, "toggle must be directly inside dialog, banner, page, frame, phone, dock or row"),
     ]);
     expect(warnings("page\n  table\n    input Search\n    row\n      cell\n        select Any\n        toggle")).toEqual([
-      warning(3, "input must be directly inside dialog, banner, page, frame, phone or row"),
-      warning(6, "select must be directly inside dialog, banner, page, frame, phone or row"),
-      warning(7, "toggle must be directly inside dialog, banner, page, frame, phone or row"),
+      warning(3, "input must be directly inside dialog, banner, page, frame, phone, dock or row"),
+      warning(6, "select must be directly inside dialog, banner, page, frame, phone, dock or row"),
+      warning(7, "toggle must be directly inside dialog, banner, page, frame, phone, dock or row"),
     ]);
     expect(warnings("page\n  input Search\n  select Any\n  toggle\n  row\n    input A\n    select B\n    toggle")).toEqual([]);
   });
@@ -530,8 +525,8 @@ describe("warnings", () => {
 
   it("warns about a table outside a root, and a label on a table", () => {
     expect(warnings("table\npage\n  row\n    table\n  table Documents")).toEqual([
-      warning(1, "table must be directly inside dialog, banner, page, frame or phone"),
-      warning(4, "table must be directly inside dialog, banner, page, frame or phone"),
+      warning(1, "table must be directly inside dialog, banner, page, frame, phone or dock"),
+      warning(4, "table must be directly inside dialog, banner, page, frame, phone or dock"),
       warning(5, "table takes no label"),
     ]);
   });
@@ -600,7 +595,7 @@ describe("warnings", () => {
   it("warns about row.head outside a table and row.end inside one", () => {
     expect(warnings("page\n  row.head\n  table\n    row.end\n      cell A\n    row.head\n      cell B")).toEqual([
       warning(2, "row.head must be directly inside table"),
-      warning(4, "row.end must be directly inside dialog, banner, page, frame or phone"),
+      warning(4, "row.end must be directly inside dialog, banner, page, frame, phone, dock or card"),
     ]);
   });
 
@@ -663,7 +658,7 @@ describe("errors", () => {
       error(2, "indentation must be a multiple of two spaces, found 3"),
       error(3, "indentation must be a multiple of two spaces, found 1"),
       // Recovered at depth 0, a row is out of place too.
-      warning(3, "row must be directly inside dialog, banner, page, frame, phone or table"),
+      warning(3, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
     ]);
   });
 
@@ -686,7 +681,7 @@ describe("errors", () => {
     expect(errors('dialog\n  text "Hello\n  text a="b c\n  text "end\\"')).toEqual([
       error(2, 'unterminated quote: expected a closing "'),
       error(3, 'unterminated quote: expected a closing "'),
-      warning(3, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(3, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
       error(4, 'unterminated quote: expected a closing "'),
     ]);
     expect(parseWireframe('text "Hello').nodes[0]?.label).toBe("Hello");
@@ -698,7 +693,7 @@ describe("errors", () => {
     ]);
     expect(errors('dialog\n  text a="b"c Label')).toEqual([
       error(2, "expected a space after the closing quote"),
-      warning(2, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, or width on page, card or image (quote a label that starts with word=)'),
     ]);
   });
 

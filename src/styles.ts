@@ -22,11 +22,11 @@
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
 //   --wf-danger        the destructive colour: button.danger and banner.danger's icon
 //   --wf-danger-ink    the caption on a filled button.primary.danger
-//   --wf-focus         button.focus's ring and a keyboard-focused phone screen
+//   --wf-focus         button.focus's ring and keyboard-focused phone screens and scroll rows
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
-//   --wf-neutral-tint  a neutral banner's, frame's and phone bezel's fill;
+//   --wf-neutral-tint  a neutral banner's, frame's, image's and phone bezel's fill;
 //                      --wf-muted is the frame's bar and caption and the phone's outline
 //   Phone island: light --wf-ink / dark --wf-danger-ink, solid dark in both schemes
 //   --wf-info-tint,
@@ -271,6 +271,38 @@ const STYLES = `.wf-root {
   outline-offset: var(--_wf-focus-width);
 }
 
+.wf-root .wf-row.wf-scroll:focus-visible {
+  outline: var(--_wf-focus-width) solid var(--_wf-focus);
+  outline-offset: calc(-1 * var(--_wf-focus-width));
+}
+
+/* The dock remains in flow to reserve its exact content height. A sticky last
+   grid track overlays the scrolling content at the bottom, in both axes.
+   The zero-minimum column keeps wide content from widening the dock. */
+.wf-root .wf-phone-viewport:has(> .wf-dock) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+}
+
+.wf-root .wf-dock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.875em;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0.75em 1.25em;
+  background: var(--_wf-paper);
+}
+
+.wf-root .wf-phone-viewport > .wf-dock {
+  position: sticky;
+  bottom: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+}
+
 /* Side slots shrink to zero before touching the island. Each clips its own
    fixed-size content, including at widths narrower than the island itself. */
 .wf-root .wf-phone-status {
@@ -399,7 +431,7 @@ const STYLES = `.wf-root {
   overflow-wrap: anywhere;
 }
 
-/* A text-only box on paper, with the base radius and no shadow. */
+/* A content box on paper, with the base radius and no shadow. */
 .wf-root .wf-card {
   display: flex;
   flex-direction: column;
@@ -412,6 +444,100 @@ const STYLES = `.wf-root {
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius);
   background: var(--_wf-paper);
+}
+
+.wf-root .wf-card,
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.wf-root .wf-card > .wf-text {
+  min-width: 0;
+}
+
+/* Paint the border inside sized cards, avoiding the browser's minimum 1 px
+   border rounding when the entire requested box is only 1 px wide. */
+.wf-root .wf-card.wf-sized {
+  padding: min(calc(1em + var(--_wf-stroke)), calc(var(--_wf-width) / 2));
+  border-width: 0;
+  box-shadow: inset 0 0 0 var(--_wf-stroke) var(--_wf-line);
+}
+
+/* Content is absolutely positioned: labels never affect image geometry. */
+.wf-root .wf-image {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  justify-self: stretch;
+  container-type: inline-size;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--_wf-radius);
+  background: var(--_wf-neutral-tint);
+  color: var(--_wf-muted);
+  overflow: hidden;
+}
+
+.wf-root .wf-image.wf-square {
+  aspect-ratio: 1;
+}
+
+.wf-root .wf-image.wf-round {
+  align-self: flex-start;
+  justify-self: start;
+  width: 40px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.wf-root .wf-image-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375em;
+  padding: min(0.5em, 10cqi);
+  overflow: hidden;
+}
+
+.wf-root .wf-image-caption {
+  display: none;
+  width: 100%;
+  min-width: 0;
+  font-size: calc(0.85 * var(--_wf-text-size));
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container (min-width: 80px) {
+  .wf-root .wf-image:not(.wf-round) .wf-image-caption {
+    display: block;
+  }
+}
+
+.wf-root .wf-row > .wf-image {
+  align-self: center;
+  width: 48px;
+}
+
+.wf-root .wf-row > .wf-image.wf-round:not(.wf-sized) {
+  width: 40px;
+}
+
+.wf-root .wf-row > .wf-image .wf-image-caption {
+  display: none;
+}
+
+.wf-root :is(.wf-card, .wf-image).wf-sized {
+  width: min(var(--_wf-width), 100%);
 }
 
 /* Stretch to the content width without an intrinsic width or extra spacing. */
@@ -482,6 +608,55 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-row.wf-end {
   justify-content: flex-end;
+}
+
+.wf-root .wf-row.wf-between {
+  justify-content: space-between;
+}
+
+.wf-root .wf-row > .wf-card {
+  flex: 1 1 0;
+}
+
+.wf-root .wf-row > .wf-card.wf-sized {
+  flex: 0 1 auto;
+}
+
+/* A scroll row alone owns its overflow, leaving all surrounding widths fixed.
+   Native scroll focus and chaining need no tabindex or event handler. */
+.wf-root .wf-row.wf-scroll,
+.wf-root :is(.wf-dialog-card, .wf-page, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-row.wf-scroll {
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  contain: inline-size;
+  overflow: auto hidden;
+  overscroll-behavior: auto;
+}
+
+.wf-root .wf-row.wf-scroll > *,
+.wf-root .wf-row.wf-scroll > :is(.wf-card, .wf-image, .wf-text, .wf-field, .wf-input) {
+  flex: none;
+  max-width: none;
+}
+
+.wf-root .wf-row.wf-scroll > .wf-card:not(.wf-sized) {
+  width: 144px;
+}
+
+.wf-root .wf-row.wf-scroll > .wf-sized {
+  width: var(--_wf-width);
+}
+
+/* Bleed to the phone's edges, retaining the content's start alignment. */
+.wf-root .wf-phone-content > .wf-row.wf-scroll {
+  align-self: stretch;
+  margin-inline: -1.25em;
+  width: calc(100% + 2.5em);
+  padding-inline: 1.25em;
+  max-width: none;
 }
 
 .wf-root .wf-row > .wf-text {
@@ -645,6 +820,37 @@ const STYLES = `.wf-root {
 .wf-root .wf-option.wf-current {
   color: var(--_wf-ink);
   font-weight: 500;
+}
+
+.wf-root .wf-option > .wf-icon {
+  color: inherit;
+  margin-inline-end: 0.375em;
+}
+
+.wf-root .wf-dock > .wf-toggle {
+  align-self: stretch;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+}
+
+.wf-root .wf-dock > .wf-toggle > .wf-option {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375em;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+}
+
+.wf-root .wf-dock > .wf-toggle > .wf-option > .wf-icon {
+  margin: 0;
+}
+
+.wf-root .wf-dock > .wf-toggle > .wf-option + .wf-option::before {
+  content: none;
 }
 
 .wf-root .wf-toggle > .wf-option + .wf-option::before {
