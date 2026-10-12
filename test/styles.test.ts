@@ -131,7 +131,10 @@ describe("getEmbedStyles", () => {
       for (const [property, value] of rule.declarations) {
         if (property.startsWith("--")) continue;
         expect(value, `${property}: ${value}`).not.toMatch(literalColour);
-        if (sized.test(property)) expect(value, `${property}: ${value}`).toMatch(/^(var\(--_wf-|calc\(.*var\(--_wf-)/);
+        // The frame's status time has a fixed pixel size, independent of body type.
+        if (property === "font-size" && rule.selectors.includes(".wf-root .wf-phone-status")) {
+          expect(value).toBe("15px");
+        } else if (sized.test(property)) expect(value, `${property}: ${value}`).toMatch(/^(var\(--_wf-|calc\(.*var\(--_wf-)/);
       }
     }
     for (const [property, value] of root.declarations) {

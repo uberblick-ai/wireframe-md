@@ -419,13 +419,18 @@ phone
   text hub.uberblick.ai
 ```
 
-The rounded outline has a thick bezel and a decorative speaker outside the
-screen. The screen is 360 × 640 CSS px on `--wf-paper`, at the wireframe's start
+The frame looks like a modern iPhone in greyscale: an even 8 px bezel with deep,
+concentric corners, a dark island pill beside `9:41`, reception, Wi-Fi and
+battery icons, and a bottom home indicator. The decoration is the same on every
+phone, hidden from assistive technology and absent from the summary. In narrow
+phones, status items are cut off beside the island rather than overlapping it.
+The screen is 393 × 852 CSS px on `--wf-paper`, at the wireframe's start
 edge. Its size does not scale with `--wf-text-size` and content is never scaled.
-Short content leaves the screen at full height; tall content scrolls vertically
-inside it. Wide content scrolls sideways inside the screen and never widens the
-phone. In a narrower parent the whole phone fits the available width, and the
-screen narrows while staying 640 px tall.
+It reserves a fixed 54 px status band at the top and a 34 px home indicator band
+at the bottom. Short content leaves the screen at full height; tall and wide
+content scrolls inside the area between the bands, never behind decoration and
+never widening the phone. In a narrower parent the whole phone fits the
+available width, and the screen narrows while staying 852 px tall.
 
 Scrolling is native: wheel and touch scrolling continue to the document at
 either end. An overflowing screen is one Tab stop, with a visible focus ring,
@@ -438,8 +443,8 @@ draws as a phone. A label warns `phone takes no label` and still draws inside
 the screen. A variant warns `unknown variant ".x": phone takes no variants`.
 Attributes get the existing warnings. Other roots inside a phone also keep
 their top-level warnings and still draw; write them as separate roots instead.
-Screen-size options, other device frames, fixed headers and phone-specific
-layouts are outside the vocabulary.
+Screen-size options, other device frames, configurable or author-written status
+bars, notch options, fixed headers and phone-specific layouts are outside the vocabulary.
 
 ## Figma blocks
 

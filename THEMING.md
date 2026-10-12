@@ -12,7 +12,7 @@ inherits.
 | --- | --- | --- | --- |
 | `--wf-ink` | text, the secondary button's caption, ascending and descending sort arrows | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
 | `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner or button, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, sortable arrows, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
-| `--wf-paper` | cards, a page, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
+| `--wf-paper` | cards, a page, a phone screen including its fixed bands, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
 | `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
 | `--wf-shadow` | the dialog card's `box-shadow` | `0 6px 20px oklch(0 0 0 / 10%)` | `0 6px 20px oklch(0 0 0 / 45%)` |
@@ -31,6 +31,15 @@ inherits.
 | `--wf-success-tint` | `banner.success`'s fill | `oklch(0.965 0.025 150)` | `oklch(0.24 0.035 150)` |
 
 The sizes and mono face are the same in light and dark.
+
+Phones use `--wf-muted` for their outline and `--wf-neutral-tint` for their
+bezel. The status time, icons and home indicator use `--wf-ink`. The island uses
+`--wf-ink` in light and `--wf-danger-ink` in dark, so both defaults are solid
+dark against the paper. Its outline radius is six times `--wf-radius-lg`;
+the screen subtracts the bezel (5 px plus three times `--wf-stroke`) for
+concentric corners. The scrolling area's focus ring uses `--wf-focus` and
+`--wf-focus-width`. Screen, band and status glyph sizes are fixed pixels,
+independent of `--wf-text-size`.
 
 | Property | Controls | Default |
 | --- | --- | --- |
