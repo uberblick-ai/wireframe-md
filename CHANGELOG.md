@@ -22,7 +22,7 @@ controls remain inert.
   rows. Image labels and dock contents leave summaries unchanged. The home-feed
   example shows the additions in light and dark, using existing theme properties:
   four 96 px cards in the first `row.scroll` and three 144 px cards in the second,
-  both overflowing the screen.
+  both overflowing the screen, with shorter collection captions.
 
 - `phone` draws a greyscale iPhone-like frame with an even thin bezel, deep
   concentric corners and a 393 × 852 CSS px screen. A fixed 54 px top band holds
