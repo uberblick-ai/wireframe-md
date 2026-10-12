@@ -1,4 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
+import { widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
 import { CELL_SORT_VARIANTS, colourVariants, KINDS } from "./vocabulary.js";
@@ -71,6 +72,12 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
   element.dataset.line = String(node.line);
+  if (node.kind === "page") {
+    const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
+    // Border-box sizing includes padding; min-content still widens a page for
+    // content that cannot wrap. The root owns that overflow, as for fluid pages.
+    if (width !== undefined) element.style.width = `min(${width}px, 100%)`;
+  }
 
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;

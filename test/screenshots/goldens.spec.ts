@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  {
+    name: "web-ui-sidebar",
+    source: readFileSync(new URL("../../examples/pages/uberblick/sidebar.wireframe", import.meta.url), "utf8"),
+    intro: "The workspace sidebar keeps its navigation in a 256 px panel at the start of the document column.",
+  },
   ...[
     ["web-ui-document-header", "pages/uberblick/document-header"],
     ["text-inline-monospace", "reference/vocabulary/inline-monospace"],

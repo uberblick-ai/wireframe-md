@@ -360,9 +360,62 @@ describe("warnings", () => {
 
   it("warns about every unknown attribute", () => {
     expect(warnings("banner tone=warning\n  text a=1 b=2 Hi")).toEqual([
-      warning(1, 'unknown attribute "tone": expected label on input or select (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "b": expected label on input or select (quote a label that starts with word=)'),
+      warning(1, 'unknown attribute "tone": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "b": expected label on input or select, or width on page (quote a label that starts with word=)'),
+    ]);
+  });
+
+  it("accepts whole pixel widths on pages, combined with an id and no label", () => {
+    for (const value of ["1", "256", "9999", "00256", '"256"']) {
+      const result = parseWireframe(`page#sidebar width=${value}`);
+      expect(result.diagnostics).toEqual([]);
+      expect(result.nodes[0]).toEqual(node(1, "page", {
+        id: "sidebar", attributes: [{ key: "width", value: value.replaceAll('"', "") }],
+      }));
+    }
+    expect(warnings("page width=256 Sidebar")).toEqual([warning(1, "page takes no label")]);
+  });
+
+  it("warns about invalid widths with their line number and keeps the source value", () => {
+    for (const value of ["240px", "50%", "0", "0000", "10000", "12.5", "-1", "+1", "1e2", "0xff", "１", "", "1 2"]) {
+      expect(warnings(`\npage width="${value}"`)).toEqual([
+        warning(2, `invalid width "${value}": expected a whole number of pixels from 1 to 9999, such as width=240`),
+      ]);
+      expect(parseWireframe(`page width="${value}"`).nodes[0]?.attributes).toEqual([{ key: "width", value }]);
+    }
+    expect(warnings("page width=")).toEqual([
+      warning(1, 'invalid width "": expected a whole number of pixels from 1 to 9999, such as width=240'),
+    ]);
+  });
+
+  it("warns only about width's placement on every other kind, whatever the value", () => {
+    for (const kind of [...KINDS.keys(), "box"].filter((kind) => kind !== "page")) {
+      for (const value of ["256", "240px", ""]) {
+        const diagnostics = warnings(`\n${kind} width=${value}`);
+        expect(diagnostics).toContainEqual(warning(2, 'attribute "width" is only allowed on page'));
+        expect(diagnostics.filter((diagnostic) => /invalid width|unknown attribute/.test(diagnostic.message))).toEqual([]);
+      }
+    }
+  });
+
+  it("warns about repeated widths and retains them in source order", () => {
+    const result = parseWireframe("page width=256 width=400 width=512");
+    expect(result.diagnostics).toEqual([
+      warning(1, 'repeated attribute "width": the first value is used'),
+      warning(1, 'repeated attribute "width": the first value is used'),
+    ]);
+    expect(result.nodes[0]?.attributes).toEqual([
+      { key: "width", value: "256" }, { key: "width", value: "400" }, { key: "width", value: "512" },
+    ]);
+    expect(warnings("page width=0 width=256")).toEqual([
+      warning(1, 'invalid width "0": expected a whole number of pixels from 1 to 9999, such as width=240'),
+      warning(1, 'repeated attribute "width": the first value is used'),
+    ]);
+    expect(warnings("dialog width=256 width=400")).toEqual([
+      warning(1, 'attribute "width" is only allowed on page'),
+      warning(1, 'repeated attribute "width": the first value is used'),
+      warning(1, 'attribute "width" is only allowed on page'),
     ]);
   });
 
@@ -399,7 +452,7 @@ describe("warnings", () => {
 
   it("still warns about other attributes on a labelled field", () => {
     expect(warnings('page\n  input label=Email size=20 name@company.com')).toEqual([
-      warning(2, 'unknown attribute "size": expected label on input or select (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "size": expected label on input or select, or width on page (quote a label that starts with word=)'),
     ]);
   });
 
@@ -633,7 +686,7 @@ describe("errors", () => {
     expect(errors('dialog\n  text "Hello\n  text a="b c\n  text "end\\"')).toEqual([
       error(2, 'unterminated quote: expected a closing "'),
       error(3, 'unterminated quote: expected a closing "'),
-      warning(3, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
+      warning(3, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
       error(4, 'unterminated quote: expected a closing "'),
     ]);
     expect(parseWireframe('text "Hello').nodes[0]?.label).toBe("Hello");
@@ -645,7 +698,7 @@ describe("errors", () => {
     ]);
     expect(errors('dialog\n  text a="b"c Label')).toEqual([
       error(2, "expected a space after the closing quote"),
-      warning(2, 'unknown attribute "a": expected label on input or select (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, or width on page (quote a label that starts with word=)'),
     ]);
   });
 

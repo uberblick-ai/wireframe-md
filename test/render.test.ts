@@ -633,6 +633,40 @@ describe("warnings", () => {
   });
 });
 
+describe("page widths", () => {
+  it("writes only the validated pixel count and keeps the summary and children unchanged", () => {
+    const plain = "page#sidebar\n  text Dashboard\n  text All documents";
+    const source = plain.replace("page#sidebar", "page#sidebar width=00256");
+    const root = render(source);
+    const page = root.querySelector<HTMLElement>(".wf-page")!;
+    expect(page.style.width).toBe("min(256px, 100%)");
+    expect(page.style.length).toBe(1);
+    expect(root.querySelector("[id]")).toBeNull();
+    expect(drawn(source)).toEqual(drawn(plain));
+    expect(summarizeWireframe(parseWireframe(source))).toBe(summarizeWireframe(parseWireframe(plain)));
+  });
+
+  it("uses the first width, even when it is invalid", () => {
+    expect(render("page width=256 width=400").querySelector<HTMLElement>(".wf-page")!.style.width).toBe("min(256px, 100%)");
+    expect(render("page width=0 width=256").outerHTML).toBe(render("page").outerHTML);
+  });
+
+  it("leaves invalid or misplaced widths out of the DOM", () => {
+    for (const value of ["240px", "50%", "0", "10000", "12.5", "-1", "", "256;position:fixed", "url(https://example.com)"]) {
+      expect(render(`page width="${value}"`).outerHTML).toBe(render("page").outerHTML);
+    }
+    for (const kind of ["dialog", "banner", "frame", "card", "text", "row", "button", "input", "select", "toggle", "option", "table", "cell", "chip", "icon", "box"]) {
+      expect(render(`${kind} width=256`).outerHTML).toBe(render(kind).outerHTML);
+    }
+  });
+
+  it("validates again when given a modified parse result", () => {
+    const result = parseWireframe("page width=256");
+    result.nodes[0]!.attributes[0]!.value = "256px; background: url(https://example.com)";
+    expect(renderWireframe(result)!.querySelector("[style]")).toBeNull();
+  });
+});
+
 describe("inert output", () => {
   const hostile = [
     "dialog <img src=x onerror=alert(1)>",

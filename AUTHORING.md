@@ -38,10 +38,11 @@ kind.variant#id key=value Label
   change the drawing.
 - **key=value** is an attribute between the first word and the line's label.
   v0.1 defines `label` on `input` and `select`: `label=Role` or
-  `label="Work email"`. Values with spaces use quotes and the same escapes as a
+  `label="Work email"`, and `width` on `page`: `width=256`.
+  Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
-  Other attributes get a warning. A repeated `label=` warns and uses the first
-  value; `label=` on any other kind warns and doesn't change its drawing.
+  Other attributes get a warning. A repeated `label=` or `width=` warns and uses
+  the first value; either on another kind warns and doesn't change its drawing.
 - **Label** is the rest of the line, without trailing spaces. On `text` lines,
   paired single backticks mark inline monospace spans; every other kind keeps
   its backticks as written. Other Markdown isn't formatted, so `*draft*` shows
@@ -340,6 +341,35 @@ page
           icon pin
 ```
 
+## Page widths
+
+A `page` may take one `width=` in CSS pixels: a whole number from 1 to 9999,
+written in digits only, with no unit, sign or decimal point. It combines with
+an `#id`, and the page still takes no label.
+
+```wireframe
+page#sidebar width=256
+  text Dashboard
+  text All documents
+```
+
+The width includes the page's border and padding. The page sits at the
+wireframe's start edge and is capped at its parent's available space; without
+`width=`, it stays fluid. CSS pixels do not scale with `--wf-text-size`. Text
+wraps inside the narrower page. Content that cannot fit, such as an unbreakable
+row of buttons, still widens the page and scrolls inside the wireframe, never
+the document. Nothing is scaled or clipped, and the accessible summary stays
+the same.
+
+These warnings still render:
+
+| Source | Diagnostic | Drawing |
+| --- | --- | --- |
+| `dialog width=256` (any kind other than `page`, whatever the value) | `attribute "width" is only allowed on page` | unchanged |
+| `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
+| `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
+| `page format=PDF` | `unknown attribute "format": expected label on input or select, or width on page (quote a label that starts with word=)` | unchanged |
+
 ## Figma blocks
 
 The reading and private states from Uberblick's "Figma blocks" page. `·` separates
@@ -414,8 +444,8 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=` on the wrong kind, a repeated
-  `label=` and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=` or `width=` on the wrong
+  kind, a repeated `label=` or `width=`, an invalid width and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
@@ -577,7 +607,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": expected label on input or select (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select, or width on page (quote a label that starts with word=)
 ```
 
 Fixed:

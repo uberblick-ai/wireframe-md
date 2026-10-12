@@ -151,6 +151,73 @@ function lines(page: Page, selector: string): Promise<number> {
 
 test.describe("fit", () => {
   for (const scheme of ["light", "dark"] as const) {
+    for (const width of [710, 200]) {
+      for (const layout of ["block", "flex", "grid"] as const) {
+        test(`page width=256 fits a ${width} px ${layout} column in ${scheme}`, async ({ page }) => {
+          await show(page, "page width=256\n  text Dashboard\n  text This navigation text wraps inside the narrower page without widening its parent.", { host: "column", scheme, width, layout });
+          expect(await measure(page)).toEqual({
+            root: { width, scrollWidth: width }, column: { width, scrollWidth: width }, escaped: [],
+          });
+          const geometry = await page.locator(".wf-page").evaluate((element) => {
+            const root = element.parentElement!;
+            const style = getComputedStyle(root);
+            const padding = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
+            const box = element.getBoundingClientRect();
+            return {
+              width: box.width, available: root.clientWidth - padding,
+              startGap: box.left - root.getBoundingClientRect().left - Number.parseFloat(style.paddingLeft),
+              fontSize: style.fontSize,
+            };
+          });
+          expect(geometry.width).toBe(Math.min(256, geometry.available));
+          expect(geometry.startGap).toBe(0);
+          expect(geometry.fontSize).toBe("14px");
+          expect(await lines(page, ".wf-text:last-child")).toBeGreaterThan(1);
+          if (width < 256) {
+            await show(page, "page\n  text Dashboard", { host: "column", scheme, width, layout });
+            expect((await page.locator(".wf-page").boundingBox())!.width).toBe(geometry.width);
+          }
+        });
+      }
+
+      test(`unbreakable content widens a sized page and scrolls only inside the wireframe at ${width} px in ${scheme}`, async ({ page }) => {
+        await show(page, `page width=256\n  row\n${"    button Option\n".repeat(25)}`, { host: "column", scheme, width });
+        const fit = await measure(page);
+        expect(fit.root.width).toBe(width);
+        expect(fit.root.scrollWidth).toBeGreaterThan(width);
+        expect(fit.column).toEqual({ width, scrollWidth: width });
+        expect(fit.escaped).toEqual([]);
+        const geometry = await page.locator(".wf-page").evaluate((element) => ({
+          width: element.clientWidth, scrollWidth: element.scrollWidth,
+          documentWidth: document.documentElement.clientWidth,
+          documentScrollWidth: document.documentElement.scrollWidth,
+        }));
+        expect(geometry.width).toBeGreaterThan(width);
+        expect(geometry.scrollWidth).toBe(geometry.width);
+        expect(geometry.documentScrollWidth).toBe(geometry.documentWidth);
+      });
+    }
+
+    test(`the product sidebar measures 256 px without sideways scroll in ${scheme}`, async ({ page }) => {
+      const source = readFileSync(new URL("../../examples/pages/uberblick/sidebar.wireframe", import.meta.url), "utf8");
+      await show(page, source, { host: "column", scheme });
+      expect((await page.locator(".wf-page").boundingBox())!.width).toBe(256);
+      expect(await measure(page)).toEqual({
+        root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+      });
+    });
+  }
+
+  test("page widths stay in CSS pixels when the host changes text size", async ({ page }) => {
+    await show(page, "page width=256\n  text Dashboard", { host: "column" });
+    await page.locator(".column").evaluate((host) => host.style.setProperty("--wf-text-size", "20px"));
+    expect((await page.locator(".wf-page").boundingBox())!.width).toBe(256);
+    expect(await measure(page)).toEqual({
+      root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
+    });
+  });
+
+  for (const scheme of ["light", "dark"] as const) {
     for (const host of ["column", "standalone"] as const) {
       test(`the Card block fits at full size in ${scheme} on a ${host} host`, async ({ page }) => {
         await show(page, cardBlock, { host, scheme });

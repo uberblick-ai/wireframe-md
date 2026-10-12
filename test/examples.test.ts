@@ -42,6 +42,12 @@ describe("examples", () => {
     expect(parseWireframe(cardBlock).diagnostics).toEqual([]);
   });
 
+  it("holds the sidebar sketch with its optional pixel width and no diagnostics", () => {
+    const source = readFileSync(new URL("pages/uberblick/sidebar.wireframe", folder), "utf8");
+    expect(source.startsWith("page width=256\n")).toBe(true);
+    expect(parseWireframe(source).diagnostics).toEqual([]);
+  });
+
   it("holds both assigned Figma sources without diagnostics", () => {
     for (const [name, source] of [["reading", figmaReading], ["private", figmaPrivate]]) {
       expect(readFileSync(new URL(`pages/uberblick/figma-block-${name}.wireframe`, folder), "utf8")).toBe(`${source}\n`);

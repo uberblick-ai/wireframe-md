@@ -1,0 +1,22 @@
+page width=256
+  row
+    chip U
+    button.link Uberblick   ↕
+    button.link «
+  text Dashboard
+  text All documents
+  text.small.muted Getting started __________
+  text Welcome to Uberblick
+  text How to Use It
+  text.small.muted Specs _________________
+  text Web UI system
+  row
+  row
+    chip + New group
+    chip + New page
+  row
+  row
+  text.small ● Offline (only when needed)
+  text Workspace settings
+  row
+    text user card
