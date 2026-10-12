@@ -10,6 +10,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 
 const samples = [
   {
+    name: "dividers-stacked-content",
+    source: readFileSync(new URL("../../examples/blocks/3-dividers/stacked-content.wireframe", import.meta.url), "utf8"),
+    intro: "Dividers separate stacked content in a page, dialog and frame, including a 256 px workspace sidebar.",
+  },
+  {
     name: "web-ui-sidebar",
     source: readFileSync(new URL("../../examples/pages/uberblick/sidebar.wireframe", import.meta.url), "utf8"),
     intro: "The workspace sidebar keeps its navigation in a 256 px panel at the start of the document column.",

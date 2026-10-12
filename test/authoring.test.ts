@@ -121,6 +121,8 @@ describe("AUTHORING.md", () => {
     const PLACES: Record<Place, string> = {
       top: "",
       root: "a root",
+      dialog: "a `dialog`",
+      page: "a `page`",
       frame: "a `frame`",
       card: "a `card`",
       row: "a `row`",

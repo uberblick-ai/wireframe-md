@@ -224,6 +224,14 @@ function checkNode(
     if (parent !== undefined) warn(`${kind} must be at the top level`);
     return;
   }
+  // A divider belongs only to stacking roots, including in a table row where
+  // its own placement warning takes precedence over the expected-cell warning.
+  if (kind === "divider") {
+    if (!rule.place.some((place) => place === parent?.kind)) {
+      warn(`divider must be directly inside ${inside(rule.place)}`);
+    }
+    return;
+  }
   const place = placeOf(parent, grandparent);
   if (kind === "cell") {
     const sorts = node.variants.filter((variant) => CELL_SORT_VARIANTS.includes(variant));

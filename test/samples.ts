@@ -124,6 +124,7 @@ export const vocabulary = [
   "    button.link.danger Delete…",
   "page",
   "  text.title Page title",
+  "  divider",
   "  input Placeholder",
   "  select Value",
   '  input label="Email address" name@company.com',

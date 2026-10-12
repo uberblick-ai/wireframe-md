@@ -121,6 +121,7 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
+| `divider` | directly inside a `dialog` or a `page` or a `frame` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
@@ -139,6 +140,35 @@ secondary button. `button.primary.danger` is a filled destructive button, and
 underline follows its colour and uses `--wf-stroke` for its thickness, including
 on every wrapped line. Icons and the gap before the caption are not underlined;
 an icon-only `.link` stays a bare icon.
+
+`divider` draws a horizontal line directly inside a `dialog`, `page` or `frame`.
+It takes no variants, label, attributes or children; an optional `#id` works as
+on any kind. A `row` arranges content side by side; a divider holds no content.
+Banners lay out on one line and cards hold only text, so neither takes a divider.
+
+The line uses `--wf-line`, like table rules, at `--wf-stroke` thickness. It spans
+the container's full content width inside its padding, with no margin: the
+container's usual gap supplies the space above and below. It never widens the
+container or wireframe, and follows the wider width when other content widens
+the container. The defaults are visible in light and dark; hosts restyle it
+through those two properties. It is an inert separator for assistive technology
+and adds nothing to its root's accessible summary.
+
+```wireframe
+page width=256
+  text Dashboard
+  text All documents
+  divider
+  text Workspace settings
+  row
+    text user card
+```
+
+In any other place, including the top level, a banner, card, row, table or cell,
+it warns `divider must be directly inside dialog, page or frame` and still draws
+a visible line where written. A label, variant, attribute or child gives the
+usual warning and fallback drawing: a label draws as text, an unknown variant
+or attribute adds no styling, and a child still draws where written.
 
 `banner.success` marks a positive outcome, such as Saved or Restored. Its fill is
 a green tint, its icon uses the green tone and that tone is mixed into its border,
@@ -754,7 +784,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, button, icon, input, select, toggle, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

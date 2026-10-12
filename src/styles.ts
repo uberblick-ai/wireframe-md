@@ -16,7 +16,7 @@
 //                      header row, cell.sortable's arrows and chip.more
 //   --wf-paper         cards, a page and the secondary button's fill
 //   --wf-line          borders: cards, a page, buttons, inputs, selects, the banner's base and unknown boxes;
-//                      a table's rules; mixed into a chip's fill
+//                      a table's rules and dividers; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
@@ -281,6 +281,24 @@ const STYLES = `.wf-root {
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius);
   background: var(--_wf-paper);
+}
+
+/* Stretch to the content width without an intrinsic width or extra spacing. */
+.wf-root .wf-divider {
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border-style: none;
+  border-top: var(--_wf-stroke) solid var(--_wf-line);
+}
+
+/* Misplaced dividers still show a line in containers that lay out horizontally. */
+.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon) > .wf-divider {
+  align-self: center;
+  flex: 1 1 auto;
+  min-width: 1em;
 }
 
 .wf-root .wf-text {
