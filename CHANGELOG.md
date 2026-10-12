@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- A static showcase build in `site/` pairs curated example sources with light
+  and dark renders, including full-page designs. Deployment requires matching
+  human playground approvals; a separate preview build marks examples awaiting
+  review. The site stays outside the npm package.
+
 - `divider` draws an inert horizontal separator directly inside a dialog, page
   or frame. It spans the content width using `--wf-line` and `--wf-stroke`, with
   the container's usual gaps. It takes only an optional `#id`; misplaced or
