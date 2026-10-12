@@ -22,13 +22,13 @@ phone
   row.scroll
     card width=144
       image.square Cover
-      text First collection
+      text 1st collection
     card width=144
       image.square Cover
-      text Second collection
+      text 2nd collection
     card width=144
       image.square Cover
-      text Third collection
+      text 3rd collection
   card
     image Promo artwork
   dock
