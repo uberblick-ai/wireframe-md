@@ -22,5 +22,5 @@ page width=256
   divider
   text Workspace settings
   row
-    icon user
-    text.small Alex · Account
+    button.link Alex · Account
+      icon user

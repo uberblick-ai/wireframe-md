@@ -294,11 +294,16 @@ const STYLES = `.wf-root {
   border-top: var(--_wf-stroke) solid var(--_wf-line);
 }
 
-/* Misplaced dividers still show a line in containers that lay out horizontally. */
-.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon) > .wf-divider {
+/* Misplaced dividers keep a visible line even in otherwise empty content. */
+.wf-root > .wf-divider,
+.wf-root :not(:is(.wf-dialog-card, .wf-page, .wf-frame)) > .wf-divider {
+  min-width: 1em;
+}
+
+/* In horizontal containers, centre the fallback line and use available room. */
+.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
   align-self: center;
   flex: 1 1 auto;
-  min-width: 1em;
 }
 
 .wf-root .wf-text {

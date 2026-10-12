@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { KINDS } from "../../src/vocabulary.js";
 import { open, show } from "./page.js";
 
 test.beforeEach(async ({ page }) => open(page));
@@ -86,19 +87,30 @@ for (const kind of ["page", "page width=256", "dialog", "frame"]) {
   }
 }
 
-test("misplaced dividers still draw visible lines where written", async ({ page }) => {
-  for (const source of [
-    "divider", "banner\n  divider", "card\n  divider", "page\n  row\n    divider",
-    "page\n  table\n    divider", "page\n  table\n    row\n      divider",
-    "page\n  table\n    row\n      cell\n        divider", "page\n  divider\n    divider",
-    "page\n  row\n    button\n      divider", "page\n  icon archive\n    divider",
-  ]) {
-    await show(page, source, { host: "column" });
-    const line = await page.locator(".wf-divider").last().boundingBox();
-    expect(line!.width, source).toBeGreaterThan(0);
-    expect(line!.height, source).toBeGreaterThan(0);
-  }
-});
+for (const scheme of ["light", "dark"] as const) {
+  test(`dividers still draw visible lines under every kind in ${scheme}`, async ({ page }) => {
+    for (const source of [
+      "divider",
+      ...[...KINDS.keys(), "unknown"].map((kind) => `${kind}\n  divider`),
+      "page\n  row\n    divider", "page\n  table\n    divider", "page\n  table\n    row\n      divider",
+      "page\n  table\n    row\n      cell\n        divider", "page\n  divider\n    divider",
+      "page\n  row\n    button\n      divider", "page\n  icon archive\n    divider",
+      "page\n  row\n    chip Draft\n      divider", "page\n  toggle\n    option\n      divider",
+      "page\n  input label=Name\n    divider", "page\n  select label=Role\n    divider",
+    ]) {
+      await show(page, source, { scheme, host: "column" });
+      const line = await page.locator(".wf-divider").last().evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return { width: box.width, height: box.height, stroke: style.borderTopWidth, colour: style.borderTopColor };
+      });
+      expect(line.width, source).toBeGreaterThan(0);
+      expect(line.height, source).toBeGreaterThan(0);
+      expect(line.stroke, source).toBe("1px");
+      expect(line.colour, source).toBe(scheme === "light" ? "oklch(0.86 0.004 75)" : "oklch(1 0 0 / 0.2)");
+    }
+  });
+}
 
 test("unknown variants and attributes add no divider styling", async ({ page }) => {
   await show(page, "page\n  text Before\n  divider\n  text After");

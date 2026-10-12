@@ -81,4 +81,9 @@ describe("examples", () => {
     const banners = examples.filter((file) => file.startsWith("badges-and-banners/2-banners/"));
     for (const file of banners) expect(parseWireframe(readFileSync(new URL(file, folder), "utf8")).diagnostics).toEqual([]);
   });
+
+  it("holds the divider showcase without diagnostics", () => {
+    const source = readFileSync(new URL("blocks/3-dividers/stacked-content.wireframe", folder), "utf8");
+    expect(parseWireframe(source).diagnostics).toEqual([]);
+  });
 });
