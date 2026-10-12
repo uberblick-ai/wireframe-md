@@ -19,7 +19,7 @@ inherits.
 | `--wf-primary` | `button.primary`'s fill, and `button.link.primary`'s caption | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
 | `--wf-primary-ink` | `button.primary`'s caption | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
 | `--wf-danger` | the destructive colour: `button.danger`, and `banner.danger`'s icon and border; red icons and text | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
-| `--wf-danger-ink` | the caption on a filled `button.primary.danger` | `oklch(1 0 0)` | `oklch(0.145 0 0)` |
+| `--wf-danger-ink` | the caption on a filled `button.primary.danger`; a phone's island in dark | `oklch(1 0 0)` | `oklch(0.145 0 0)` |
 | `--wf-focus` | `button.focus`'s ring | `oklch(0.72 0.16 65)` | `oklch(0.8 0.18 65)` |
 | `--wf-info` | `banner.info`'s icon and border; blue icons and text | `oklch(0.55 0.15 250)` | `oklch(0.75 0.12 250)` |
 | `--wf-warning` | `banner.warning`'s icon and border; amber icons and text (light text mixes 80% warning with 20% ink) | `oklch(0.66 0.13 70)` | `oklch(0.78 0.14 75)` |
@@ -46,7 +46,7 @@ independent of `--wf-text-size`.
 | `--wf-stroke` | border width; a frame's left bar is three times it; select chevron and cell sort strokes are one and a half times it on a 16-unit grid, and icons match on Tabler's 24-unit grid | `1px` |
 | `--wf-focus-width` | the focus ring's width | `2px` |
 | `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
-| `--wf-radius-lg` | the dialog's card and scrim, and a page | `10px` |
+| `--wf-radius-lg` | the dialog's card and scrim, and a page; a phone's outline uses six times it, with concentric screen corners | `10px` |
 | `--wf-text-size` | the base type size; spacing, chips and `text.small` scale with it | `0.875rem` |
 | `--wf-title-size` | the dialog's title and a card's direct `text.title`; other `text.title` is one and a half times it, unless combined with `.small` | `1rem` |
 | `--wf-mono-font` | the font family of paired-backtick spans on `text` lines | `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace` |

@@ -261,7 +261,11 @@ const STYLES = `.wf-root {
 }
 
 /* Browsers focus overflowing scroll containers as one stop, like wf-root.
-   Leave the bezel unclipped so the screen's ring stays visible outside it. */
+   Draw only the screen's themed ring, with the bezel unclipped around it. */
+.wf-root .wf-phone-viewport:focus-visible {
+  outline-style: none;
+}
+
 .wf-root .wf-phone-screen:has(> .wf-phone-viewport:focus-visible) {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: var(--_wf-focus-width);

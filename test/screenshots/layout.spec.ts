@@ -1086,6 +1086,7 @@ test.describe("phone screens", () => {
         };
       });
       expect(ring).toEqual({ visible: true, fits: true });
+      expect(await screen.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe("none");
     });
 
     test(`phone bands keep decoration fixed and text clear in both scroll directions in ${scheme}`, async ({ page }) => {
