@@ -5,6 +5,14 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+## 0.3.0
+
+Wireframes gain a broader visual vocabulary: Tabler icons, named colours, inline
+monospace, table sort indicators, dividers and explicit page widths. Phone
+layouts add a decorated scrollable screen, image placeholders, sideways card
+rows and a bottom dock. The authoring guide covers the new vocabulary; mock
+controls remain inert.
+
 - Phone home screens support `image` placeholders (`.square`, `.round`),
   `row.between`, native sideways `row.scroll`, cards in rows, and a final opaque
   bottom `dock`. Cards hold images and rows and share `width=` with pages and
@@ -12,7 +20,9 @@ format, the vocabulary and the rendering may change in any minor version.
   equal-width options. Layout variants and shapes use the first when competing.
   A valid image width overrides its default size, including round avatars in
   rows. Image labels and dock contents leave summaries unchanged. The home-feed
-  example shows the additions in light and dark, using existing theme properties.
+  example shows the additions in light and dark, using existing theme properties:
+  four 96 px cards in the first `row.scroll` and three 144 px cards in the second,
+  both overflowing the screen.
 
 - `phone` draws a greyscale iPhone-like frame with an even thin bezel, deep
   concentric corners and a 393 × 852 CSS px screen. A fixed 54 px top band holds
@@ -25,6 +35,11 @@ format, the vocabulary and the rendering may change in any minor version.
   keyboard stop with one visible themed focus ring around the paper screen.
   Summaries and placement warnings include phones, and the examples show short
   and tall screens in both themes.
+
+- The README is a short entry point. Hosts now find the `--wf-*` theming
+  reference in [THEMING.md](https://github.com/uberblick-ai/wireframe-md/blob/main/THEMING.md)
+  in the repository; it no longer lives in the shipped README, and `THEMING.md`
+  does not ship in the package.
 
 - A static showcase build in `site/` pairs curated example sources with light
   and dark renders, including full-page designs. Deployment requires matching
