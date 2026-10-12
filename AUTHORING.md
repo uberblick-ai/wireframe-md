@@ -109,7 +109,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 
 ## Kinds
 
-`dialog`, `banner`, `page` and `frame` are roots: they stand at the top level and hold the
+`dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
 rest. A `card` may also stand at the top level, but holds only text lines.
 
 | Kind | Where | Variants | Label |
@@ -118,10 +118,11 @@ rest. A `card` may also stand at the top level, but holds only text lines.
 | `banner` | at the top level | `.neutral`, the default: a plain strip; `.info`: news, tinted blue; `.warning`: a state to notice, tinted amber; `.danger`: a problem, tinted red; `.success`: a positive outcome, tinted green | none: its text goes on a `text` line |
 | `page` | at the top level | none | none: its title goes on a `text.title` line |
 | `frame` | at the top level | none | the caption: the block's name, then its title |
+| `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `card` | at the top level or directly inside a root | none | none: its text goes on `text` lines |
 | `text` | directly inside a root or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `table` | `.end`: aligns its children to the right; `.head`: a table's header row, in grey | none |
-| `divider` | directly inside a `dialog` or a `page` or a `frame` | none | none |
+| `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `cell` or a `button` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `row` | none | the placeholder |
@@ -141,7 +142,7 @@ underline follows its colour and uses `--wf-stroke` for its thickness, including
 on every wrapped line. Icons and the gap before the caption are not underlined;
 an icon-only `.link` stays a bare icon.
 
-`divider` draws a horizontal line directly inside a `dialog`, `page` or `frame`.
+`divider` draws a horizontal line directly inside a `dialog`, `page`, `frame` or `phone`.
 It takes no variants, label, attributes or children; an optional `#id` works as
 on any kind. A `row` arranges content side by side; a divider holds no content.
 Banners lay out on one line and cards hold only text, so neither takes a divider.
@@ -165,7 +166,7 @@ page width=256
 ```
 
 In any other place, including the top level, a banner, card, row, table or cell,
-it warns `divider must be directly inside dialog, page or frame` and still draws
+it warns `divider must be directly inside dialog, page, frame or phone` and still draws
 a visible line where written. A label, variant, attribute or child gives the
 usual warning and fallback drawing: a label draws as text, an unknown variant
 or attribute adds no styling, and a child still draws where written.
@@ -399,6 +400,46 @@ These warnings still render:
 | `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
 | `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
 | `page format=PDF` | `unknown attribute "format": expected label on input or select, or width on page (quote a label that starts with word=)` | unchanged |
+
+## Phones
+
+A `phone` is a root at the top level. It holds the same text, rows, dividers,
+cards, controls, tables and icons as a page, stacked at the screen's full width.
+It takes no label, variants or attributes; `#id` is optional. Put its title on
+a `text.title` line. Buttons belong in rows or cells, as on a page.
+
+```wireframe
+phone
+  text.title General
+  input label=Name Uberblick
+  row.end
+    button Save
+  divider
+  text.muted Hub
+  text hub.uberblick.ai
+```
+
+The rounded outline has a thick bezel and a decorative speaker outside the
+screen. The screen is 360 × 640 CSS px on `--wf-paper`, at the wireframe's start
+edge. Its size does not scale with `--wf-text-size` and content is never scaled.
+Short content leaves the screen at full height; tall content scrolls vertically
+inside it. Wide content scrolls sideways inside the screen and never widens the
+phone. In a narrower parent the whole phone fits the available width, and the
+screen narrows while staying 640 px tall.
+
+Scrolling is native: wheel and touch scrolling continue to the document at
+either end. An overflowing screen is one Tab stop, with a visible focus ring,
+so arrow and Page keys scroll it. A fitting screen adds no Tab stop and no mock
+control takes focus. The summary uses the first direct text, like a page:
+`Wireframe: phone “General”`, or `Wireframe: phone` without text.
+
+A phone below the top level warns `phone must be at the top level` and still
+draws as a phone. A label warns `phone takes no label` and still draws inside
+the screen. A variant warns `unknown variant ".x": phone takes no variants`.
+Attributes get the existing warnings. Other roots inside a phone also keep
+their top-level warnings and still draw; write them as separate roots instead.
+Screen-size options, other device frames, fixed headers and phone-specific
+layouts are outside the vocabulary.
 
 ## Figma blocks
 
@@ -741,7 +782,7 @@ page
 
 ### A root inside another node
 
-`dialog`, `banner`, `page` and `frame` stand only at the top level. Wrong:
+`dialog`, `banner`, `page`, `frame` and `phone` stand only at the top level. Wrong:
 
 ```text
 dialog Delete “Q3 launch draft”?
@@ -784,7 +825,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, card, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

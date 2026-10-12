@@ -83,6 +83,18 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;
   switch (node.kind) {
+    case "phone": {
+      // Device decoration stays outside the native scrolling viewport.
+      const speaker = create(document, "div", ["wf-phone-speaker"]);
+      speaker.setAttribute("aria-hidden", "true");
+      const screen = create(document, "div", ["wf-phone-screen"]);
+      body = create(document, "div", ["wf-phone-content"]);
+      screen.append(body);
+      element.append(speaker, screen);
+      // Unsupported labels still draw, inside the screen with all other source.
+      if (node.label !== "") body.append(text(document, "span", ["wf-text"], node.label));
+      break;
+    }
     case "dialog":
       // The node's element is the scrim; the card inside it holds the title and children.
       body = create(document, "div", ["wf-dialog-card"]);

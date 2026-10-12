@@ -5,6 +5,13 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `phone` draws a rounded device outline with a 360 × 640 CSS px screen that
+  scrolls internally and fits narrower parents without growing or scaling.
+  It holds the same content as a page, with no label, variants or attributes.
+  Native scrolling chains to the document; an overflowing screen takes one
+  keyboard stop with a visible focus ring. Summaries and placement warnings
+  include phones, and the examples show short and tall screens in both themes.
+
 - A static showcase build in `site/` pairs curated example sources with light
   and dark renders, including full-page designs. Deployment requires matching
   human playground approvals; a separate preview build marks examples awaiting

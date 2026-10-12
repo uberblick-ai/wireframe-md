@@ -105,6 +105,7 @@ host can resolve it from the installed package, for example with
 | `dialog` | at the top level | none | the title |
 | `banner` | at the top level | `.neutral` (default), `.info`, `.warning`, `.danger` | none; its text goes on a `text` line |
 | `page` | at the top level | none | none; its title goes on a `text.title` line |
+| `phone` | at the top level | none | none; its title goes on a `text.title` line |
 | `text` | directly inside a root, a `card` or a non-table `row` | `.muted`, `.strong`, `.title`, `.small` | the text |
 | `row` | directly inside a root, or a `table` as a table row of cells | `.end` aligns its children right; `.head` is a table's header row | none |
 | `button` | directly inside a `row` or a `cell` | `.primary`, `.danger`, `.link`, `.focus` | the caption |
@@ -116,6 +117,15 @@ host can resolve it from the installed package, for example with
 | `table` | directly inside a root | none | none |
 | `cell` | directly inside a table row | `.end` right-aligns, with tabular figures; `.sortable`, `.ascending`, `.descending` draw sort arrows | its text, or none |
 | `chip` | directly inside a `row` or a `cell` | `.more` is the count of the rest | the tag, or the count |
+
+A `phone` holds the same content as a page inside a rounded device outline with
+a decorative speaker. Its screen is 360 × 640 CSS px on `--wf-paper`, at the
+wireframe's start edge. The outline fits narrower parents; the screen narrows
+and stays 640 px tall. Content scrolls inside the screen in either direction,
+without growing the phone or scaling the content. Native wheel and touch
+scrolling continue to the document at either end. An overflowing screen takes
+one Tab stop with a visible focus ring; a fitting screen adds none. Mock controls
+stay inert. A phone takes no label, variants or attributes; `#id` is optional.
 
 A `select` shares the input's border, radius, height and padding, with no fill,
 its value in ink and a muted stroked chevron-down at the end. The chevron belongs

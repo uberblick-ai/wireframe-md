@@ -1,0 +1,31 @@
+phone
+  text.title General
+  text.muted Workspace settings
+  input label=Name Uberblick
+  text.small.muted Shown in the sidebar header and the workspace menu.
+  row.end
+    button.primary Save
+  divider
+  text.strong Where it lives
+  text.small.muted Hub
+  text hub.uberblick.ai
+  text.small.muted Workspace ID
+  text.small `722007fa-8921-45ee-a580-e20311030fef`
+  row.end
+    button.link Copy
+  divider
+  text.strong About this workspace
+  text.small.muted Documents
+  text 68 (3 archived)
+  text.small.muted Members
+  text 4
+  text.small.muted Tags
+  text 6
+  text.small.muted Size
+  text 12.4 MB on this device
+  text.small.muted Last edited
+  text 2 hours ago
+  divider
+  row
+    button.link Connection details
+      icon chevron-right

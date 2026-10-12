@@ -86,4 +86,12 @@ describe("examples", () => {
     const source = readFileSync(new URL("blocks/3-dividers/stacked-content.wireframe", folder), "utf8");
     expect(parseWireframe(source).diagnostics).toEqual([]);
   });
+
+  it("holds the short and workspace General phone examples without diagnostics", () => {
+    for (const name of ["phones/1-screens/short-screen", "phones/uberblick/workspace-general"]) {
+      const source = readFileSync(new URL(`${name}.wireframe`, folder), "utf8");
+      expect(source.startsWith("phone\n  text.title General\n")).toBe(true);
+      expect(parseWireframe(source).diagnostics).toEqual([]);
+    }
+  });
 });

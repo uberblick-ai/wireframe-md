@@ -983,3 +983,132 @@ test("a wireframe that scrolls takes focus only as a whole, so the keyboard can 
   await show(page, `dialog Pick one\n  row.end\n${"    button.focus Option\n".repeat(25)}`, { host: "column" });
   expect(await focusable(page)).toEqual(["wf-root"]);
 });
+
+test.describe("phone screens", () => {
+  const short = readFileSync(new URL("../../examples/phones/1-screens/short-screen.wireframe", import.meta.url), "utf8");
+  const long = readFileSync(new URL("../../examples/phones/uberblick/workspace-general.wireframe", import.meta.url), "utf8");
+
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [710, 200]) {
+      for (const layout of ["block", "flex", "grid"] as const) {
+        test(`phone fits a ${width} px ${layout} column in ${scheme}`, async ({ page }) => {
+          await show(page, short, { host: "column", scheme, width, layout });
+          expect(await measure(page)).toEqual({
+            root: { width, scrollWidth: width }, column: { width, scrollWidth: width }, escaped: [],
+          });
+          const geometry = await page.locator(".wf-phone").evaluate((phone) => {
+            const root = phone.closest<HTMLElement>(".wf-root")!;
+            const screen = phone.querySelector(".wf-phone-screen")!.getBoundingClientRect();
+            const box = phone.getBoundingClientRect();
+            const style = getComputedStyle(root);
+            return {
+              screen: { width: screen.width, height: screen.height },
+              width: box.width,
+              available: root.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight),
+              startGap: box.left - root.getBoundingClientRect().left - Number.parseFloat(style.paddingLeft),
+              documentWidth: document.documentElement.clientWidth, documentScrollWidth: document.documentElement.scrollWidth,
+            };
+          });
+          expect(geometry.screen.height).toBe(640);
+          expect(geometry.startGap).toBe(0);
+          expect(geometry.width).toBeLessThanOrEqual(geometry.available);
+          expect(geometry.documentScrollWidth).toBe(geometry.documentWidth);
+          if (width === 710) expect(geometry.screen.width).toBe(360);
+          else {
+            expect(geometry.width).toBe(geometry.available);
+            expect(geometry.screen.width).toBeLessThan(200);
+          }
+          await page.locator(".column").evaluate((host) => host.style.setProperty("--wf-text-size", "20px"));
+          expect((await page.locator(".wf-phone-screen").boundingBox())!.height).toBe(640);
+          expect((await page.locator(".wf-phone-screen").boundingBox())!.width).toBe(geometry.screen.width);
+          expect(await page.locator(".wf-input").evaluate((node) => getComputedStyle(node).fontSize)).toBe("20px");
+        });
+      }
+    }
+
+    test(`tall phone scrolls at the short phone's outer size and is the only keyboard stop in ${scheme}`, async ({ page }) => {
+      await show(page, short, { host: "column", scheme });
+      const shortBox = (await page.locator(".wf-phone").boundingBox())!;
+      expect(await focusable(page)).toEqual([]);
+      await show(page, long, { host: "column", scheme });
+      const screen = page.locator(".wf-phone-screen");
+      const longBox = (await page.locator(".wf-phone").boundingBox())!;
+      expect({ width: longBox.width, height: longBox.height }).toEqual({ width: shortBox.width, height: shortBox.height });
+      expect(await screen.evaluate((node) => node.scrollHeight)).toBeGreaterThan(640);
+      expect(await screen.evaluate((node) => node.scrollTop)).toBe(0);
+      expect(await focusable(page)).toEqual(["wf-phone-screen"]);
+      await page.keyboard.press("PageDown");
+      await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+      await page.keyboard.press("Control+End");
+      await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBe(await screen.evaluate((node) => node.scrollHeight - node.clientHeight));
+      await expect(page.locator(".wf-phone-content > .wf-row:last-child")).toBeInViewport();
+      await screen.evaluate((node) => { node.scrollTop = 0; });
+      await page.keyboard.press("ArrowDown");
+      await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+      const ring = await screen.evaluate((node) => {
+        const css = getComputedStyle(node);
+        const box = node.getBoundingClientRect();
+        const phone = node.parentElement!.getBoundingClientRect();
+        const outset = Number.parseFloat(css.outlineWidth) + Number.parseFloat(css.outlineOffset);
+        return {
+          visible: css.outlineStyle === "solid" && outset > 0 && node.matches(":focus-visible"),
+          fits: box.left - outset >= phone.left && box.right + outset <= phone.right && box.top - outset >= phone.top && box.bottom + outset <= phone.bottom,
+        };
+      });
+      expect(ring).toEqual({ visible: true, fits: true });
+    });
+
+    test(`wide rows scroll only inside the phone screen in ${scheme}`, async ({ page }) => {
+      await show(page, `phone\n  row.end\n${"    button Option\n".repeat(25)}`, { host: "column", scheme });
+      const screen = page.locator(".wf-phone-screen");
+      expect(await screen.evaluate((node) => node.scrollWidth)).toBeGreaterThan(360);
+      const root = page.locator(".wf-root");
+      expect(await root.evaluate((node) => node.scrollWidth)).toBe(await root.evaluate((node) => node.clientWidth));
+      expect(await focusable(page)).toEqual(["wf-phone-screen"]);
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => screen.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
+      await screen.evaluate((node) => { node.scrollLeft = node.scrollWidth; });
+      await expect(page.locator(".wf-button").last()).toBeInViewport();
+      expect(await root.evaluate((node) => node.scrollLeft)).toBe(0);
+      expect(await page.locator(".column").evaluate((node) => node.scrollWidth)).toBe(710);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(960);
+    });
+
+    test(`wheel scrolling chains to the document at either end in ${scheme}`, async ({ page }) => {
+      await show(page, long, { host: "column", scheme });
+      await page.locator("#host").evaluate((host) => { host.style.paddingBottom = "2000px"; });
+      const screen = page.locator(".wf-phone-screen");
+      await screen.hover();
+      await page.mouse.wheel(0, 200);
+      await expect.poll(() => screen.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await screen.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+      await page.mouse.wheel(0, 200);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      const documentScroll = await page.evaluate(() => window.scrollY);
+      await screen.evaluate((node) => { node.scrollTop = 0; });
+      await screen.hover();
+      await page.mouse.wheel(0, -200);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(documentScroll);
+      expect(await screen.evaluate((node) => node.scrollTop)).toBe(0);
+    });
+
+    test(`phone decoration and focus use existing theme properties in ${scheme}`, async ({ page }) => {
+      await show(page, short, { host: "column", scheme });
+      await page.locator(".column").evaluate((host) => {
+        host.style.setProperty("--wf-paper", "rgb(10, 20, 30)");
+        host.style.setProperty("--wf-muted", "rgb(40, 50, 60)");
+        host.style.setProperty("--wf-stroke", "2px");
+        host.style.setProperty("--wf-radius-lg", "12px");
+      });
+      const styles = await page.locator(".wf-phone").evaluate((phone) => {
+        const css = getComputedStyle(phone);
+        const screen = getComputedStyle(phone.querySelector(".wf-phone-screen")!);
+        const speaker = getComputedStyle(phone.querySelector(".wf-phone-speaker")!);
+        return { border: css.borderTopWidth, colour: css.borderTopColor, radius: css.borderTopLeftRadius, screen: screen.backgroundColor, speaker: speaker.backgroundColor };
+      });
+      expect(styles).toEqual({ border: "6px", colour: "rgb(40, 50, 60)", radius: "36px", screen: "rgb(10, 20, 30)", speaker: "rgb(40, 50, 60)" });
+      expect((await page.locator(".wf-phone-screen").boundingBox())!.width).toBe(360);
+    });
+  }
+});

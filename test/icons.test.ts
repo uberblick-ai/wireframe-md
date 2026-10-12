@@ -98,7 +98,7 @@ describe("bundled Tabler icons", () => {
   it.each(["row", "card", "text"])("warns and still draws an icon in %s", (parent) => {
     const source = parent === "card" ? "card\n  icon pin" : `page\n  ${parent}\n    icon pin`;
     const result = parseWireframe(source);
-    expect(result.diagnostics).toEqual([{ line: source.split("\n").length, severity: "warning", message: "icon must be directly inside dialog, banner, page, frame, cell or button" }]);
+    expect(result.diagnostics).toEqual([{ line: source.split("\n").length, severity: "warning", message: "icon must be directly inside dialog, banner, page, frame, phone, cell or button" }]);
     expect(renderWireframe(result)!.querySelector('svg[aria-label="pin"]')).not.toBeNull();
   });
 });
