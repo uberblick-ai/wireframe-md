@@ -11,6 +11,10 @@ phone
       image.square Cover
     card width=96
       image.square Cover
+    card width=96
+      image.square Cover
+    card width=96
+      image.square Cover
   row
     text.strong New near you
     button.link

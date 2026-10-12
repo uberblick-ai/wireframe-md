@@ -120,8 +120,8 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: its text goes on `text` lines |
-| `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images and rows; optional `width=` |
+| `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `dock` or a `card` or a `table` | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
@@ -130,7 +130,7 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
 | `toggle` | directly inside a root or a `dock` or a `row` | none | none: its choices are `option` lines |
-| `option` | directly inside a `toggle` | `.current`: the chosen one | the caption |
+| `option` | directly inside a `toggle` | `.current`: the chosen one | the caption; it may hold one icon |
 | `table` | directly inside a root or a `dock` | none | none: it holds rows |
 | `cell` | directly inside a table `row` | `.end`: right-aligned, for times and figures; `.sortable`: muted ↕; `.ascending`: ink ↑; `.descending`: ink ↓ | its text, or none for an empty cell |
 | `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
@@ -423,20 +423,26 @@ phone
   text hub.uberblick.ai
 ```
 
-The rounded outline has a thick bezel and a decorative speaker outside the
-screen. The screen is 360 × 640 CSS px on `--wf-paper`, at the wireframe's start
+The frame looks like a modern iPhone in greyscale: an even 8 px bezel with deep,
+concentric corners, a dark island pill beside `9:41`, reception, Wi-Fi and
+battery icons, and a bottom home indicator. The decoration is the same on every
+phone, hidden from assistive technology and absent from the summary. In narrow
+phones, status items are cut off beside the island rather than overlapping it.
+The screen is 393 × 852 CSS px on `--wf-paper`, at the wireframe's start
 edge. Its size does not scale with `--wf-text-size` and content is never scaled.
-Short content leaves the screen at full height; tall content scrolls vertically
-inside it. Wide content scrolls sideways inside the screen and never widens the
-phone. In a narrower parent the whole phone fits the available width, and the
-screen narrows while staying 640 px tall.
+It reserves a fixed 54 px status band at the top and a 34 px home indicator band
+at the bottom. Short content leaves the screen at full height; tall and wide
+content scrolls inside the area between the bands, never behind decoration and
+never widening the phone. In a narrower parent the whole phone fits the
+available width, and the screen narrows while staying 852 px tall.
 
 Scrolling is native: wheel and touch scrolling continue to the document at
 either end. An overflowing screen is one Tab stop, with a visible focus ring,
 so arrow and Page keys scroll it. A fitting screen adds no Tab stop and no mock
 control takes focus. A screen with an overflowing scroll row is reached through
 that row: browsers focus a scroll container only when no descendant takes focus.
-Up, Down and Page keys in the row still scroll the screen. The summary uses the first direct text, like a page:
+Up, Down and Page keys in the row still scroll the screen. The summary uses
+the first direct text, like a page:
 `Wireframe: phone “General”`, or `Wireframe: phone` without text.
 
 A phone below the top level warns `phone must be at the top level` and still
@@ -447,8 +453,8 @@ their top-level warnings and still draw; write them as separate roots instead.
 A final `dock` pins content to the bottom of the screen; see below. Image labels
 and dock contents never name the phone, so a home screen whose title is inside
 a row summarizes as `Wireframe: phone`. Screen-size options, other device frames,
-author-written status bars, notches, fixed top headers and other floating elements
-are outside the vocabulary.
+configurable or author-written status bars, notches, fixed top headers and other
+floating elements are outside the vocabulary.
 
 ## Images, card rows and docks
 
@@ -514,8 +520,8 @@ phone
 It holds the phone vocabulary with the same placement rules. It is opaque and
 stays across the full screen width at the bottom while content scrolls behind it
 in either direction. Its height is reserved in the scroll range, so the last
-content line clears it at the end. With a decorative home indicator, it sits above
-the indicator. Docks elsewhere warn `dock must be directly inside phone`. A dock
+content line clears it at the end. It sits above the decorative home indicator.
+Docks elsewhere warn `dock must be directly inside phone`. A dock
 followed by another child warns `dock must be its phone's last child` and draws
 at its source position; this includes the first of two docks.
 

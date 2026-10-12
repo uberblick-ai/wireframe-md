@@ -81,12 +81,12 @@ describe("getEmbedStyles", () => {
     expect(css.match(/var\(--wf-/g)).toHaveLength(PROPERTIES.length);
   });
 
-  it("lists every property in the README with its defaults", () => {
+  it("lists every property in THEMING.md with its defaults", () => {
     // A path, as jsdom's URL is not one Node's fs accepts.
-    const readme = readFileSync(join(import.meta.dirname, "../README.md"), "utf8");
+    const theming = readFileSync(join(import.meta.dirname, "../THEMING.md"), "utf8");
     // Rows of the theming tables: | `--wf-name` | what it controls | `light` | `dark` |, or one default for both.
     const documented = new Map(
-      readme
+      theming
         .split("\n")
         .filter((line) => line.startsWith("| `--wf-"))
         .map((line) => {
@@ -135,6 +135,9 @@ describe("getEmbedStyles", () => {
           expect(value).toBe("50%"); // A circle's geometry is independent of theme radii.
         } else if (property === "border-width" && rule.selectors.includes(".wf-root .wf-card.wf-sized")) {
           expect(value).toBe("0");
+        } else if (property === "font-size" && rule.selectors.includes(".wf-root .wf-phone-status")) {
+          // The frame's status time has a fixed pixel size, independent of body type.
+          expect(value).toBe("15px");
         } else if (sized.test(property)) expect(value, `${property}: ${value}`).toMatch(/^(var\(--_wf-|(?:calc|min|inset)\b.*var\(--_wf-)/);
       }
     }

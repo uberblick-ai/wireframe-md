@@ -91,17 +91,30 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
 
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;
-  let phoneScreen: HTMLElement | undefined;
+  let phoneViewport: HTMLElement | undefined;
   switch (node.kind) {
     case "phone": {
       // Device decoration stays outside the native scrolling viewport.
-      const speaker = create(document, "div", ["wf-phone-speaker"]);
-      speaker.setAttribute("aria-hidden", "true");
       const screen = create(document, "div", ["wf-phone-screen"]);
-      phoneScreen = screen;
+      const status = create(document, "div", ["wf-phone-status"]);
+      status.setAttribute("aria-hidden", "true");
+      const time = create(document, "div", ["wf-phone-time"]);
+      time.append(text(document, "span", ["wf-phone-time-text"], "9:41"));
+      const island = create(document, "div", ["wf-phone-island"]);
+      const indicators = create(document, "div", ["wf-phone-indicators"]);
+      for (const name of ["antenna-bars-5", "wifi", "battery-4"]) {
+        indicators.append(icon(document, name, "outline"));
+      }
+      status.append(time, island, indicators);
+      const viewport = create(document, "div", ["wf-phone-viewport"]);
+      phoneViewport = viewport;
       body = create(document, "div", ["wf-phone-content"]);
-      screen.append(body);
-      element.append(speaker, screen);
+      viewport.append(body);
+      const home = create(document, "div", ["wf-phone-home"]);
+      home.setAttribute("aria-hidden", "true");
+      home.append(create(document, "div", ["wf-phone-home-indicator"]));
+      screen.append(status, viewport, home);
+      element.append(screen);
       // Unsupported labels still draw, inside the screen with all other source.
       if (node.label !== "") body.append(text(document, "span", ["wf-text"], node.label));
       break;
@@ -187,8 +200,8 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     if ((node.kind === "button" || node.kind === "option") && child.kind === "icon") continue;
     // Only the valid final dock gets a sticky track. Misplaced docks retain
     // their source position in the content, including the first of two docks.
-    const target = phoneScreen !== undefined && child.kind === "dock" && child === node.children.at(-1)
-      ? phoneScreen : child.kind === "button" && actions !== undefined ? actions : body;
+    const target = phoneViewport !== undefined && child.kind === "dock" && child === node.children.at(-1)
+      ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child));
   }
   if (node.kind === "input" || node.kind === "select") {

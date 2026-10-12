@@ -14,11 +14,19 @@ describe("phone", () => {
     expect(phone.querySelector(".wf-phone-content")!.children).toHaveLength(9);
     expect(phone.querySelector(".wf-field-label")!.textContent).toBe("Name");
     expect(phone.querySelector(".wf-divider")!.getAttribute("role")).toBe("separator");
-    const speaker = phone.querySelector(".wf-phone-speaker")!;
-    expect(speaker.getAttribute("aria-hidden")).toBe("true");
-    expect(speaker.childNodes).toHaveLength(0);
-    expect(speaker.parentElement).toBe(phone);
-    expect(phone.querySelector(".wf-phone-screen")!.contains(speaker)).toBe(false);
+    const viewport = phone.querySelector(".wf-phone-viewport")!;
+    for (const selector of [".wf-phone-status", ".wf-phone-home"]) {
+      const decoration = phone.querySelector(selector)!;
+      expect(decoration.getAttribute("aria-hidden")).toBe("true");
+      expect(viewport.contains(decoration)).toBe(false);
+      expect(decoration.querySelector("[data-line]")).toBeNull();
+    }
+    expect(phone.querySelector(".wf-phone-time")!.textContent).toBe("9:41");
+    expect([...phone.querySelectorAll(".wf-phone-indicators svg")].map((svg) => svg.getAttribute("aria-label")))
+      .toEqual(["antenna bars 5", "wifi", "battery 4"]);
+    expect(phone.querySelectorAll(".wf-phone-indicators .wf-icon-outline")).toHaveLength(3);
+    expect(phone.querySelector(".wf-phone-island")!.childNodes).toHaveLength(0);
+    expect(phone.querySelector(".wf-phone-home-indicator")!.childNodes).toHaveLength(0);
     expect(root.querySelector("[id], [style], [tabindex], a, button, input, script")).toBeNull();
   });
 
@@ -28,7 +36,7 @@ describe("phone", () => {
     expect(parsed.diagnostics.filter((diagnostic) => diagnostic.line === 2)).toEqual([
       { line: 2, severity: "warning", message: "phone must be at the top level" },
     ]);
-    expect(renderWireframe(parsed)!.querySelector('.wf-phone[data-line="2"] .wf-phone-screen')!.textContent).toBe("General");
+    expect(renderWireframe(parsed)!.querySelector('.wf-phone[data-line="2"] .wf-phone-content')!.textContent).toBe("General");
   });
 
   it("warns about unsupported syntax, retains source text and ignores attributes", () => {
@@ -41,7 +49,7 @@ describe("phone", () => {
       { line: 1, severity: "warning", message: "phone takes no label" },
     ]);
     const root = renderWireframe(parsed)!;
-    expect(root.querySelector(".wf-phone-screen")!.textContent).toBe("<script>Child");
+    expect(root.querySelector(".wf-phone-content")!.textContent).toBe("<script>Child");
     expect(root.querySelector("[style], .wf-x, script")).toBeNull();
   });
 

@@ -14,9 +14,9 @@ describe("home screen vocabulary", () => {
     expect(parsed.diagnostics).toEqual([]);
     expect(summarizeWireframe(parsed)).toBe("Wireframe: phone");
     const root = renderWireframe(parsed)!;
-    expect(root.querySelectorAll(".wf-image")).toHaveLength(8);
+    expect(root.querySelectorAll(".wf-image")).toHaveLength(10);
     expect(root.querySelectorAll(".wf-row.wf-scroll")).toHaveLength(2);
-    expect(root.querySelector(".wf-phone-screen > .wf-dock > .wf-toggle")!.children).toHaveLength(4);
+    expect(root.querySelector(".wf-phone-viewport > .wf-dock > .wf-toggle")!.children).toHaveLength(4);
     expect(root.querySelector("a, button, input, script, [tabindex], [onclick], [src], [href]")).toBeNull();
   });
 
@@ -95,7 +95,7 @@ describe("home screen vocabulary", () => {
     expect(warnings(source)).toEqual(["2: dock must be its phone's last child"]);
     const root = render(source);
     expect(root.querySelector(".wf-phone-content > .wf-dock")!.textContent).toBe("Early");
-    expect(root.querySelector(".wf-phone-screen > .wf-dock")!.textContent).toBe("Late");
+    expect(root.querySelector(".wf-phone-viewport > .wf-dock")!.textContent).toBe("Late");
     expect(warnings("phone\n  dock\n  text After")).toEqual(["2: dock must be its phone's last child"]);
   });
 

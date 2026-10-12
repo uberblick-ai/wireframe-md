@@ -10,7 +10,7 @@
 // only inline monospace spans use --wf-mono-font.
 //
 // Public properties:
-//   --wf-ink           text, and the secondary button's caption
+//   --wf-ink           text, the secondary button's caption, phone status and home indicator
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
 //                      an input's placeholder, a select's chevron-down, options but the current one, a table's
 //                      header row, cell.sortable's arrows and chip.more
@@ -27,15 +27,16 @@
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
 //   --wf-neutral-tint  a neutral banner's, frame's, image's and phone bezel's fill;
-//                      --wf-muted is the frame's bar and caption and the phone's outline and speaker
+//                      --wf-muted is the frame's bar and caption and the phone's outline
+//   Phone island: light --wf-ink / dark --wf-danger-ink, solid dark in both schemes
 //   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint,
 //   --wf-success-tint                          a banner's fill
 //   --wf-stroke        border width; icon, select chevron and cell sort strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
-//   --wf-radius-lg     the dialog's card and scrim, a page and a phone screen;
-//                      a phone's outline uses three times it
+//   --wf-radius-lg     the dialog's card and scrim, a page; a phone's outline uses six times it,
+//                      and its concentric screen subtracts the bezel
 //   --wf-text-size     the base type size; spacing, chips and text.small scale with it
 //   --wf-title-size    the dialog's title and a card's direct text.title; other text.title is one and a half
 //                      times it, unless combined with .small
@@ -228,56 +229,57 @@ const STYLES = `.wf-root {
   align-items: stretch;
   align-self: start;
   flex: none;
-  gap: 10px;
   box-sizing: border-box;
-  width: calc(360px + 16px + 6 * var(--_wf-stroke));
+  width: calc(393px + 10px + 6 * var(--_wf-stroke));
   min-width: 0;
   max-width: 100%;
   margin: 0;
-  padding: 12px 8px 16px;
+  padding: 5px;
   border: calc(3 * var(--_wf-stroke)) solid var(--_wf-muted);
-  border-radius: calc(3 * var(--_wf-radius-lg));
+  border-radius: calc(6 * var(--_wf-radius-lg));
   background: var(--_wf-neutral-tint);
 }
 
-.wf-root .wf-phone-speaker {
-  align-self: center;
-  flex: none;
-  width: 48px;
-  max-width: 100%;
-  height: 4px;
-  border-radius: var(--_wf-radius);
-  background: var(--_wf-muted);
-}
-
 .wf-root .wf-phone-screen {
+  display: grid;
+  grid-template-rows: 54px minmax(0, 1fr) 34px;
   flex: none;
   width: 100%;
-  height: 640px;
+  height: 852px;
   min-width: 0;
   margin: 0;
-  border-radius: var(--_wf-radius-lg);
+  border-radius: calc(max(0px, 6 * var(--_wf-radius-lg) - 5px - 3 * var(--_wf-stroke)));
   background: var(--_wf-paper);
+  overflow: hidden;
+}
+
+.wf-root .wf-phone-viewport {
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
   overscroll-behavior: auto;
 }
 
 /* Browsers focus overflowing scroll containers as one stop, like wf-root.
-   Leave the bezel unclipped so the screen's ring stays visible outside it. */
-.wf-root .wf-phone-screen:focus-visible,
-.wf-root .wf-row.wf-scroll:focus-visible {
+   Draw only the screen's themed ring, with the bezel unclipped around it. */
+.wf-root .wf-phone-viewport:focus-visible {
+  outline-style: none;
+}
+
+.wf-root .wf-phone-screen:has(> .wf-phone-viewport:focus-visible) {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: var(--_wf-focus-width);
 }
 
 .wf-root .wf-row.wf-scroll:focus-visible {
+  outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: calc(-1 * var(--_wf-focus-width));
 }
 
 /* The dock remains in flow to reserve its exact content height. A sticky last
    grid track overlays the scrolling content at the bottom, in both axes.
    The zero-minimum column keeps wide content from widening the dock. */
-.wf-root .wf-phone-screen:has(> .wf-dock) {
+.wf-root .wf-phone-viewport:has(> .wf-dock) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 1fr auto;
@@ -294,11 +296,78 @@ const STYLES = `.wf-root {
   background: var(--_wf-paper);
 }
 
-.wf-root .wf-phone-screen > .wf-dock {
+.wf-root .wf-phone-viewport > .wf-dock {
   position: sticky;
   bottom: 0;
   inset-inline-start: 0;
   z-index: 1;
+}
+
+/* Side slots shrink to zero before touching the island. Each clips its own
+   fixed-size content, including at widths narrower than the island itself. */
+.wf-root .wf-phone-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(126px, 100%) minmax(0, 1fr);
+  align-items: start;
+  padding-top: 11px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--_wf-ink);
+  font-size: 15px;
+  line-height: 37px;
+  font-weight: 600;
+}
+
+.wf-root :is(.wf-phone-time, .wf-phone-indicators) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 37px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wf-root .wf-phone-time-text {
+  flex: none;
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+
+.wf-root .wf-phone-island {
+  height: 37px;
+  border-radius: calc(6 * var(--_wf-radius-lg));
+  background: light-dark(var(--_wf-ink), var(--_wf-danger-ink));
+}
+
+.wf-root .wf-phone-indicators {
+  justify-content: flex-start;
+  gap: 3px;
+}
+
+.wf-root .wf-phone-indicators > .wf-icon-glyph {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--_wf-ink);
+}
+
+.wf-root .wf-phone-indicators > .wf-icon-glyph:first-child {
+  margin-inline-start: 8px;
+}
+
+.wf-root .wf-phone-home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.wf-root .wf-phone-home-indicator {
+  width: 134px;
+  max-width: 100%;
+  height: 5px;
+  border-radius: var(--_wf-radius);
+  background: var(--_wf-ink);
 }
 
 .wf-root .wf-phone-content {
