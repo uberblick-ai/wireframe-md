@@ -160,16 +160,23 @@ describe("release checks with fake executables", () => {
 
   it.each([
     changelog.replace("0.4.0 — 2026-10-15", "0.4.0"),
+    changelog.replace("0.4.0 — 2026-10-15", "0.4.0 (beta) — 2026-10-15"),
+    changelog.replace("0.4.0 — 2026-10-15", "0.4.0 anything at all — 2026-10-15"),
+    changelog.replace("0.4.0 — 2026-10-15", "0.4.0  — 2026-10-15"),
     changelog.replace("2026-10-15", "2026-02-29"),
     changelog.replace("2026-10-15", "0000-01-01"),
     changelog.replace("2026-10-15", "2026-13-01"),
     changelog.replace(notes, "\n\n"),
     `${changelog}\n## 0.4.0 — 2026-10-16\nDuplicate.\n`,
     `${changelog}\n## 0.4.0\nUndated duplicate.\n`,
-  ])("rejects absent, invalid, empty or duplicate dated sections", (source) => {
-    const result = fixture({}, source).run();
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain("CHANGELOG check");
+  ])("rejects absent, invalid, empty or duplicate dated sections in both modes", (source) => {
+    for (const args of [["0.4.0", "--check"], ["0.4.0"]]) {
+      const test = fixture({}, source);
+      const result = test.run(args);
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("CHANGELOG check");
+      expect(test.calls().some((call) => call.args.includes("POST"))).toBe(false);
+    }
   });
 
   it("preserves CRLF and an EOF section without a final newline", () => {

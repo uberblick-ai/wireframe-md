@@ -61,7 +61,7 @@ function notesFrom(changelog: string, version: string): string {
   if (candidates.length !== 1) throw new Error(`expected exactly one ## ${version} — YYYY-MM-DD section`);
   const heading = candidates[0];
   const date = heading?.[0].match(/ — (\d{4}-\d{2}-\d{2})$/)?.[1];
-  if (!heading || !date || date.startsWith("0000-") || Number.isNaN(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) {
+  if (!heading || !date || heading[0] !== `## ${version} — ${date}` || date.startsWith("0000-") || Number.isNaN(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) {
     throw new Error(`expected ## ${version} — YYYY-MM-DD with a valid date`);
   }
   const next = headings[headings.indexOf(heading) + 1];
