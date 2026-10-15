@@ -529,6 +529,7 @@ const STYLES = `.wf-root {
 
 /* A content box on paper, with the base radius and no shadow. */
 .wf-root .wf-card {
+  --_wf-card-padding: 1em;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -536,7 +537,7 @@ const STYLES = `.wf-root {
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 1em;
+  padding: var(--_wf-card-padding);
   border: var(--_wf-stroke) solid var(--_wf-line);
   border-radius: var(--_wf-radius);
   background: var(--_wf-paper);
@@ -555,9 +556,21 @@ const STYLES = `.wf-root {
 /* Paint the border inside sized cards, avoiding the browser's minimum 1 px
    border rounding when the entire requested box is only 1 px wide. */
 .wf-root .wf-card.wf-sized {
-  padding: min(calc(1em + var(--_wf-stroke)), calc(var(--_wf-width) / 2));
+  --_wf-card-padding-limit: calc(var(--_wf-width) / 2);
+  padding: min(calc(var(--_wf-card-padding) + var(--_wf-stroke)), var(--_wf-card-padding-limit));
   border-width: 0;
   box-shadow: inset 0 0 0 var(--_wf-stroke) var(--_wf-line);
+}
+
+/* Explicit insets also fit a parent narrower than the declared width. Padding
+   percentages refer to that parent's content width on all four sides. */
+.wf-root .wf-card.wf-sized.wf-padded {
+  --_wf-card-padding-limit: min(calc(var(--_wf-width) / 2), 50%);
+}
+
+/* Scroll-row widths are exact, even when wider than their parent. */
+.wf-root .wf-row.wf-scroll > .wf-card.wf-sized.wf-padded {
+  --_wf-card-padding-limit: calc(var(--_wf-width) / 2);
 }
 
 /* Content is absolutely positioned: labels never affect image geometry. */

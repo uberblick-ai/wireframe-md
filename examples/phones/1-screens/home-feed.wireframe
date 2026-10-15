@@ -32,7 +32,7 @@ phone
   card
     image Promo artwork
   dock
-    card
+    card padding=8
       row
         image.square Cover
         text Now playing · 32:44

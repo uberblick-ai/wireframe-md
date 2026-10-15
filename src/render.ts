@@ -1,5 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
-import { widthPixels } from "./attributes.js";
+import { paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
@@ -86,6 +86,14 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
         element.classList.add("wf-sized");
         element.style.setProperty("--_wf-width", `${width}px`);
       }
+    }
+  }
+
+  if (node.kind === "card") {
+    const padding = paddingPixels(node.attributes.find((attribute) => attribute.key === "padding")?.value);
+    if (padding !== undefined) {
+      element.classList.add("wf-padded");
+      element.style.setProperty("--_wf-card-padding", `${padding}px`);
     }
   }
 

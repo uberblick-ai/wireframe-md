@@ -1,5 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { widthPixels } from "./attributes.js";
+import { paddingPixels, widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
 
@@ -201,14 +201,19 @@ function checkNode(
   }
   const seenAttributes = new Set<string>();
   for (const { key, value } of node.attributes) {
-    if (key !== "label" && key !== "width") {
-      warn(`unknown attribute ${quote(key)}: expected label on input or select, or width on page, card or image (quote a label that starts with word=)`);
+    if (key !== "label" && key !== "width" && key !== "padding") {
+      warn(`unknown attribute ${quote(key)}: expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)`);
       continue;
     }
     if (seenAttributes.has(key)) warn(`repeated attribute ${quote(key)}: the first value is used`);
     seenAttributes.add(key);
     if (key === "label") {
       if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
+    } else if (key === "padding") {
+      if (kind !== "card") warn('attribute "padding" is only allowed on card');
+      else if (paddingPixels(value) === undefined) {
+        warn(`invalid padding ${quote(value)}: expected a whole number of pixels from 0 to 64, such as padding=8`);
+      }
     } else if (!["page", "card", "image"].includes(kind)) {
       warn('attribute "width" is only allowed on page, card or image');
     } else if (widthPixels(value) === undefined) {

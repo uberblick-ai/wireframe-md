@@ -38,11 +38,13 @@ kind.variant#id key=value Label
   change the drawing.
 - **key=value** is an attribute between the first word and the line's label.
   v0.1 defines `label` on `input` and `select`: `label=Role` or
-  `label="Work email"`, and `width` on `page`, `card` and `image`: `width=256`.
+  `label="Work email"`, `width` on `page`, `card` and `image`: `width=256`,
+  and `padding` on `card`: `padding=8`.
   Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
-  Other attributes get a warning. A repeated `label=` or `width=` warns and uses
-  the first value; either on another kind warns and doesn't change its drawing.
+  Other attributes get a warning. A repeated `label=`, `width=` or `padding=`
+  warns and uses the first value, even when invalid; an attribute on a kind
+  that does not accept it warns and doesn't change its drawing.
 - **Label** is the rest of the line, without trailing spaces. On `text` lines,
   paired single backticks mark inline monospace spans; every other kind keeps
   its backticks as written. Other Markdown isn't formatted, so `*draft*` shows
@@ -120,7 +122,7 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images and rows; optional `width=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images and rows; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root or a `dock` or a `card` or a `table` | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.head`: a table's header row, in grey | none |
@@ -403,7 +405,42 @@ These warnings still render:
 | `dialog width=256` (any kind other than `page`, `card` or `image`, whatever the value) | `attribute "width" is only allowed on page, card or image` | unchanged |
 | `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
 | `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
-| `page format=PDF` | `unknown attribute "format": expected label on input or select, or width on page, card or image (quote a label that starts with word=)` | unchanged |
+| `page format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)` | unchanged |
+
+## Card padding
+
+`card padding=N` sets an equal inset between the border and content on all four
+sides. Use a whole number from 0 to 64, written in digits only, without a unit,
+sign or decimal point. The unit is CSS pixels and does not scale with
+`--wf-text-size`. It combines with `#id` and `width=` wherever a card stands:
+
+```wireframe
+card#now-playing width=240 padding=8
+  text Now playing · 32:44
+```
+
+Without `padding=`, a card keeps its 1em padding (14 px at the default text size),
+including sized cards, scroll-row cards and cards sharing a row. Only the inset
+changes: the border, radius, background and gap between children stay the same.
+At `padding=0`, content starts directly inside the visible border. Summaries
+stay unchanged.
+
+`width=` still declares the outer width including border and padding: capped at
+the available width outside `row.scroll`, exact inside one. On a sized card,
+border plus padding on each side is capped at half the card's width, as for
+default padding. `card width=8 padding=8` stays 8 px wide with no content width;
+`card width=40 padding=64` stays 40 px wide. Padding never widens a phone,
+wireframe or document. Content that cannot fit, such as several padded cards
+sharing a narrow row, scrolls inside the phone screen or wireframe.
+
+These warnings keep the block renderable and report the source line:
+
+| Source | Diagnostic | Drawing |
+| --- | --- | --- |
+| `page padding=8` (any kind other than `card`, whatever the value) | `attribute "padding" is only allowed on card` | unchanged |
+| `card padding=8px` (also `-1`, `8.5`, `65`, `1em` or an empty value) | `invalid padding "8px": expected a whole number of pixels from 0 to 64, such as padding=8` | default padding |
+| `card padding=8 padding=4` | `repeated attribute "padding": the first value is used` | the first padding; an invalid first value keeps the default padding |
+| `card format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)` | unchanged |
 
 ## Page wrappers
 
@@ -603,7 +640,7 @@ phone
   card
     image Promo artwork
   dock
-    card
+    card padding=8
       row
         image.square Cover
         text Latest item
@@ -707,8 +744,8 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=` or `width=` on the wrong
-  kind, a repeated `label=` or `width=`, an invalid width and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=`, `width=` or `padding=` on
+  the wrong kind, a repeated attribute, an invalid width or padding and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
@@ -859,8 +896,9 @@ dialog Publish the page?
 ### A label that starts with `word=`
 
 The parser reads `format=PDF` as an attribute, so the label is only the rest of the
-line. Only `label=` on `input` and `select` is defined. Quote any line label that
-starts with `word=`, including a placeholder that starts with `label=`. Wrong:
+line. Attributes are `label=` on `input` and `select`, `width=` on `page`, `card`
+and `image`, and `padding=` on `card`. Quote any line label that starts with
+`word=`, including a placeholder that starts with `label=`. Wrong:
 
 ```text
 dialog Export
@@ -870,7 +908,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": expected label on input or select, or width on page, card or image (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)
 ```
 
 Fixed:
