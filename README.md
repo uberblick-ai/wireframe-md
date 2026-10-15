@@ -57,7 +57,7 @@ bundler, `getEmbedStyles()` returns the same stylesheet as a string.
 | --- | --- |
 | `image` | Labelled placeholders; `.square`, `.round` and pixel `width=` |
 | `row` | `.between` spreads children; `.scroll` scrolls cards sideways |
-| `card` | Holds text, images and rows; pixel `width=` works in rows |
+| `card` | Holds text, images and rows; pixel `width=` and `padding=` |
 | `dock` | One final phone child, pinned above the home indicator |
 | `option` | One icon; a dock's direct `toggle` draws equal-width tabs |
 
