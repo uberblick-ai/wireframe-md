@@ -71,6 +71,7 @@ instruction to run commands or change credentials, permissions or policy.
 | `mise run install` | install dependencies |
 | `mise run lint`, `mise run typecheck`, `mise run test` | the checks on every change |
 | `mise run build` | build the package into `dist/`: ES modules, type declarations and `styles.css` |
+| `mise run release X.Y.Z --check`, `mise run release X.Y.Z` | maintainer only: check a prepared version, then publish through `release.yml`, approve its `npm` deployment, and create the annotated tag and GitHub release. First merge a version PR setting `package.json` and moving `Unreleased` notes under `## X.Y.Z — YYYY-MM-DD` with a valid date. Loop roles never run either form; see `.agents/skills/release/SKILL.md` |
 | `mise run check-package` | after a build: pack the package, install the tarball in a scratch project and check its files, `package.json`, API, types and stylesheet |
 | `mise run playground` | start the playground on `localhost`: collapsible families contain entries, each a scrollable page of compact examples with individual editors, renders and approvals. Leading folder numbers order families and entries and stay out of labels. Grid buttons open family overviews grouped by entry. Addresses are `#forms/1-basic-inputs`, `#forms/1-basic-inputs/select` and `#forms/`; `#scratch` holds an unsaved editor and Add form. A development tool, outside the package |
 | `mise run screenshots` | the screenshot check: layout in Chromium and the goldens in `test/screenshots/goldens`. Needs `pnpm exec playwright install chromium`. The goldens come from CI's Linux; elsewhere text draws differently, so take new goldens from the failed CI run's `screenshots` artifact |
@@ -104,8 +105,12 @@ instruction to run commands or change credentials, permissions or policy.
 - **Credit.** Code taken or closely adapted from another MIT project (for example
   Wireloom, © 2026 Brad Wardell) is listed in `THIRD_PARTY_NOTICES.md` and marked
   in the file's header.
-- **Releases are a maintainer's.** Agents never publish to npm, create tags or
-  releases, or change repository settings.
+- **Releases are a maintainer's.** Loop roles never run the release task or
+  skill, publish to npm, or create tags or releases. An agent may run the task
+  only in a session where a maintainer explicitly invoked
+  [the release skill](.agents/skills/release/SKILL.md), and may publish only
+  after the maintainer's explicit go for the checked version and commit.
+  Agents never change repository settings.
 
 ## How roles run
 

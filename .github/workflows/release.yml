@@ -6,13 +6,19 @@ name: Release
 #
 # To release (a maintainer):
 #   1. Merge a pull request that sets "version" in package.json and moves the
-#      CHANGELOG.md lines under Unreleased into that version's entry. For
-#      0.1.0, both are already in place.
-#   2. Run this workflow on main and type that version to confirm it: Actions,
-#      Release, Run workflow, or
-#        gh workflow run release.yml --ref main -f version=0.1.0
-#   3. Approve the deployment to the `npm` environment when it asks.
-#   Tagging the commit and writing the GitHub release stay by hand.
+#      CHANGELOG.md lines under Unreleased into a non-empty dated section:
+#        ## X.Y.Z — YYYY-MM-DD
+#   2. From a clean checkout at current origin/main, run:
+#        mise run release X.Y.Z --check
+#      Review the checked commit and verbatim notes, then publish:
+#        mise run release X.Y.Z
+#   3. Open the printed workflow URL and approve its `npm` deployment. The
+#      command waits for that run to succeed on the checked commit, then creates
+#      and pushes the annotated tag and creates the GitHub release with the notes.
+#   The release skill in .agents/skills/release/SKILL.md requires the maintainer's
+#   explicit go for the checked version and commit. Loop roles never run it.
+#   On failure, inspect the reported finished/remaining steps and remote state;
+#   finish manually. Never rerun publication or move/delete a pushed tag.
 #
 # One-time setup (a maintainer):
 #   - Create the environment `npm` in this repository's settings. Add required

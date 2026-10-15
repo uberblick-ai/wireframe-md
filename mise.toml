@@ -23,6 +23,10 @@ run = "pnpm test"
 description = "Build the package into dist: ES modules, type declarations and styles.css"
 run = "pnpm build"
 
+[tasks.release]
+description = "Maintainer only: release a prepared X.Y.Z; --check prints go/no-go and notes without publishing"
+run = "node scripts/release.ts"
+
 [tasks.check-package]
 description = "Pack the built package, install the tarball in a scratch project and check its contents, API, types and stylesheet"
 run = "pnpm check:package"
