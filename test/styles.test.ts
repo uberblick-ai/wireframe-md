@@ -137,7 +137,7 @@ describe("getEmbedStyles", () => {
       for (const [property, value] of rule.declarations) {
         if (property.startsWith("--")) continue;
         expect(value, `${property}: ${value}`).not.toMatch(literalColour);
-        if (property === "border-radius" && rule.selectors.includes(".wf-root .wf-image.wf-round")) {
+        if (property === "border-radius" && rule.selectors.some((selector) => [".wf-root .wf-image.wf-round", ".wf-root .wf-window-light"].includes(selector))) {
           expect(value).toBe("50%"); // A circle's geometry is independent of theme radii.
         } else if (property === "border-width" && rule.selectors.includes(".wf-root .wf-card.wf-sized")) {
           expect(value).toBe("0");

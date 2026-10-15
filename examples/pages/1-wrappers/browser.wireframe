@@ -1,0 +1,29 @@
+page.browser acme.example/pricing
+  row.between
+    text.strong Acme
+    toggle
+      option Product
+      option.current Pricing
+      option Docs
+  text.title Pricing that grows with your team
+  text.muted Start free. Upgrade when you need more.
+  row
+    card
+      text.title Free
+      text $0 per month
+      row
+        button Start free
+    card
+      text.title Team
+      text $12 per seat a month
+      row
+        button.primary Try Team
+    card
+      text.title Enterprise
+      text Custom pricing
+      row
+        button Contact sales
+  divider
+  row.between
+    text.small.muted © 2026 Acme
+    text.small.muted Privacy · Terms

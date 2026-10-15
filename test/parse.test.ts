@@ -621,7 +621,7 @@ describe("warnings", () => {
       "        chip.danger web",
     ].join("\n");
     expect(warnings(source)).toEqual([
-      warning(1, 'unknown variant ".wide": page takes no variants'),
+      warning(1, 'unknown variant ".wide" on page: expected .browser or .window'),
       warning(2, 'unknown variant ".large": input takes no variants'),
       warning(3, 'unknown variant ".open": select takes no variants'),
       warning(4, 'unknown variant ".small": toggle takes no variants'),

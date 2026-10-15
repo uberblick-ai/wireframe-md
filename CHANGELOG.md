@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Pages support decorative browser chrome with an address (`page.browser`) and
+  macOS window chrome with a centred title (`page.window`). Both keep the page's
+  content, width and fit rules, use the existing theme properties and remain
+  inert. Long chrome labels ellipsize; accessible summaries name the variant.
+
 - Cards accept `padding=0` through `padding=64` for an equal inset in CSS pixels
   on all four sides. Sized cards cap border plus padding at half their width;
   cards without the attribute keep their 1em inset. Invalid, misplaced and

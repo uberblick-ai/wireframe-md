@@ -1,0 +1,6 @@
+page width=360
+  text.title Sign in
+  input label=Email you@company.com
+  input label=Password Password
+  row.end
+    button.primary Continue

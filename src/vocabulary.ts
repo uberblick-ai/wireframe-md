@@ -27,6 +27,7 @@ export interface KindRule {
 export const CELL_SORT_VARIANTS: readonly string[] = ["sortable", "ascending", "descending"];
 export const ROW_LAYOUT_VARIANTS: readonly string[] = ["end", "between", "scroll"];
 export const IMAGE_SHAPE_VARIANTS: readonly string[] = ["square", "round"];
+export const PAGE_CHROME_VARIANTS: readonly string[] = ["browser", "window"];
 export const HUE_VARIANTS: readonly string[] = ["red", "amber", "green", "blue"];
 const TEXT_COLOURS: readonly string[] = ["muted", ...HUE_VARIANTS];
 
@@ -39,8 +40,8 @@ export function colourVariants(kind: string): readonly string[] {
 export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["dialog", { place: ["top"], variants: [], label: true }],
   ["banner", { place: ["top"], variants: ["neutral", "info", "warning", "danger", "success"], label: false }],
-  // Its title is a text.title line.
-  ["page", { place: ["top"], variants: [], label: false }],
+  // Only chrome variants take a label; the content title is a text.title line.
+  ["page", { place: ["top"], variants: PAGE_CHROME_VARIANTS, label: true }],
   ["frame", { place: ["top"], variants: [], label: true }],
   ["phone", { place: ["top"], variants: [], label: false }],
   ["dock", { place: ["phone"], variants: [], label: false }],

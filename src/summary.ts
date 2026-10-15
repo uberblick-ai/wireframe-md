@@ -1,5 +1,6 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { textRuns } from "./text.js";
+import { PAGE_CHROME_VARIANTS } from "./vocabulary.js";
 
 // Strongest first, as the stylesheet's later tone rules win.
 const TONES: readonly string[] = ["danger", "warning", "info", "success"];
@@ -28,6 +29,7 @@ function describe(node: WireframeNode): string {
 
 function name(node: WireframeNode): string {
   if (node.kind === "") return "unnamed node";
+  if (node.kind === "page") return node.variants.find((variant) => PAGE_CHROME_VARIANTS.includes(variant)) ?? "page";
   if (node.kind !== "banner") return node.kind;
   const tone = TONES.find((variant) => node.variants.includes(variant));
   return tone === undefined ? "banner" : `${tone} banner`;
