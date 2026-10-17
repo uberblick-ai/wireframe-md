@@ -723,6 +723,11 @@ const STYLES = `.wf-root {
   justify-content: space-between;
 }
 
+/* A nested layout row stays content-width and shrinks so its text can wrap. */
+.wf-root .wf-row.wf-row-group {
+  flex: 0 1 auto;
+}
+
 .wf-root .wf-row > .wf-card {
   flex: 1 1 0;
 }

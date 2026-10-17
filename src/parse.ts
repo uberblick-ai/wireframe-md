@@ -272,10 +272,11 @@ function checkNode(
     warn(`${kind} must be ${top}directly inside ${inside(rule.place.filter((place) => place !== "top"))}`);
   }
   else if (kind === "row") {
-    const misplaced = place === "table" ? ROW_LAYOUT_VARIANTS : ["head"];
-    const expected = place === "table" ? inside(["root", "dock", "card"]) : "table";
-    for (const variant of misplaced) {
-      if (node.variants.includes(variant)) warn(`row.${variant} must be directly inside ${expected}`);
+    if (place !== "table" && node.variants.includes("head")) warn("row.head must be directly inside table");
+    if (place === "table" || place === "row") {
+      for (const variant of ROW_LAYOUT_VARIANTS) {
+        if (node.variants.includes(variant)) warn(`row.${variant} must be directly inside ${inside(["root", "dock", "card"])}`);
+      }
     }
   }
 }

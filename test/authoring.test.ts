@@ -160,7 +160,9 @@ describe("AUTHORING.md", () => {
       it(`says where ${kind} stands, its variants and its label`, () => {
         const row = rows.get(kind);
         expect(row).toBeDefined();
-        expect(row!.where).toBe(where(rule));
+        expect(row!.where).toBe(kind === "row"
+          ? "directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row"
+          : where(rule));
         expect(backticked(row!.variants, /`\.([a-z-]+)`/g)).toEqual(rule.variants);
         if (rule.variants.length === 0) expect(row!.variants).toBe("none");
         expect(row!.label.startsWith("none")).toBe(!rule.label);

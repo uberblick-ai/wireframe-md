@@ -40,6 +40,8 @@ describe("summarizeWireframe", () => {
   it("does not name a root by text in a row", () => {
     expect(summary("page\n  row.end\n    text.muted 1–10 of 24\n    button Next")).toBe("Wireframe: page");
     expect(summary("page\n  row\n    text.title In a row\n  text Direct text")).toBe("Wireframe: page “Direct text”");
+    expect(summary("card\n  row.between\n    row\n      text.strong Ana Lopez\n      text.small.muted 2 h ago\n    button Resolve")).toBe("Wireframe: card");
+    expect(summary("card\n  row\n    row\n      text.title Nested title\n  text Comment body")).toBe("Wireframe: card “Comment body”");
   });
 
   it("names a frame by its caption label, without falling back to body text", () => {
