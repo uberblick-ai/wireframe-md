@@ -16,7 +16,8 @@ requirement.
 - **MCP corpus:** the format's intended behavior, its samples and its decision
   records live in the project's Uberblick workspace, bound in `.uberblick.json`
   and served by the `wireframe-corpus` MCP server from `.mcp.json`. Start from the
-  documents pinned in the sidebar (`get_sidebar`); discover the rest with
+  pinned Format v0.1 entry page's index (`get_sidebar`), then open only the
+  focused reference page the task needs. Discover other documents with
   `list_docs` and `search`, and decisions with `list_docs` and `kind: decision`.
   Cite documents by the title and UUID you discover; never pin UUIDs in
   repository files.
