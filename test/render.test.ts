@@ -331,6 +331,24 @@ describe("kinds and variants", () => {
     ]);
   });
 
+  it("draws nested rows as one group and preserves its children's text styles", () => {
+    expect(drawn("card\n  row.between\n    row\n      text.strong Ana Lopez\n      text.small.muted 2 h ago\n    button.link ✓ Resolve")).toEqual([
+      "div.wf-card",
+      "  div.wf-row.wf-between",
+      "    div.wf-row.wf-row-group",
+      "      div.wf-text.wf-strong Ana Lopez",
+      "      div.wf-text.wf-small.wf-muted 2 h ago",
+      "    span.wf-button.wf-link",
+      "      span.wf-button-caption ✓ Resolve",
+    ]);
+  });
+
+  it.each(["end", "between", "scroll", "end.between.scroll"])("draws a nested row.%s as a plain group", (variants) => {
+    const plain = render("card\n  row.between\n    row\n      text Name\n    button Resolve");
+    const warned = render(`card\n  row.between\n    row.${variants}\n      text Name\n    button Resolve`);
+    expect(warned.outerHTML).toBe(plain.outerHTML);
+  });
+
   it.each([
     ["sortable", "M8 13V3M4 7l4-4 4 4M4 9l4 4 4-4"],
     ["ascending", "M8 13V3M4 7l4-4 4 4"],

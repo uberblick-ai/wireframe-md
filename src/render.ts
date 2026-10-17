@@ -55,9 +55,10 @@ export function renderWireframe(
   }
 }
 
-function draw(document: Document, node: WireframeNode): HTMLElement {
+function draw(document: Document, node: WireframeNode, parent?: WireframeNode, grandparent?: WireframeNode): HTMLElement {
   const rule = KINDS.get(node.kind);
   if (rule === undefined) return unknown(document, node);
+  const rowGroup = node.kind === "row" && parent?.kind === "row" && grandparent?.kind !== "table";
   const sortIndex = node.kind === "cell"
     ? node.variants.findIndex((variant) => CELL_SORT_VARIANTS.includes(variant))
     : -1;
@@ -69,11 +70,13 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants
     .filter((variant, index) => rule.variants.includes(variant) &&
+      (!rowGroup || !ROW_LAYOUT_VARIANTS.includes(variant)) &&
       (!colours.includes(variant) || index === colourIndex) &&
       (!exclusive.includes(variant) || index === exclusiveIndex) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
+  if (rowGroup) element.classList.add("wf-row-group");
   element.dataset.line = String(node.line);
   if (node.kind === "divider") element.setAttribute("role", "separator");
   if (["page", "card", "image"].includes(node.kind)) {
@@ -201,7 +204,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
         element.classList.add("wf-has-icon");
         if (node.kind === "button" && node.label === "") element.classList.add("wf-icon-only");
       }
-      for (const child of icons) element.append(draw(document, child));
+      for (const child of icons) element.append(draw(document, child, node, parent));
       if (node.label !== "") {
         element.append((node.kind === "option" && icons.length > 0) || node.variants.includes("link")
           // A separate caption permits a dock's tab bar to stack icon and text.
@@ -235,7 +238,7 @@ function draw(document: Document, node: WireframeNode): HTMLElement {
     // their source position in the content, including the first of two docks.
     const target = phoneViewport !== undefined && child.kind === "dock" && child === node.children.at(-1)
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
-    target.append(draw(document, child));
+    target.append(draw(document, child, node, parent));
   }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
@@ -259,7 +262,7 @@ function unknown(document: Document, node: WireframeNode): HTMLElement {
   if (node.kind !== "") head.append(text(document, "span", ["wf-unknown-kind"], node.kind));
   if (node.label !== "") head.append(text(document, "span", ["wf-unknown-label"], node.label));
   if (head.hasChildNodes()) element.append(head);
-  for (const child of node.children) element.append(draw(document, child));
+  for (const child of node.children) element.append(draw(document, child, node));
   return element;
 }
 

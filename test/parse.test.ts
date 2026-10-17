@@ -477,11 +477,10 @@ describe("warnings", () => {
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
       warning(1, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
-      warning(2, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
+      warning(2, "row must be directly inside dialog, banner, page, frame, phone, dock, card, row or table"),
       warning(3, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(4, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
       warning(5, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
     ]);
   });
@@ -571,6 +570,27 @@ describe("warnings", () => {
     expect(warnings("page\n  row.end\n    text.small.muted 1–10 of 24\n    text.strong Count\n    text.title Title\n    button Next")).toEqual([]);
   });
 
+  it("accepts plain row groups with the same children as a non-table row", () => {
+    for (const row of ["row", "row.end", "row.between", "row.scroll"]) {
+      expect(warnings(`page\n  ${row}\n    row\n      button.link\n        icon user-circle\n      text.strong Ana Lopez\n      text.small.muted 2 h ago\n      card\n        text Preview\n      image.round Avatar\n      input Hint\n      select Value\n      toggle\n        option Choice\n      chip Tag\n      row\n        button More\n    button.link ✓ Resolve`)).toEqual([]);
+    }
+  });
+
+  it.each(["end", "between", "scroll"])("warns about row.%s in a nested group", (variant) => {
+    expect(warnings(`card\n  row.between\n    row.${variant}\n      text Name\n    button Resolve`)).toEqual([
+      warning(3, `row.${variant} must be directly inside dialog, banner, page, frame, phone, dock or card`),
+    ]);
+  });
+
+  it("keeps the header warning for a nested row and placement warnings outside rows", () => {
+    expect(warnings("page\n  row\n    row.head")).toEqual([
+      warning(3, "row.head must be directly inside table"),
+    ]);
+    expect(warnings("page\n  table\n    row\n      cell\n        row")).toEqual([
+      warning(5, "row must be directly inside dialog, banner, page, frame, phone, dock, card, row or table"),
+    ]);
+  });
+
   it("warns about any kind but cell in a table row", () => {
     const source = [
       "page",
@@ -658,7 +678,7 @@ describe("errors", () => {
       error(2, "indentation must be a multiple of two spaces, found 3"),
       error(3, "indentation must be a multiple of two spaces, found 1"),
       // Recovered at depth 0, a row is out of place too.
-      warning(3, "row must be directly inside dialog, banner, page, frame, phone, dock, card or table"),
+      warning(3, "row must be directly inside dialog, banner, page, frame, phone, dock, card, row or table"),
     ]);
   });
 

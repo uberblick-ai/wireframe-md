@@ -125,7 +125,7 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images and rows; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
-| `row` | directly inside a root or a `dock` or a `card` or a `table` | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.head`: a table's header row, in grey | none |
+| `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; these three belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
@@ -615,6 +615,34 @@ at the available space. Inside a scroll row it is exact. A card without a width
 is 144 px in a scroll row; in another row unsized cards share the room equally.
 
 `row.between` puts the first child at the start and the last at the end.
+A plain `row` directly inside a non-table `row` is an invisible group: it counts
+as one child of the outer row, takes its content's width, and holds anything a
+non-table row holds. Its children sit side by side, vertically centred, with the
+usual row gap. The group has no border, fill, padding or margin. In a narrow
+card, text wraps between words inside the group while a trailing action stays
+at the end; the header does not widen the card or wireframe. Text keeps its
+variants and does not name the root in its accessible summary.
+
+Use a group to keep an icon, author and timestamp together beside an action:
+
+```wireframe
+card width=400
+  row.between
+    row
+      button.link
+        icon user-circle
+      text.strong Ana Lopez
+      text.small.muted 2 h ago
+    button.link ✓ Resolve
+  text Ten feels low. Could we do twenty?
+```
+
+This also fits at `card width=240`. `.end`, `.between` or `.scroll` on the inner
+row warns that it must be directly inside `dialog`, `banner`, `page`, `frame`,
+`phone`, `dock` or `card`, and draws a plain group. `.head` still warns that it
+must be directly inside a table. A row in a cell or any other unsupported place
+still warns; a table row continues to hold only cells.
+
 `row.scroll` keeps children on one line at their own width without shrinking.
 Only the row scrolls sideways; it never widens its root, screen or wireframe.
 Overflowing children are cut at the row's edge. Directly inside a phone it runs

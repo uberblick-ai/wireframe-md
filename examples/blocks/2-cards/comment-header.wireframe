@@ -1,0 +1,19 @@
+card width=400
+  row.between
+    row
+      button.link
+        icon user-circle
+      text.strong Ana Lopez
+      text.small.muted 2 h ago
+    button.link ✓ Resolve
+  text Ten feels low. Could we do twenty?
+
+card width=240
+  row.between
+    row
+      button.link
+        icon user-circle
+      text.strong Ana Lopez
+      text.small.muted 2 h ago
+    button.link ✓ Resolve
+  text Ten feels low. Could we do twenty?

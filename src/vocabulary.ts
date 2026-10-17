@@ -48,8 +48,8 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["card", { place: ["top", "root", "dock", "row"], variants: [], label: false }],
   ["image", { place: ["root", "dock", "card", "row"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
   ["text", { place: ["root", "dock", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS], label: true }],
-  // Inside a table, a row is a table row of cells: .head there, .end outside one.
-  ["row", { place: ["root", "dock", "card", "table"], variants: ["end", "between", "scroll", "head"], label: false }],
+  // Inside a table, a row holds cells; inside a layout row, it is a plain group.
+  ["row", { place: ["root", "dock", "card", "row", "table"], variants: ["end", "between", "scroll", "head"], label: false }],
   ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.

@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Plain rows can group content inside a non-table row. An author, icon and
+  timestamp stay together beside a trailing action in `row.between`, with text
+  wrapping inside the group at narrow widths. Layout variants on the inner row
+  warn and draw a plain group.
+
 - Pages support decorative browser chrome with an address (`page.browser`) and
   macOS window chrome with a centred title (`page.window`). Both keep the page's
   content, width and fit rules, use the existing theme properties and remain
