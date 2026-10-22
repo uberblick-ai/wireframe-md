@@ -257,9 +257,10 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
         line.append(child);
       }
     }
-    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized") !== null) {
+    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized, :scope > .wf-banner-line .wf-banner-wrap") !== null) {
       // Measure the image cap against available space, independently of the
       // banner expanding to enclose the image and its neighbouring content.
+      // Nested sized banners need the outer boundary even without a direct image.
       // A size container cannot supply an intrinsic width. Keep a hidden sizing
       // copy beside it so shrink-to-fit hosts can still measure the content.
       const intrinsic = create(document, "div", ["wf-banner-intrinsic"]);

@@ -998,7 +998,7 @@ const STYLES = `.wf-root {
 /* A sized image caps at the space offered to the banner, before neighbouring
    content can widen its border. Query units keep that cap definite during
    intrinsic sizing; a percentage of the growing flex line would be circular.
-   Only banners with direct sized images need this extra sizing container.
+   Banners with direct or nested sized images need this sizing container.
    Its sibling supplies the intrinsic width that size containment removes. */
 .wf-root .wf-banner-wrap {
   display: grid;
@@ -1010,6 +1010,12 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-banner-wrap > * {
   grid-area: 1 / 1;
+}
+
+/* A misplaced banner in a row must keep room for its content instead of
+   shrinking its contained box to zero underneath the following sibling. */
+.wf-root .wf-row > .wf-banner-wrap {
+  flex-shrink: 0;
 }
 
 .wf-root .wf-banner-intrinsic {

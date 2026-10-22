@@ -81,6 +81,19 @@ describe("tabs", () => {
     expect(intrinsic.querySelector("[data-line], .wf-tabs, .wf-banner-intrinsic")).toBeNull();
   });
 
+  it("keeps one source annotation per node when an unsized banner inherits a nested sizing boundary", () => {
+    const parsed = parseWireframe("banner\n  text Outer\n  banner\n    image width=80 Preview\n    text Draft\n  tabs\n    option.current Overview");
+    const root = renderWireframe(parsed)!;
+    expect(root.firstElementChild!.className).toBe("wf-banner-wrap");
+    expect(root.querySelectorAll(".wf-banner[data-line]")).toHaveLength(2);
+    expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(["1", "2", "3", "4", "5", "6", "7"]);
+    const copy = root.querySelector(":scope > .wf-banner-wrap > .wf-banner-intrinsic")!;
+    expect(copy.getAttribute("aria-hidden")).toBe("true");
+    expect(copy.querySelector("[data-line], .wf-banner-size, .wf-tabs")).toBeNull();
+    expect(copy.querySelectorAll(".wf-banner-intrinsic")).toHaveLength(1);
+  });
+
   it("keeps toggle and dock behavior when several options are current", () => {
     for (const prefix of ["page\n  toggle\n", "phone\n  dock\n    toggle\n"]) {
       const indent = prefix.includes("dock") ? "      " : "    ";

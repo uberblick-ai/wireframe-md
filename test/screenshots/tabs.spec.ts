@@ -257,6 +257,8 @@ for (const scheme of ["light", "dark"] as const) {
   }
 
   for (const [name, source, declaredWidths] of [
+    ["an unsized outer with actions", "banner.warning\n  icon alert-triangle\n  text Sync paused\n  banner\n    image width=80 Preview\n    text Draft\n  row.end\n    button Retry\n    button Dismiss\n    button Details", [80]],
+    ["an unsized outer with two texts", "banner.warning\n  text.strong Offline\n  text Your changes will sync when you reconnect to the network.\n  banner\n    image width=80 Preview\n    text Draft", [80]],
     ["two levels", "banner\n  image width=100 Outer\n  text Outer\n  banner\n    image width=200 Inner\n    text Inner banner text that is fairly long", [100, 200]],
     ["three levels", "banner\n  image width=60 A\n  text One\n  banner\n    image width=80 B\n    text Two\n    banner\n      image width=120 C\n      text Three levels deep", [60, 80, 120]],
     ...[3, 4].map((depth) => [
@@ -276,11 +278,19 @@ for (const scheme of ["light", "dark"] as const) {
               rootWidth: root.getBoundingClientRect().width,
               overflow: root.scrollWidth - root.clientWidth,
               widths: [...root.querySelectorAll(".wf-image[data-line]")].map((image) => image.getBoundingClientRect().width),
+              enclosures: [...root.querySelectorAll(".wf-banner[data-line]")].map((banner) => {
+                const box = banner.getBoundingClientRect();
+                return [...banner.querySelectorAll(":scope > .wf-banner-line > *")].every((child) => {
+                  const rect = child.getBoundingClientRect();
+                  return rect.left >= box.left && rect.right <= box.right;
+                });
+              }),
             }));
             expect(geometry.widths, `${layout}, ${width}, tabs=${tabs !== ""}`).toEqual(declaredWidths);
             expect(geometry.rootWidth).toBeLessThanOrEqual(width);
+            expect(geometry.enclosures.every(Boolean)).toBe(true);
             if (width === 710) expect(geometry.overflow).toBe(0);
-            else expect(geometry.overflow).toBeGreaterThan(0);
+            else if (!name.startsWith("an unsized")) expect(geometry.overflow).toBeGreaterThan(0);
             if (name === "two levels") await expect(page.locator(".wf-root")).toContainText("Inner", { useInnerText: true });
             measurements.push(geometry);
           }
@@ -290,36 +300,67 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 
+  test(`a sized banner in a crowded row keeps its image beside siblings in ${scheme}`, async ({ page }) => {
+    const row = "row\n  button Back\n  button Cancel\n  button Save draft\n  banner\n    image width=80 Inner\n    text Inner note\n  button Next";
+    for (const layout of ["block", "fit-content", "grid-content"] as const) {
+      for (const width of [710, 400, 320]) {
+        for (const phone of [false, true]) {
+          const measurements = [];
+          for (const tabs of ["", "\n    tabs\n      option.current Overview\n      option Details"]) {
+            const source = row.replace("\n  button Next", `${tabs}\n  button Next`);
+            await show(page, phone ? `phone\n  dock\n${source.split("\n").map((line) => `    ${line}`).join("\n")}` : source, { scheme, host: "column", width, layout });
+            const geometry = await page.locator(".wf-image[data-line]").evaluate((image) => {
+              const banner = image.closest(".wf-banner")!;
+              const wrap = banner.closest(".wf-banner-wrap")!;
+              const previous = wrap.previousElementSibling!.getBoundingClientRect();
+              const next = wrap.nextElementSibling!.getBoundingClientRect();
+              const box = banner.getBoundingClientRect();
+              return { imageWidth: image.getBoundingClientRect().width, left: box.left, right: box.right, previousRight: previous.right, nextLeft: next.left };
+            });
+            expect(geometry.imageWidth, `${layout}, ${width}, phone=${phone}`).toBe(80);
+            expect(geometry.left).toBeGreaterThan(geometry.previousRight);
+            expect(geometry.right).toBeLessThan(geometry.nextLeft);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            measurements.push(geometry);
+          }
+          expect(measurements[1]).toEqual(measurements[0]);
+        }
+      }
+    }
+  });
+
   test(`nested banner image caps follow the outer available width in ${scheme}`, async ({ page }) => {
     for (const kind of ["image", "image.round"]) {
-      for (const layout of ["block", "fit-content", "grid-content"] as const) {
-        for (const tabs of ["", `\n${strip}`]) {
-          const source = `banner\n  image width=80 Outer\n  text Outer\n  banner\n    text Middle\n    banner\n      ${kind} width=9999 Inner\n      text Inner${tabs}`;
-          await show(page, source, { scheme, host: "column", layout });
-          for (const width of [710, 400, 320, 710]) {
-            await page.locator(".column").evaluate((column, width) => { (column as HTMLElement).style.width = `${width}px`; }, width);
-            const geometry = await page.locator(".wf-root").evaluate((root) => {
-              const boundary = root.querySelector(".wf-banner-size")!;
-              const outer = boundary.querySelector(".wf-banner")!;
-              const style = getComputedStyle(outer);
-              const images = [...root.querySelectorAll(".wf-image[data-line]")];
-              const inner = images[1]!.getBoundingClientRect();
-              return {
-                rootWidth: root.getBoundingClientRect().width,
-                overflow: root.scrollWidth - root.clientWidth,
-                cap: boundary.getBoundingClientRect().width - Number.parseFloat(style.paddingLeft)
-                  - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth),
-                widths: images.map((image) => image.getBoundingClientRect().width),
-                height: inner.height,
-              };
-            });
-            expect(geometry.rootWidth).toBeLessThanOrEqual(width);
-            expect(geometry.widths[0]).toBe(80);
-            expect(geometry.widths[1]).toBeCloseTo(geometry.cap, 1);
-            expect(geometry.widths[1]).toBeGreaterThan(0);
-            expect(geometry.height).toBeCloseTo(geometry.cap / (kind === "image.round" ? 1 : 16 / 9), 1);
-            expect(geometry.overflow).toBeGreaterThan(0);
-            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      for (const sizedOuter of [false, true]) {
+        for (const layout of ["block", "fit-content", "grid-content"] as const) {
+          for (const tabs of ["", `\n${strip}`]) {
+            const source = `banner\n${sizedOuter ? "  image width=80 Outer\n" : ""}  text Outer\n  banner\n    text Middle\n    banner\n      ${kind} width=9999 Inner\n      text Inner${tabs}`;
+            await show(page, source, { scheme, host: "column", layout });
+            for (const width of [710, 400, 320, 710]) {
+              await page.locator(".column").evaluate((column, width) => { (column as HTMLElement).style.width = `${width}px`; }, width);
+              const geometry = await page.locator(".wf-root").evaluate((root) => {
+                const boundary = root.querySelector(".wf-banner-size")!;
+                const outer = boundary.querySelector(".wf-banner")!;
+                const style = getComputedStyle(outer);
+                const images = [...root.querySelectorAll(".wf-image[data-line]")];
+                const inner = images.at(-1)!.getBoundingClientRect();
+                return {
+                  rootWidth: root.getBoundingClientRect().width,
+                  overflow: root.scrollWidth - root.clientWidth,
+                  cap: boundary.getBoundingClientRect().width - Number.parseFloat(style.paddingLeft)
+                    - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth),
+                  widths: images.map((image) => image.getBoundingClientRect().width),
+                  height: inner.height,
+                };
+              });
+              expect(geometry.rootWidth).toBeLessThanOrEqual(width);
+              expect(geometry.widths.slice(0, -1)).toEqual(sizedOuter ? [80] : []);
+              expect(geometry.widths.at(-1)).toBeCloseTo(geometry.cap, 1);
+              expect(geometry.widths.at(-1)).toBeGreaterThan(0);
+              expect(geometry.height).toBeCloseTo(geometry.cap / (kind === "image.round" ? 1 : 16 / 9), 1);
+              expect(geometry.overflow).toBeGreaterThan(0);
+              expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            }
           }
         }
       }
