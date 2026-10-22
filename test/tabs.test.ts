@@ -65,6 +65,19 @@ describe("tabs", () => {
     expect([...root.querySelectorAll(".wf-option")].map((node) => node.textContent)).toEqual(["Before", "First", "Second", "Third", "Independent"]);
   });
 
+  it("keeps sized banner images and strips in source order inside their sizing boundary", () => {
+    const parsed = parseWireframe("banner.warning\n  image width=9999 Preview\n  tabs\n    option.current First\n  text After\nbanner\n  image width=invalid Preview");
+    const root = renderWireframe(parsed)!;
+    const banners = root.querySelectorAll(".wf-banner");
+    expect(root.querySelectorAll(".wf-banner-size")).toHaveLength(1);
+    expect(banners[0]!.parentElement!.className).toBe("wf-banner-size");
+    expect(banners[1]!.parentElement).toBe(root);
+    expect([...banners[0]!.children].map((node) => node.className)).toEqual(["wf-banner-line", "wf-tabs", "wf-banner-line"]);
+    expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(["1", "2", "3", "4", "5", "6", "7"]);
+    expect(banners[0]!.querySelector<HTMLElement>(".wf-image")!.style.getPropertyValue("--_wf-width")).toBe("9999px");
+  });
+
   it("keeps toggle and dock behavior when several options are current", () => {
     for (const prefix of ["page\n  toggle\n", "phone\n  dock\n    toggle\n"]) {
       const indent = prefix.includes("dock") ? "      " : "    ";

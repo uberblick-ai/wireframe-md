@@ -120,6 +120,8 @@ for (const scheme of ["light", "dark"] as const) {
       width,
     ] as const),
     ["a default image", "  icon alert-triangle\n  image Preview\n  text You are offline. Your changes will sync when you reconnect to the network.\n  row.end\n    button Retry"],
+    ["a sized image beside an unbroken word", "  image width=800 Preview\n  text PneumonoultramicroscopicsilicovolcanoconiosisPneumonoultramicroscopicsilicovolcanoconiosis\n  row.end\n    button Retry", 800],
+    ["a large round image", "  image.round width=9999 Ana\n  text Ana joined.", 9999],
   ];
   for (const [name, content, imageWidth] of bannerCases) {
     test(`banner tabs preserve the layout of ${name} in ${scheme}`, async ({ page }) => {
@@ -128,11 +130,15 @@ for (const scheme of ["light", "dark"] as const) {
         const box = banner.getBoundingClientRect();
         const style = getComputedStyle(banner);
         const root = banner.closest(".wf-root")!;
+        const size = banner.closest(".wf-banner-size");
         return {
           width: box.width,
           overflow: root.scrollWidth - root.clientWidth,
           contentLeft: box.left + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft),
           contentRight: box.right - Number.parseFloat(style.borderRightWidth) - Number.parseFloat(style.paddingRight),
+          availableWidth: (size?.getBoundingClientRect().width ?? box.width)
+            - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth)
+            - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight),
           children: [...banner.querySelectorAll("[data-line]")].filter((node) => !node.closest(".wf-tabs")).map((node) => {
             const rect = node.getBoundingClientRect();
             return { left: rect.left, right: rect.right, top: rect.top - box.top, bottom: rect.bottom - box.top, scrollWidth: node.scrollWidth };
@@ -161,8 +167,9 @@ for (const scheme of ["light", "dark"] as const) {
           expect(child.right).toBeLessThanOrEqual(after.contentRight);
         }
         if (imageWidth !== undefined) {
-          expect(after.children[0]!.right - after.children[0]!.left).toBe(imageWidth);
-          if (width === 320 || imageWidth >= width) expect(after.overflow).toBeGreaterThan(0);
+          expect(after.children[0]!.right - after.children[0]!.left)
+            .toBeCloseTo(Math.min(imageWidth, after.availableWidth), 1);
+          if (imageWidth >= width || name === "a sized image beside an unbroken word") expect(after.overflow).toBeGreaterThan(0);
         }
         if (name === "a default image") {
           expect(after.children[1]!.right - after.children[1]!.left).toBeGreaterThan(0);
@@ -175,6 +182,60 @@ for (const scheme of ["light", "dark"] as const) {
       }
     });
   }
+
+  test(`lone banner images cap declared widths with and without tabs in ${scheme}`, async ({ page }) => {
+    for (const [kind, declaredWidth] of [["image", 1], ["image", 300], ["image", 800], ["image", 9999], ["image.round", 9999]] as const) {
+      const image = `${kind} width=${declaredWidth}`;
+      for (const width of [710, 320]) {
+        for (const layout of ["block", "flex", "grid"] as const) {
+          for (const tabs of ["", `\n${strip}`]) {
+            await show(page, `banner\n  ${image} Preview${tabs}`, { scheme, host: "column", width, layout });
+            const geometry = await page.locator(".wf-banner").evaluate((banner) => {
+              const box = banner.getBoundingClientRect();
+              const style = getComputedStyle(banner);
+              const image = banner.querySelector(".wf-image")!.getBoundingClientRect();
+              const root = banner.closest(".wf-root")!;
+              return {
+                contentWidth: box.width - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth)
+                  - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight),
+                imageWidth: image.width,
+                imageHeight: image.height,
+                overflow: root.scrollWidth - root.clientWidth,
+              };
+            });
+            expect(geometry.imageWidth, `${image}, ${width}, ${layout}, tabs=${tabs !== ""}`)
+              .toBeCloseTo(Math.min(declaredWidth, geometry.contentWidth), 1);
+            expect(geometry.imageHeight).toBeCloseTo(geometry.imageWidth / (kind === "image.round" ? 1 : 16 / 9), 1);
+            expect(geometry.overflow).toBe(0);
+          }
+        }
+      }
+    }
+  });
+
+  test(`banner image caps follow host resizing and themed insets in ${scheme}`, async ({ page }) => {
+    const host = await show(page, `banner\n${strip}\n  image width=800 Preview\n${strip}\n  image.round width=9999 Ana`, { scheme, host: "column" });
+    await host.evaluate((host) => {
+      host.style.setProperty("--wf-text-size", "20px");
+      host.style.setProperty("--wf-stroke", "3px");
+    });
+    for (const width of [710, 320, 710]) {
+      await page.locator(".column").evaluate((column, width) => { (column as HTMLElement).style.width = `${width}px`; }, width);
+      const geometry = await page.locator(".wf-banner").evaluate((banner) => {
+        const box = banner.getBoundingClientRect();
+        const style = getComputedStyle(banner);
+        const root = banner.closest(".wf-root")!;
+        return {
+          contentWidth: box.width - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth)
+            - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight),
+          widths: [...banner.querySelectorAll(".wf-image, .wf-tabs")].map((node) => node.getBoundingClientRect().width),
+          overflow: root.scrollWidth - root.clientWidth,
+        };
+      });
+      for (const childWidth of geometry.widths) expect(childWidth).toBeCloseTo(geometry.contentWidth, 1);
+      expect(geometry.overflow).toBe(0);
+    }
+  });
 
   test(`overflow stays in the tab strip across containers and host layouts in ${scheme}`, async ({ page }) => {
     for (const layout of ["block", "flex", "grid"] as const) {

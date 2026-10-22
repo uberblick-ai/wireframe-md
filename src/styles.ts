@@ -995,10 +995,24 @@ const STYLES = `.wf-root {
   flex-shrink: 1;
 }
 
-/* Keep a declared width in the line's intrinsic contribution. max-width still
-   caps the image to its line; min(Npx, 100%) would lose N during that pass. */
+/* A sized image caps at the space offered to the banner, before neighbouring
+   content can widen its border. Query units keep that cap definite during
+   intrinsic sizing; a percentage of the growing flex line would be circular.
+   Only banners with direct sized images need this extra sizing container. */
+.wf-root .wf-banner-size {
+  container-type: inline-size;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.wf-root .wf-banner-size > .wf-banner {
+  min-width: min-content;
+}
+
 .wf-root .wf-banner-line > .wf-image.wf-sized {
-  width: var(--_wf-width);
+  width: min(var(--_wf-width), max(0px, calc(100cqi - 1.5em - 2 * var(--_wf-stroke))));
 }
 
 .wf-root .wf-dock > .wf-toggle {

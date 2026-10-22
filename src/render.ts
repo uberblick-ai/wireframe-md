@@ -257,6 +257,13 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
         line.append(child);
       }
     }
+    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized") !== null) {
+      // Measure the image cap against available space, independently of the
+      // banner expanding to enclose the image and its neighbouring content.
+      const size = create(document, "div", ["wf-banner-size"]);
+      size.append(element);
+      return size;
+    }
   }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
