@@ -187,7 +187,7 @@ for (const scheme of ["light", "dark"] as const) {
     for (const [kind, declaredWidth] of [["image", 1], ["image", 300], ["image", 800], ["image", 9999], ["image.round", 9999]] as const) {
       const image = `${kind} width=${declaredWidth}`;
       for (const width of [710, 320]) {
-        for (const layout of ["block", "flex", "grid"] as const) {
+        for (const layout of ["block", "flex", "grid", "fit-content", "flex-content", "grid-content", "inline-block", "float"] as const) {
           for (const tabs of ["", `\n${strip}`]) {
             await show(page, `banner\n  ${image} Preview${tabs}`, { scheme, host: "column", width, layout });
             const geometry = await page.locator(".wf-banner").evaluate((banner) => {
@@ -212,6 +212,49 @@ for (const scheme of ["light", "dark"] as const) {
       }
     }
   });
+
+  for (const [name, content, declaredWidth] of [
+    ["a sized preview and actions", "  image width=200 Preview\n  text You are offline.\n  row.end\n    button Retry", 200],
+    ["a sized avatar", "  image.round width=48 Ana\n  text Ana joined the workspace.", 48],
+  ] as const) {
+    test(`banner with ${name} keeps its intrinsic width in ${scheme}`, async ({ page }) => {
+      for (const layout of ["fit-content", "flex-content", "grid-content", "inline-block", "float"] as const) {
+        for (const width of [710, 320]) {
+          const measurements = [];
+          for (const tabs of ["", `\n${strip}`]) {
+            await show(page, `banner.warning\n${content}${tabs}`, { scheme, host: "column", width, layout });
+            const geometry = await page.locator(".wf-banner").evaluate((banner) => {
+              const box = banner.getBoundingClientRect();
+              const style = getComputedStyle(banner);
+              const root = banner.closest(".wf-root")!;
+              return {
+                rootWidth: root.getBoundingClientRect().width,
+                bannerWidth: box.width,
+                overflow: root.scrollWidth - root.clientWidth,
+                contentRight: box.right - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderRightWidth),
+                children: [...banner.querySelectorAll(".wf-banner-line > *")].map((node) => {
+                  const rect = node.getBoundingClientRect();
+                  return { left: rect.left, right: rect.right, width: rect.width, height: rect.height, top: rect.top - box.top };
+                }),
+              };
+            });
+            expect(geometry.children[0]!.width, `${layout}, ${width}`).toBe(declaredWidth);
+            expect(geometry.rootWidth).toBeGreaterThan(declaredWidth + geometry.children[1]!.width);
+            expect(geometry.rootWidth).toBeLessThanOrEqual(width);
+            for (const child of geometry.children) expect(child.right).toBeLessThanOrEqual(geometry.contentRight);
+            // The preview's image and actions need more than a 320 px column.
+            // All other cases fit at their natural width, without root scrolling.
+            if (declaredWidth === 48 || width === 710) {
+              expect(geometry.overflow).toBe(0);
+              expect(geometry.rootWidth).toBeLessThan(width);
+            }
+            measurements.push(geometry);
+          }
+          expect(measurements[1]).toEqual(measurements[0]);
+        }
+      }
+    });
+  }
 
   test(`banner image caps follow host resizing and themed insets in ${scheme}`, async ({ page }) => {
     const host = await show(page, `banner\n${strip}\n  image width=800 Preview\n${strip}\n  image.round width=9999 Ana`, { scheme, host: "column" });

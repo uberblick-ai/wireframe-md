@@ -12,7 +12,8 @@ format, the vocabulary and the rendering may change in any minor version.
   spacing, word wrapping and long-word scrolling beside icons and actions.
   Banners use the same sizing with or without strips, capping declared image
   widths at the available space and enclosing neighbouring content. Fluid
-  images share a line with text and actions.
+  images share a line with text and actions. Banners with sized images keep
+  their intrinsic width in hosts that size to content.
 
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text

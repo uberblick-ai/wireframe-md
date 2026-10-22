@@ -260,9 +260,24 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized") !== null) {
       // Measure the image cap against available space, independently of the
       // banner expanding to enclose the image and its neighbouring content.
+      // A size container cannot supply an intrinsic width. Keep a hidden sizing
+      // copy beside it so shrink-to-fit hosts can still measure the content.
+      const intrinsic = create(document, "div", ["wf-banner-intrinsic"]);
+      intrinsic.setAttribute("aria-hidden", "true");
+      for (const child of element.children) {
+        if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
+      }
+      // A misplaced nested banner may already have its own sizing copy. Never
+      // copy those copies again as nesting grows, or duplicate source markers.
+      for (const child of intrinsic.querySelectorAll(".wf-banner-intrinsic")) child.remove();
+      for (const child of intrinsic.querySelectorAll("[data-line]")) {
+        child.removeAttribute("data-line");
+      }
       const size = create(document, "div", ["wf-banner-size"]);
       size.append(element);
-      return size;
+      const wrap = create(document, "div", ["wf-banner-wrap"]);
+      wrap.append(size, intrinsic);
+      return wrap;
     }
   }
   if (node.kind === "input" || node.kind === "select") {

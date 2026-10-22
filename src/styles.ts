@@ -998,7 +998,33 @@ const STYLES = `.wf-root {
 /* A sized image caps at the space offered to the banner, before neighbouring
    content can widen its border. Query units keep that cap definite during
    intrinsic sizing; a percentage of the growing flex line would be circular.
-   Only banners with direct sized images need this extra sizing container. */
+   Only banners with direct sized images need this extra sizing container.
+   Its sibling supplies the intrinsic width that size containment removes. */
+.wf-root .wf-banner-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 0;
+}
+
+.wf-root .wf-banner-wrap > * {
+  grid-area: 1 / 1;
+}
+
+.wf-root .wf-banner-intrinsic {
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr);
+  gap: 0.625em;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 0;
+  padding-inline: 0.75em;
+  border-inline: var(--_wf-stroke) solid transparent;
+  visibility: hidden;
+  overflow: hidden;
+}
+
 .wf-root .wf-banner-size {
   container-type: inline-size;
   align-self: stretch;
@@ -1013,6 +1039,10 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-banner-line > .wf-image.wf-sized {
   width: min(var(--_wf-width), max(0px, calc(100cqi - 1.5em - 2 * var(--_wf-stroke))));
+}
+
+.wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
+  width: var(--_wf-width);
 }
 
 .wf-root .wf-dock > .wf-toggle {

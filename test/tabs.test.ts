@@ -76,6 +76,9 @@ describe("tabs", () => {
     expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
       .toEqual(["1", "2", "3", "4", "5", "6", "7"]);
     expect(banners[0]!.querySelector<HTMLElement>(".wf-image")!.style.getPropertyValue("--_wf-width")).toBe("9999px");
+    const intrinsic = root.querySelector(".wf-banner-intrinsic")!;
+    expect(intrinsic.getAttribute("aria-hidden")).toBe("true");
+    expect(intrinsic.querySelector("[data-line], .wf-tabs, .wf-banner-intrinsic")).toBeNull();
   });
 
   it("keeps toggle and dock behavior when several options are current", () => {
