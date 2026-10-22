@@ -259,23 +259,72 @@ for (const scheme of ["light", "dark"] as const) {
   for (const [name, source, declaredWidths] of [
     ["two levels", "banner\n  image width=100 Outer\n  text Outer\n  banner\n    image width=200 Inner\n    text Inner banner text that is fairly long", [100, 200]],
     ["three levels", "banner\n  image width=60 A\n  text One\n  banner\n    image width=80 B\n    text Two\n    banner\n      image width=120 C\n      text Three levels deep", [60, 80, 120]],
+    ...[3, 4].map((depth) => [
+      `${depth} equal-width levels`,
+      Array.from({ length: depth }, (_, level) => `${"  ".repeat(level)}banner\n${"  ".repeat(level + 1)}image width=80 Image ${level}\n${"  ".repeat(level + 1)}text Level ${level} note`).join("\n"),
+      Array.from({ length: depth }, () => 80),
+    ] as const),
   ] as const) {
     test(`nested banners at ${name} keep image widths in ${scheme}`, async ({ page }) => {
       for (const layout of ["block", "fit-content", "flex-content", "grid-content", "inline-block", "float"] as const) {
-        for (const tabs of ["", `\n${strip}`]) {
-          await show(page, `${source}${tabs}`, { scheme, host: "column", width: 710, layout });
-          // Source markers identify real images, excluding hidden sizing copies.
-          const geometry = await page.locator(".wf-root").evaluate((root) => ({
-            overflow: root.scrollWidth - root.clientWidth,
-            widths: [...root.querySelectorAll(".wf-image[data-line]")].map((image) => image.getBoundingClientRect().width),
-          }));
-          expect(geometry.widths, `${layout}, tabs=${tabs !== ""}`).toEqual(declaredWidths);
-          expect(geometry.overflow).toBe(0);
-          if (name === "two levels") await expect(page.locator(".wf-root")).toContainText("Inner", { useInnerText: true });
+        for (const width of [710, 400, 320]) {
+          const measurements = [];
+          for (const tabs of ["", `\n${strip}`]) {
+            await show(page, `${source}${tabs}`, { scheme, host: "column", width, layout });
+            // Source markers identify real images, excluding hidden sizing copies.
+            const geometry = await page.locator(".wf-root").evaluate((root) => ({
+              rootWidth: root.getBoundingClientRect().width,
+              overflow: root.scrollWidth - root.clientWidth,
+              widths: [...root.querySelectorAll(".wf-image[data-line]")].map((image) => image.getBoundingClientRect().width),
+            }));
+            expect(geometry.widths, `${layout}, ${width}, tabs=${tabs !== ""}`).toEqual(declaredWidths);
+            expect(geometry.rootWidth).toBeLessThanOrEqual(width);
+            if (width === 710) expect(geometry.overflow).toBe(0);
+            else expect(geometry.overflow).toBeGreaterThan(0);
+            if (name === "two levels") await expect(page.locator(".wf-root")).toContainText("Inner", { useInnerText: true });
+            measurements.push(geometry);
+          }
+          expect(measurements[1]).toEqual(measurements[0]);
         }
       }
     });
   }
+
+  test(`nested banner image caps follow the outer available width in ${scheme}`, async ({ page }) => {
+    for (const kind of ["image", "image.round"]) {
+      for (const layout of ["block", "fit-content", "grid-content"] as const) {
+        for (const tabs of ["", `\n${strip}`]) {
+          const source = `banner\n  image width=80 Outer\n  text Outer\n  banner\n    text Middle\n    banner\n      ${kind} width=9999 Inner\n      text Inner${tabs}`;
+          await show(page, source, { scheme, host: "column", layout });
+          for (const width of [710, 400, 320, 710]) {
+            await page.locator(".column").evaluate((column, width) => { (column as HTMLElement).style.width = `${width}px`; }, width);
+            const geometry = await page.locator(".wf-root").evaluate((root) => {
+              const boundary = root.querySelector(".wf-banner-size")!;
+              const outer = boundary.querySelector(".wf-banner")!;
+              const style = getComputedStyle(outer);
+              const images = [...root.querySelectorAll(".wf-image[data-line]")];
+              const inner = images[1]!.getBoundingClientRect();
+              return {
+                rootWidth: root.getBoundingClientRect().width,
+                overflow: root.scrollWidth - root.clientWidth,
+                cap: boundary.getBoundingClientRect().width - Number.parseFloat(style.paddingLeft)
+                  - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth),
+                widths: images.map((image) => image.getBoundingClientRect().width),
+                height: inner.height,
+              };
+            });
+            expect(geometry.rootWidth).toBeLessThanOrEqual(width);
+            expect(geometry.widths[0]).toBe(80);
+            expect(geometry.widths[1]).toBeCloseTo(geometry.cap, 1);
+            expect(geometry.widths[1]).toBeGreaterThan(0);
+            expect(geometry.height).toBeCloseTo(geometry.cap / (kind === "image.round" ? 1 : 16 / 9), 1);
+            expect(geometry.overflow).toBeGreaterThan(0);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+          }
+        }
+      }
+    }
+  });
 
   test(`banner image caps follow host resizing and themed insets in ${scheme}`, async ({ page }) => {
     const host = await show(page, `banner\n${strip}\n  image width=800 Preview\n${strip}\n  image.round width=9999 Ana`, { scheme, host: "column" });

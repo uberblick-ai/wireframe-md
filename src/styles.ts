@@ -1045,6 +1045,23 @@ const STYLES = `.wf-root {
   width: var(--_wf-width);
 }
 
+/* Misplaced nested banners still draw at their intrinsic minimum. Reuse the
+   outer sizing container's cap instead of capping each image at the leftover
+   space in its parent's flex line. Without containment the real nested box
+   supplies its own width, so only the outer copy is needed for sizing. */
+.wf-root .wf-banner-size .wf-banner-wrap {
+  grid-template-columns: minmax(min-content, 1fr);
+  min-width: min-content;
+}
+
+.wf-root .wf-banner-size .wf-banner-size {
+  container-type: normal;
+}
+
+.wf-root .wf-banner-size .wf-banner-intrinsic {
+  display: none;
+}
+
 .wf-root .wf-dock > .wf-toggle {
   align-self: stretch;
   flex-wrap: nowrap;
