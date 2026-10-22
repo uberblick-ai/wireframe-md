@@ -267,9 +267,9 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       for (const child of element.children) {
         if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
       }
-      // A misplaced nested banner may already have its own sizing copy. Never
-      // copy those copies again as nesting grows, or duplicate source markers.
-      for (const child of intrinsic.querySelectorAll(".wf-banner-intrinsic")) child.remove();
+      // Nested banners contribute through their sizing copies too. Drop their
+      // contained real boxes so each nested banner is measured only once.
+      for (const child of intrinsic.querySelectorAll(".wf-banner-size")) child.remove();
       for (const child of intrinsic.querySelectorAll("[data-line]")) {
         child.removeAttribute("data-line");
       }

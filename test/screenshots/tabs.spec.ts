@@ -256,6 +256,27 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 
+  for (const [name, source, declaredWidths] of [
+    ["two levels", "banner\n  image width=100 Outer\n  text Outer\n  banner\n    image width=200 Inner\n    text Inner banner text that is fairly long", [100, 200]],
+    ["three levels", "banner\n  image width=60 A\n  text One\n  banner\n    image width=80 B\n    text Two\n    banner\n      image width=120 C\n      text Three levels deep", [60, 80, 120]],
+  ] as const) {
+    test(`nested banners at ${name} keep image widths in ${scheme}`, async ({ page }) => {
+      for (const layout of ["block", "fit-content", "flex-content", "grid-content", "inline-block", "float"] as const) {
+        for (const tabs of ["", `\n${strip}`]) {
+          await show(page, `${source}${tabs}`, { scheme, host: "column", width: 710, layout });
+          // Source markers identify real images, excluding hidden sizing copies.
+          const geometry = await page.locator(".wf-root").evaluate((root) => ({
+            overflow: root.scrollWidth - root.clientWidth,
+            widths: [...root.querySelectorAll(".wf-image[data-line]")].map((image) => image.getBoundingClientRect().width),
+          }));
+          expect(geometry.widths, `${layout}, tabs=${tabs !== ""}`).toEqual(declaredWidths);
+          expect(geometry.overflow).toBe(0);
+          if (name === "two levels") await expect(page.locator(".wf-root")).toContainText("Inner", { useInnerText: true });
+        }
+      }
+    });
+  }
+
   test(`banner image caps follow host resizing and themed insets in ${scheme}`, async ({ page }) => {
     const host = await show(page, `banner\n${strip}\n  image width=800 Preview\n${strip}\n  image.round width=9999 Ana`, { scheme, host: "column" });
     await host.evaluate((host) => {
