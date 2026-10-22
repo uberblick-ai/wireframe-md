@@ -5,6 +5,24 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `tabs` draws an inert tab strip directly inside roots and cards, with an ink
+  underline on the first `option.current`. Options may hold an icon. Overflow
+  scrolls inside the strip with a native keyboard stop and a visible focus ring.
+  Banner strips take their own line while surrounding content keeps its normal
+  spacing, word wrapping and long-word scrolling beside icons and actions.
+  Banners use the same sizing with or without strips, capping declared image
+  widths at the available space and enclosing neighbouring content. Fluid
+  images share a line with text and actions. Banners with sized images keep
+  their intrinsic width in hosts that size to content, including misplaced
+  nested banners. Nested images keep their declared width up to the outer
+  banner's available space, including when that banner has no direct image.
+  Misplaced sized banners in rows wrap text and cap images at the row's
+  available width while keeping room beside siblings; unfitting content
+  widens enclosing dialogs, pages, frames and phone content, including nested
+  misplaced containers, then scrolls inside the wireframe or phone screen.
+  Nested containers account for their own insets and preferred widths when
+  capping images, before content expands their borders.
+
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text
   wrapping inside the group at narrow widths. Layout variants on the inner row

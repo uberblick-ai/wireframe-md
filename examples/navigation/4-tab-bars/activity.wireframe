@@ -1,0 +1,7 @@
+card
+  tabs
+    option Overview
+    option.current Activity
+      icon activity
+    option Members
+  text.muted No activity in the last 7 days.

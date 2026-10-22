@@ -58,8 +58,8 @@ for (const scheme of ["light", "dark"] as const) {
       host.style.setProperty("--wf-info", "rgb(30, 70, 130)");
     });
     await check();
-    await expect(page.locator(".wf-banner > .wf-icon:not(.wf-red, .wf-amber, .wf-green, .wf-blue)")).toHaveCount(4);
-    for (const icon of await page.locator(".wf-banner > .wf-icon:not(.wf-red, .wf-amber, .wf-green, .wf-blue)").all()) {
+    await expect(page.locator(".wf-banner-line > .wf-icon:not(.wf-red, .wf-amber, .wf-green, .wf-blue)")).toHaveCount(4);
+    for (const icon of await page.locator(".wf-banner-line > .wf-icon:not(.wf-red, .wf-amber, .wf-green, .wf-blue)").all()) {
       await expect(icon).toHaveCSS("color", "rgb(140, 100, 20)");
     }
   });

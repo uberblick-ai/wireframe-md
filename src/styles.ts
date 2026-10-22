@@ -22,7 +22,7 @@
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
 //   --wf-danger        the destructive colour: button.danger and banner.danger's icon
 //   --wf-danger-ink    the caption on a filled button.primary.danger
-//   --wf-focus         button.focus's ring and keyboard-focused phone screens and scroll rows
+//   --wf-focus         button.focus's ring and keyboard-focused phone screens, scroll rows and tab strips
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
@@ -161,15 +161,16 @@ const STYLES = `.wf-root {
   line-height: 1.3;
 }
 
-.wf-root .wf-dialog-card > .wf-row {
+.wf-root .wf-dialog-card > :is(.wf-row, .wf-row-wrap) {
   margin-top: 0.5em;
 }
 
 .wf-root .wf-banner {
   --_wf-tone: var(--_wf-muted);
   --_wf-tint: var(--_wf-neutral-tint);
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr);
+  align-items: stretch;
   gap: 0.625em;
   box-sizing: border-box;
   margin: 0;
@@ -199,11 +200,11 @@ const STYLES = `.wf-root {
   --_wf-tint: var(--_wf-danger-tint);
 }
 
-.wf-root .wf-banner > .wf-icon {
+.wf-root :is(.wf-banner, .wf-banner-line) > .wf-icon {
   color: var(--_wf-tone);
 }
 
-.wf-root .wf-banner > .wf-row.wf-end {
+.wf-root :is(.wf-banner, .wf-banner-line) > :is(.wf-row, .wf-row-wrap).wf-end {
   margin-inline-start: auto;
 }
 
@@ -367,7 +368,8 @@ const STYLES = `.wf-root {
   outline-offset: var(--_wf-focus-width);
 }
 
-.wf-root .wf-row.wf-scroll:focus-visible {
+.wf-root .wf-row.wf-scroll:focus-visible,
+.wf-root .wf-tabs:focus-visible {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: calc(-1 * var(--_wf-focus-width));
 }
@@ -667,7 +669,7 @@ const STYLES = `.wf-root {
 }
 
 /* In horizontal containers, centre the fallback line and use available room. */
-.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
+.wf-root :is(.wf-banner, .wf-banner-line, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
   align-self: center;
   flex: 1 1 auto;
 }
@@ -939,6 +941,196 @@ const STYLES = `.wf-root {
 .wf-root .wf-option > .wf-icon {
   color: inherit;
   margin-inline-end: 0.375em;
+}
+
+/* Tab strips own their overflow. The inset rule stays across the visible
+   content width while the tabs scroll; only the current tab underlines it. */
+.wf-root .wf-tabs {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  justify-self: stretch;
+  gap: 0.5em;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  contain: inline-size;
+  overflow: auto hidden;
+  overscroll-behavior: auto;
+  box-shadow: inset 0 calc(-1 * var(--_wf-stroke)) 0 var(--_wf-line);
+}
+
+.wf-root .wf-tabs > * {
+  flex: none;
+}
+
+.wf-root .wf-tabs > .wf-option {
+  position: relative;
+  padding: 0.5em 0.75em 0.625em;
+}
+
+.wf-root .wf-tabs > .wf-option.wf-current::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(2 * var(--_wf-stroke));
+  background: var(--_wf-ink);
+}
+
+/* All banners use the same line layout, with or without strips. The grid's
+   minimum track encloses each line, including percentage-sized media. */
+.wf-root .wf-banner-line {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  min-width: min-content;
+}
+
+/* Fluid media shares the line with text and actions rather than taking 100%
+   of that line in addition to them. Declared widths and avatars stay fixed. */
+.wf-root .wf-banner-line > .wf-image:not(.wf-sized):not(.wf-round) {
+  flex-shrink: 1;
+}
+
+/* A sized image caps at the space offered to the banner, before neighbouring
+   content can widen its border. Query units keep that cap definite during
+   intrinsic sizing; a percentage of the growing flex line would be circular.
+   Banners with direct or nested sized images need this sizing container.
+   Its sibling supplies the intrinsic width that size containment removes. */
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 0;
+}
+
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) > * {
+  grid-area: 1 / 1;
+}
+
+/* Keep a wrapped row's usual flex sizing, including compact nested groups. */
+.wf-root .wf-row-wrap {
+  flex: none;
+}
+
+.wf-root .wf-row-wrap.wf-row-group {
+  flex: 0 1 auto;
+}
+
+.wf-root :is(.wf-row, .wf-banner-line) > .wf-row-wrap {
+  align-self: center;
+}
+
+.wf-root :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
+  min-width: 0;
+  height: 0;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.wf-root .wf-banner-intrinsic {
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr);
+  gap: 0.625em;
+  box-sizing: border-box;
+  padding-inline: 0.75em;
+  border-inline: var(--_wf-stroke) solid transparent;
+}
+
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-size) {
+  --_wf-banner-cap: initial;
+  --_wf-content-width: initial;
+  container-type: inline-size;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.wf-root .wf-banner-size > .wf-banner,
+.wf-root .wf-row-size > .wf-row,
+.wf-root .wf-content-size > * {
+  min-width: min-content;
+}
+
+.wf-root .wf-banner-line > .wf-image.wf-sized {
+  width: min(var(--_wf-width), max(0px, var(--_wf-banner-cap, calc(100cqi - 1.5em - 2 * var(--_wf-stroke)))));
+}
+
+/* Snapshot a nested box's available width before its own insets are applied.
+   Two properties let every level subtract its insets without a variable cycle.
+   Independent boundaries (for example in a sibling card) start from their own
+   size container. An explicit page width also limits the pre-expansion cap. */
+.wf-root .wf-content-wrap {
+  --_wf-content-available: initial;
+  --_wf-content-limit: initial;
+}
+
+.wf-root .wf-content-wrap.wf-shared {
+  --_wf-content-available: var(--_wf-content-width, 100cqi);
+}
+
+.wf-root .wf-content-size > * {
+  --_wf-content-input: min(var(--_wf-content-available, 100cqi), var(--_wf-content-limit, 100cqi));
+  --_wf-banner-cap: calc(var(--_wf-content-width) - 1.5em - 2 * var(--_wf-stroke));
+}
+
+/* Subtract the surrounding box's normal insets. The dialog card also has its
+   usual 32em preferred width. The banner's own insets are subtracted above. */
+.wf-root .wf-content-size > .wf-dialog {
+  --_wf-content-width: calc(min(32em, var(--_wf-content-input) - 2.5em) - 3em - 2 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-page {
+  --_wf-content-width: calc(var(--_wf-content-input) - 3.5em - 2 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-frame {
+  --_wf-content-width: calc(var(--_wf-content-input) - 2em - 3 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-phone-content {
+  --_wf-content-width: calc(var(--_wf-content-input) - 2.5em);
+}
+
+/* Nested rows and banners reuse the outer cap. Nested content boxes subtract
+   their own insets from the snapshotted available width instead. */
+.wf-root .wf-shared > :is(.wf-banner-size, .wf-row-size, .wf-content-size),
+.wf-root .wf-row-cap.wf-shared {
+  --_wf-banner-cap: inherit;
+  --_wf-content-width: inherit;
+}
+
+.wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
+  width: var(--_wf-width);
+}
+
+/* Misplaced nested banners still draw at their intrinsic minimum. Reuse the
+   outer sizing container's cap instead of capping each image at the leftover
+   space in its parent's flex line. Without containment the real nested box
+   supplies its own width, so only the outer copy is needed for sizing. */
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap).wf-shared {
+  grid-template-columns: minmax(min-content, 1fr);
+  min-width: min-content;
+}
+
+.wf-root .wf-shared > :is(.wf-banner-size, .wf-row-size, .wf-content-size),
+.wf-root .wf-row-cap.wf-shared {
+  container-type: normal;
+}
+
+.wf-root .wf-shared > :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
+  display: none;
+}
+
+.wf-root .wf-row-cap {
+  --_wf-banner-cap: initial;
+  --_wf-content-width: initial;
+  container-type: inline-size;
 }
 
 .wf-root .wf-dock > .wf-toggle {

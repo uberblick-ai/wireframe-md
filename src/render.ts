@@ -47,6 +47,16 @@ export function renderWireframe(
     const root = document.createElement("div");
     root.className = ROOT_CLASS;
     for (const node of result.nodes) root.append(draw(document, node));
+    // Share sizing only with the nearest boundary. A content boundary shares
+    // with its affected direct children; independent boxes inside sibling cards
+    // keep their own caps, even when that content box is itself nested in a row.
+    for (const wrap of root.querySelectorAll(".wf-banner-wrap, .wf-row-wrap, .wf-content-wrap, .wf-row-cap")) {
+      if (wrap.closest('[aria-hidden="true"]') !== null) continue;
+      const boundary = wrap.parentElement?.closest(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap");
+      if (boundary && (!boundary.classList.contains("wf-content-size") || wrap.classList.contains("wf-content-item"))) {
+        wrap.classList.add("wf-shared");
+      }
+    }
     return root;
   } catch {
     // Only a result that did not come from parseWireframe, or a missing
@@ -73,6 +83,8 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       (!rowGroup || !ROW_LAYOUT_VARIANTS.includes(variant)) &&
       (!colours.includes(variant) || index === colourIndex) &&
       (!exclusive.includes(variant) || index === exclusiveIndex) &&
+      (node.kind !== "option" || parent?.kind !== "tabs" || variant !== "current" ||
+        node === parent.children.find((child) => child.kind === "option" && child.variants.includes("current"))) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
@@ -240,6 +252,59 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
+  if (["dialog", "page", "frame", "phone"].includes(node.kind) && body.querySelector(":scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
+    // Keep wrapped rows and misplaced content boxes in the intrinsic sizing
+    // path at every level. The boundary sits outside the enclosing box, so
+    // unfitting content widens its borders instead of escaping them.
+    const children = [...body.querySelectorAll(":scope > .wf-row-wrap, :scope > .wf-content-wrap")];
+    if (phoneViewport !== undefined) {
+      const next = body.nextSibling;
+      phoneViewport.insertBefore(sizingBoundary(document, body, "content"), next);
+      for (const child of children) child.classList.add("wf-content-item");
+    } else {
+      const wrap = sizingBoundary(document, element, "content");
+      for (const child of children) child.classList.add("wf-content-item");
+      if (node.kind === "page" && element.style.width !== "") {
+        wrap.style.width = element.style.width;
+        const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
+        if (width !== undefined) wrap.style.setProperty("--_wf-content-limit", `${width}px`);
+        element.style.width = "100%";
+      }
+      return wrap;
+    }
+  }
+  if (node.kind === "banner") {
+    // Each strip gets its own line. Keep intervening source in the banner's
+    // usual nowrap flex line. Use the same layout without strips, so adding
+    // tabs cannot change percentage media's intrinsic sizing pass.
+    let line: HTMLElement | undefined;
+    for (const child of [...element.children]) {
+      if (child.classList.contains("wf-tabs")) line = undefined;
+      else {
+        if (line === undefined) {
+          line = create(document, "div", ["wf-banner-line"]);
+          element.insertBefore(line, child);
+        }
+        line.append(child);
+      }
+    }
+    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized, :scope > .wf-banner-line .wf-banner-wrap") !== null) {
+      // Measure the image cap against available space, independently of the
+      // banner expanding to enclose the image and its neighbouring content.
+      // Nested sized banners need the outer boundary even without a direct image.
+      // A size container cannot supply an intrinsic width. Keep a hidden sizing
+      // copy beside it so shrink-to-fit hosts can still measure the content.
+      return sizingBoundary(document, element, "banner");
+    }
+  }
+  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
+    // A misplaced banner still shrinks and wraps beside row siblings. Measure
+    // its image cap against the row's available width, before content widens
+    // the row, rather than against the banner's remaining slice of that line.
+    // Scroll rows already have inline-size containment and need no wrapper.
+    if (!element.classList.contains("wf-scroll")) return sizingBoundary(document, element, "row");
+    element.classList.add("wf-row-cap");
+  }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
     if (label !== undefined) {
@@ -252,6 +317,31 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     }
   }
   return element;
+}
+
+/** Keep available-width image caps independent of intrinsic content sizing. */
+function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
+  const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
+  intrinsic.setAttribute("aria-hidden", "true");
+  if (kind !== "banner") intrinsic.append(element.cloneNode(true));
+  else for (const child of element.children) {
+    if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
+  }
+  // Nested boundaries contribute through their sizing copies. Drop contained
+  // real boxes so each nested banner or row is measured only once.
+  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size")) child.remove();
+  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
+  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
+  const size = create(document, "div", [`wf-${kind}-size`]);
+  size.append(element);
+  const wrap = create(document, "div", [`wf-${kind}-wrap`]);
+  if (kind === "row") {
+    for (const variant of ["wf-row-group", "wf-end"]) {
+      if (element.classList.contains(variant)) wrap.classList.add(variant);
+    }
+  }
+  wrap.append(size, intrinsic);
+  return wrap;
 }
 
 /** A dashed box showing the kind as written, the label and the children. */

@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...["settings", "activity", "overflow"].map((name) => ({
+    name: `navigation-tabs-${name}`,
+    source: readFileSync(new URL(`../../examples/navigation/4-tab-bars/${name}.wireframe`, import.meta.url), "utf8"),
+    intro: "Tabs mark the current section with an ink underline; longer strips scroll inside their container.",
+  })),
   ...["browser", "window", "general"].map((name) => ({
     name: `pages-wrappers-${name}`,
     source: readFileSync(new URL(`../../examples/pages/1-wrappers/${name}.wireframe`, import.meta.url), "utf8"),

@@ -38,10 +38,10 @@ export interface Options {
   /** The column's width in pixels, 710 unless given. */
   width?: number;
   /**
-   * How the column lays out the wireframe: as a block, or as a flex row or a
-   * `1fr` grid whose item is a wrapper around it, which sizes to its content.
+   * How the column lays out the wireframe. The flex and grid variants fill
+   * the column; the content variants and other wrappers size to their content.
    */
-  layout?: "block" | "flex" | "grid";
+  layout?: "block" | "flex" | "grid" | "fit-content" | "flex-content" | "grid-content" | "inline-block" | "float";
 }
 
 /** Open the test page. Call once per test before {@link show}. */
@@ -91,10 +91,16 @@ export async function show(page: Page, source: string, options: Options = {}): P
         if (intro !== "") parent.append(Object.assign(document.createElement("p"), { textContent: intro }));
         main.append(parent);
         if (layout !== "block") {
-          parent.style.display = layout;
-          if (layout === "grid") parent.style.gridTemplateColumns = "1fr";
+          if (layout === "flex" || layout === "flex-content") parent.style.display = "flex";
+          if (layout === "grid" || layout === "grid-content") {
+            parent.style.display = "grid";
+            parent.style.gridTemplateColumns = layout === "grid" ? "1fr" : "auto minmax(0, 1fr)";
+          }
           const item = document.createElement("div");
           if (layout === "flex") item.style.flex = "1";
+          if (layout === "fit-content") item.style.width = "fit-content";
+          if (layout === "inline-block") item.style.display = "inline-block";
+          if (layout === "float") item.style.cssFloat = "left";
           parent.append(item);
           parent = item;
         }

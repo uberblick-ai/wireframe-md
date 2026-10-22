@@ -112,7 +112,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 ## Kinds
 
 `dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
-rest. A `card` may also stand at the top level, but holds text, images and rows.
+rest. A `card` may also stand at the top level, but holds text, images, rows and tabs.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images and rows; optional `width=` and `padding=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows and tabs; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; these three belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
@@ -132,13 +132,15 @@ rest. A `card` may also stand at the top level, but holds text, images and rows.
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
 | `toggle` | directly inside a root or a `dock` or a `row` | none | none: its choices are `option` lines |
-| `option` | directly inside a `toggle` | `.current`: the chosen one | the caption; it may hold one icon |
+| `tabs` | directly inside a root or a `card` | none | none: its tabs are `option` lines |
+| `option` | directly inside a `toggle` or a `tabs` | `.current`: the chosen one | the caption; it may hold one icon |
 | `table` | directly inside a root or a `dock` | none | none: it holds rows |
 | `cell` | directly inside a table `row` | `.end`: right-aligned, for times and figures; `.sortable`: muted ↕; `.ascending`: ink ↑; `.descending`: ink ↓ | its text, or none for an empty cell |
 | `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
 
 A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-width
-strip with its icon, text and buttons on one line. A `page` draws as a framed
+strip with its icon, text and buttons on one line; tabs take a full-width line.
+A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
 `button.link.danger` an underlined destructive text button. A `.link` caption's
@@ -256,11 +258,11 @@ A frame's summary names its label, for example `Wireframe: frame “Figma · Pay
 without a label it is `Wireframe: frame`.
 
 A `card` is a box on the paper ground with a 1 px border in the line colour, the
-base radius and no shadow. `text`, `image` and `row` lines belong in a card and stack inside at full width.
+base radius and no shadow. `text`, `image`, `row` and `tabs` lines belong in a card and stack inside at full width.
 Other children warn and still draw where written. Cards may also stand inside a
 non-table row. Their text wraps between words within their width.
 Neither `frame` nor `card` takes variants, and a card takes no label.
-A card at the top level is still not a root for placement: an icon, control
+A card at the top level is still not a root for placement: an icon, other control
 or another card directly inside it warns. Adjacent cards stack at full width with a small
 gap. Directly inside a card, `text.title` is bold at a dialog title's size,
 larger than body text and smaller than a page's title. Elsewhere it keeps the
@@ -290,6 +292,46 @@ page
 
 A `toggle` draws its options on one line, separated by `·`. A `chip` is a small
 neutral tag, and `chip.more` the count of the tags that don't show.
+
+`tabs` draws a left-aligned line of `option` captions without separators, above
+a hairline rule across the container's content width inside its padding. The
+rule uses `--wf-line` at `--wf-stroke`. `option.current` draws in ink with a short
+ink underline on the rule under that tab; other tabs are muted. An option may
+hold one icon, drawn before its caption as in a toggle. Without a current option,
+all tabs are muted and there is no warning. Tabs remain inert in light and dark,
+using the existing theme properties; they do not switch content or name roots
+in summaries.
+
+```wireframe
+page.window width=480 Settings
+  tabs
+    option.current General
+    option Accounts
+    option Sync
+  input label=Name Uberblick
+  select label=Appearance Match system
+  row.end
+    button Cancel
+    button.primary Save
+```
+
+When tabs do not fit, the strip scrolls sideways inside itself, like `row.scroll`,
+while the rule still spans the container. Nothing widens the card, wireframe or
+document. An overflowing strip is one native Tab stop with a visible ring;
+fitting strips add none and individual tabs cannot take focus. In a phone, tabs
+scroll with the screen content. A `toggle` directly inside a `dock` keeps drawing
+the phone's bottom tab bar.
+
+Warnings retain the source and still draw:
+
+| Source | Diagnostic | Drawing |
+| --- | --- | --- |
+| A later `option.current` in one `tabs` | `tabs takes one current option: the first is used` | later current options draw muted |
+| `text` directly in `tabs` (other non-option children get their usual placement warning) | `text must be directly inside dialog, banner, page, frame, phone, dock, card or row` | child still draws |
+| `tabs` outside a root or card, including in a dock or row | `tabs must be directly inside dialog, banner, page, frame, phone or card` | strip still draws |
+| `option` outside a toggle or tabs | `option must be directly inside toggle or tabs` | option still draws |
+| `tabs.pills` | `unknown variant ".pills": tabs takes no variants` | plain tabs |
+| `tabs Sections` | `tabs takes no label` | label still draws as text |
 
 A `row` directly inside a `table` is a table row: it holds only `cell` lines, and
 each `cell` holds its text, `chip` lines or `button` lines. A table draws with
@@ -577,9 +619,9 @@ available width, and the screen narrows while staying 852 px tall.
 Scrolling is native: wheel and touch scrolling continue to the document at
 either end. An overflowing screen is one Tab stop, with a visible focus ring,
 so arrow and Page keys scroll it. A fitting screen adds no Tab stop and no mock
-control takes focus. A screen with an overflowing scroll row is reached through
-that row: browsers focus a scroll container only when no descendant takes focus.
-Up, Down and Page keys in the row still scroll the screen. The summary uses
+control takes focus. A screen with an overflowing scroll row or tab strip is
+reached through that strip: browsers focus a scroll container only when no
+descendant takes focus. Up, Down and Page keys there still scroll the screen. The summary uses
 the first direct text, like a page:
 `Wireframe: phone “General”`, or `Wireframe: phone` without text.
 
@@ -604,6 +646,9 @@ the mark. The label never determines the box's width or height.
 
 Inside a root, dock or card, an image fills the available width at 16:9;
 `.square` makes it 1:1. Inside a non-table row it is 48 px wide beside text.
+In a banner, a fluid image shares the line's available width with text and
+actions; a declared width caps at the available content width. Content that
+cannot fit beside the capped image widens the banner, which encloses the line.
 `.round` is a 40 px circle by default, including at the start of a root or card.
 A valid `width=` overrides the default, and the ratio determines the height.
 Use only one shape variant: `.square.round` warns and uses the first.
@@ -1083,7 +1128,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, tabs, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

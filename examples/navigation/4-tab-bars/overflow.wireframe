@@ -1,0 +1,8 @@
+card width=320
+  tabs
+    option.current Overview
+    option Recent activity
+    option Members and permissions
+    option Integrations
+    option Billing and usage
+  text.muted Scroll the tabs to see more sections.

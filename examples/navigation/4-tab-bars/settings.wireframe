@@ -1,0 +1,10 @@
+page.window width=480 Settings
+  tabs
+    option.current General
+    option Accounts
+    option Sync
+  input label=Name Uberblick
+  select label=Appearance Match system
+  row.end
+    button Cancel
+    button.primary Save
