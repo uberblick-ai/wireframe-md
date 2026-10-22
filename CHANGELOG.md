@@ -8,7 +8,8 @@ format, the vocabulary and the rendering may change in any minor version.
 - `tabs` draws an inert tab strip directly inside roots and cards, with an ink
   underline on the first `option.current`. Options may hold an icon. Overflow
   scrolls inside the strip with a native keyboard stop and a visible focus ring.
-  Banner strips take their own line while text wraps beside the icon and actions.
+  Banner strips take their own line while surrounding content keeps its normal
+  spacing, word wrapping and long-word scrolling beside icons and actions.
 
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text

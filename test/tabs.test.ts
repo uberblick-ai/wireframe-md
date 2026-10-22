@@ -43,6 +43,16 @@ describe("tabs", () => {
     expect(renderWireframe(parsed)!.querySelectorAll(".wf-current")).toHaveLength(0);
   });
 
+  it("keeps banner content, unsupported labels and multiple strips in source order", () => {
+    const parsed = parseWireframe("banner Unexpected\n  tabs\n    option.current First\n  text Between\n  row.end\n    button Go\n  tabs\n  tabs\n    option.current Last\n  text After");
+    const banner = renderWireframe(parsed)!.querySelector(".wf-banner")!;
+    expect(banner.textContent).toBe("UnexpectedFirstBetweenGoLastAfter");
+    expect([...banner.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(["2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+    expect(banner.querySelectorAll(":scope > .wf-tabs")).toHaveLength(3);
+    expect(banner.querySelectorAll(".wf-tabs > .wf-option")).toHaveLength(2);
+  });
+
   it("warns at each later current option and renders only the first current in each strip", () => {
     const parsed = parseWireframe("page\n  tabs\n    option Before\n    option.current First\n    option.current Second\n    option.current Third\n  tabs\n    option.current Independent");
     expect(parsed.renderable).toBe(true);

@@ -199,11 +199,11 @@ const STYLES = `.wf-root {
   --_wf-tint: var(--_wf-danger-tint);
 }
 
-.wf-root .wf-banner > .wf-icon {
+.wf-root :is(.wf-banner, .wf-banner-line) > .wf-icon {
   color: var(--_wf-tone);
 }
 
-.wf-root .wf-banner > .wf-row.wf-end {
+.wf-root :is(.wf-banner, .wf-banner-line) > .wf-row.wf-end {
   margin-inline-start: auto;
 }
 
@@ -668,7 +668,7 @@ const STYLES = `.wf-root {
 }
 
 /* In horizontal containers, centre the fallback line and use available room. */
-.wf-root :is(.wf-banner, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
+.wf-root :is(.wf-banner, .wf-banner-line, .wf-row, .wf-button, .wf-toggle, .wf-select, .wf-icon, .wf-chip) > .wf-divider {
   align-self: center;
   flex: 1 1 auto;
 }
@@ -979,19 +979,18 @@ const STYLES = `.wf-root {
   background: var(--_wf-ink);
 }
 
-/* A banner normally uses one line; a tab strip needs a content-width line. */
+/* Strips stack in source order; each intervening run keeps the banner's
+   original one-line layout and lets unbroken content widen the whole banner. */
 .wf-root .wf-banner:has(> .wf-tabs) {
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
 }
 
-/* Keep text beside the icon and actions instead of wrapping its flex item. */
-.wf-root .wf-banner:has(> .wf-tabs) > .wf-text {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.wf-root .wf-banner > .wf-tabs {
-  flex: 0 1 100%;
+.wf-root .wf-banner-line {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  min-width: min-content;
 }
 
 .wf-root .wf-dock > .wf-toggle {

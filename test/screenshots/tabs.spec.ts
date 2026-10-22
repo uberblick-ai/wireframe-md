@@ -78,7 +78,7 @@ for (const scheme of ["light", "dark"] as const) {
         return { left: child.left, right: child.right, top: child.top - box.top, bottom: child.bottom - box.top, height: child.height };
       };
       return {
-        icon: rect(":scope > .wf-icon"), text: rect(":scope > .wf-text"), actions: rect(":scope > .wf-row.wf-end"),
+        icon: rect('[data-line="2"]'), text: rect('[data-line="3"]'), actions: rect('[data-line="4"]'),
         lineHeight: Number.parseFloat(getComputedStyle(banner.querySelector(".wf-text")!).lineHeight),
         contentLeft: box.left + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft),
         contentRight: box.right - Number.parseFloat(style.borderRightWidth) - Number.parseFloat(style.paddingRight),
@@ -107,6 +107,54 @@ for (const scheme of ["light", "dark"] as const) {
       expect(await page.locator(".wf-root").evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
     }
   });
+
+  for (const [name, content] of [
+    ["an unbroken word", "  icon alert-triangle\n  text Visit https://example.com/a/very/long/unbreakable/path/segment/that/keeps/going/and/going/forever now\n  row.end\n    button Retry"],
+    ["two direct texts", "  icon alert-triangle\n  text.strong Offline\n  text Your changes will sync when you reconnect to the network, and comments stay drafts until then.\n  row.end\n    button Retry"],
+    ["a toggle", "  text View\n  toggle\n    option.current List\n    option Grid\n  row.end\n    button Apply"],
+    ["an input", "  icon search\n  text Filter\n  input Search\n  row.end\n    button Go"],
+    ["labelled fields", "  text Filter\n  input label=Search Search\n  select label=Scope Everything\n  row.end\n    button Go"],
+  ]) {
+    test(`banner tabs preserve the layout of ${name} in ${scheme}`, async ({ page }) => {
+      const source = `banner.warning\n${content}`;
+      const measure = () => page.locator(".wf-banner").evaluate((banner) => {
+        const box = banner.getBoundingClientRect();
+        const style = getComputedStyle(banner);
+        const root = banner.closest(".wf-root")!;
+        return {
+          width: box.width,
+          overflow: root.scrollWidth - root.clientWidth,
+          contentLeft: box.left + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft),
+          contentRight: box.right - Number.parseFloat(style.borderRightWidth) - Number.parseFloat(style.paddingRight),
+          children: [...banner.querySelectorAll("[data-line]")].filter((node) => !node.closest(".wf-tabs")).map((node) => {
+            const rect = node.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, top: rect.top - box.top, bottom: rect.bottom - box.top, scrollWidth: node.scrollWidth };
+          }),
+          tabs: [...banner.querySelectorAll(".wf-tabs")].map((node) => {
+            const rect = node.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, top: rect.top - box.top };
+          }),
+        };
+      });
+      for (const width of [710, 320]) {
+        await show(page, source, { scheme, host: "column", width });
+        const before = await measure();
+        await show(page, `${source}\n${strip}`, { scheme, host: "column", width });
+        const after = await measure();
+        expect(after.children).toEqual(before.children);
+        expect(after.width).toBe(before.width);
+        expect(after.overflow).toBe(before.overflow);
+        expect(after.tabs[0]!.top).toBeGreaterThan(Math.max(...after.children.map((child) => child.bottom)));
+        expect(after.tabs[0]!.left).toBeCloseTo(after.contentLeft, 1);
+        expect(after.tabs[0]!.right).toBeCloseTo(after.contentRight, 1);
+        if (name === "an unbroken word") {
+          expect(after.overflow).toBeGreaterThan(0);
+          expect(after.children[1]!.right).toBeLessThan(after.children[2]!.left);
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      }
+    });
+  }
 
   test(`overflow stays in the tab strip across containers and host layouts in ${scheme}`, async ({ page }) => {
     for (const layout of ["block", "flex", "grid"] as const) {

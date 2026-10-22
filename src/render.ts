@@ -242,6 +242,21 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
+  if (node.kind === "banner" && node.children.some((child) => child.kind === "tabs")) {
+    // Each strip gets its own line. Keep intervening source in the banner's
+    // usual nowrap flex line, including its intrinsic minimum width.
+    let line: HTMLElement | undefined;
+    for (const child of [...element.children]) {
+      if (child.classList.contains("wf-tabs")) line = undefined;
+      else {
+        if (line === undefined) {
+          line = create(document, "div", ["wf-banner-line"]);
+          element.insertBefore(line, child);
+        }
+        line.append(child);
+      }
+    }
+  }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
     if (label !== undefined) {
