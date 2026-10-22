@@ -1043,6 +1043,7 @@ const STYLES = `.wf-root {
 
 .wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-size) {
   --_wf-banner-cap: initial;
+  --_wf-content-width: initial;
   container-type: inline-size;
   align-self: stretch;
   justify-self: stretch;
@@ -1060,29 +1061,48 @@ const STYLES = `.wf-root {
   width: min(var(--_wf-width), max(0px, var(--_wf-banner-cap, calc(100cqi - 1.5em - 2 * var(--_wf-stroke)))));
 }
 
-/* A surrounding content box supplies the row's available width before it
-   expands. Subtract its normal insets and the banner's own border/padding.
-   The dialog's card also has its usual 32em preferred width. */
+/* Snapshot a nested box's available width before its own insets are applied.
+   Two properties let every level subtract its insets without a variable cycle.
+   Independent boundaries (for example in a sibling card) start from their own
+   size container. An explicit page width also limits the pre-expansion cap. */
+.wf-root .wf-content-wrap {
+  --_wf-content-available: initial;
+  --_wf-content-limit: initial;
+}
+
+.wf-root .wf-content-wrap.wf-content-item,
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) .wf-content-wrap {
+  --_wf-content-available: var(--_wf-content-width, 100cqi);
+}
+
+.wf-root .wf-content-size > * {
+  --_wf-content-input: min(var(--_wf-content-available, 100cqi), var(--_wf-content-limit, 100cqi));
+  --_wf-banner-cap: calc(var(--_wf-content-width) - 1.5em - 2 * var(--_wf-stroke));
+}
+
+/* Subtract the surrounding box's normal insets. The dialog card also has its
+   usual 32em preferred width. The banner's own insets are subtracted above. */
 .wf-root .wf-content-size > .wf-dialog {
-  --_wf-banner-cap: calc(min(32em, 100cqi - 2.5em) - 4.5em - 4 * var(--_wf-stroke));
+  --_wf-content-width: calc(min(32em, var(--_wf-content-input) - 2.5em) - 3em - 2 * var(--_wf-stroke));
 }
 
 .wf-root .wf-content-size > .wf-page {
-  --_wf-banner-cap: calc(100cqi - 5em - 4 * var(--_wf-stroke));
+  --_wf-content-width: calc(var(--_wf-content-input) - 3.5em - 2 * var(--_wf-stroke));
 }
 
 .wf-root .wf-content-size > .wf-frame {
-  --_wf-banner-cap: calc(100cqi - 3.5em - 5 * var(--_wf-stroke));
+  --_wf-content-width: calc(var(--_wf-content-input) - 2em - 3 * var(--_wf-stroke));
 }
 
 .wf-root .wf-content-size > .wf-phone-content {
-  --_wf-banner-cap: calc(100cqi - 4em - 2 * var(--_wf-stroke));
+  --_wf-content-width: calc(var(--_wf-content-input) - 2.5em);
 }
 
-/* A nested boundary continues to use the outermost cap. */
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size),
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) .wf-content-size > * {
+/* Nested rows and banners reuse the outer cap. Nested content boxes subtract
+   their own insets from the snapshotted available width instead. */
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size) {
   --_wf-banner-cap: inherit;
+  --_wf-content-width: inherit;
 }
 
 .wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
@@ -1093,17 +1113,17 @@ const STYLES = `.wf-root {
    outer sizing container's cap instead of capping each image at the leftover
    space in its parent's flex line. Without containment the real nested box
    supplies its own width, so only the outer copy is needed for sizing. */
-.wf-root .wf-content-row,
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
+.wf-root .wf-content-item,
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
   grid-template-columns: minmax(min-content, 1fr);
   min-width: min-content;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap) {
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap) {
   container-type: normal;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
   display: none;
 }
 

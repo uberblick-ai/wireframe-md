@@ -412,6 +412,14 @@ for (const scheme of ["light", "dark"] as const) {
       "page width=256\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Next",
       "page.window width=320 Settings\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Next",
       "page\n  row\n    banner\n      image width=80 Preview\n      text Draft saved\n  card width=240\n    row\n      banner\n        image width=9999 Independent\n        text Note",
+      "page\n  text.title Settings\n  dialog Confirm\n    row.end\n      button Cancel\n      banner\n        image width=80 Preview\n        text Draft saved\n      button Save\n      button Publish now",
+      "dialog Confirm\n  text Leave?\n  page\n    row\n      button Back\n      banner\n        image width=80 Preview\n        text Saved\n      button Next\n      button Done",
+      "phone\n  text Home\n  dialog Confirm\n    row.end\n      button Cancel\n      banner\n        image width=80 Preview\n        text Draft saved\n      button Save\n      button Publish now",
+      "frame Preview\n  dialog Confirm\n    row.end\n      button Cancel\n      banner\n        image width=80 Preview\n        text Draft saved\n      button Save\n      button Publish now",
+      "row\n  button Back\n  dialog Confirm\n    row.end\n      button Cancel\n      banner\n        image width=80 Preview\n        text Draft saved\n      button Save\n  button Next",
+      "page\n  text.title Settings\n  dialog Confirm\n    row.end\n      button Back\n      banner\n        image width=9999 Preview\n        text Note\n      button Next",
+      "row\n  button Back\n  frame Preview\n    row\n      button Back\n      banner\n        image width=9999 Preview\n        text Note\n      button Next\n  button Next",
+      "page width=300\n  dialog Confirm\n    page.window width=256 Inner\n      frame Preview\n        row\n          button Back\n          banner\n            image width=9999 Preview\n            text Note\n          button Next",
     ].flatMap((source) => [source, source.replace(/(^|\n)( *)banner(?=\n)/g, "$1$2banner\n$2  tabs\n$2    option.current Overview\n$2    option Details")])) {
       for (const layout of ["block", "fit-content", "grid-content"] as const) {
         await show(page, source, { scheme, host: "column", layout });
@@ -425,15 +433,19 @@ for (const scheme of ["light", "dark"] as const) {
             const insets = (style: CSSStyleDeclaration) => Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
               + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.borderRightWidth);
             let available = boundary.getBoundingClientRect().width - insets(getComputedStyle(boundary));
-            if (boundary.classList.contains("wf-content-size")) {
-              const ancestors = [];
-              for (let parent = banner.parentElement!; parent !== boundary; parent = parent.parentElement!) ancestors.unshift(parent);
-              for (const parent of ancestors) {
-                const style = getComputedStyle(parent);
-                if (parent.classList.contains("wf-dialog-card")) available = Math.min(available, 32 * Number.parseFloat(style.fontSize));
-                available -= insets(style);
-              }
+            const ancestors = [];
+            for (let parent = banner.parentElement!; parent !== boundary; parent = parent.parentElement!) ancestors.unshift(parent);
+            for (const parent of ancestors) {
+              const style = getComputedStyle(parent);
+              const limit = Number.parseFloat((parent as HTMLElement).style.getPropertyValue("--_wf-content-limit"));
+              if (Number.isFinite(limit)) available = Math.min(available, limit);
+              if (parent.classList.contains("wf-dialog-card")) available = Math.min(available, 32 * Number.parseFloat(style.fontSize));
+              // Nested banners reuse the outer banner cap; content boxes each
+              // subtract their own insets before passing space to their rows.
+              if (!parent.classList.contains("wf-banner")) available -= insets(style);
             }
+            const realBox = (child: Element) => (child.matches(".wf-row-wrap, .wf-banner-wrap, .wf-content-wrap")
+              ? child.querySelector(":scope > :is(.wf-row-size, .wf-banner-size, .wf-content-size) > *")! : child).getBoundingClientRect();
             return {
               imageWidth: image.getBoundingClientRect().width,
               declaredWidth: Number.parseFloat((image as HTMLElement).style.getPropertyValue("--_wf-width")),
@@ -443,14 +455,16 @@ for (const scheme of ["light", "dark"] as const) {
                 const children = element.classList.contains("wf-banner") ? element.querySelectorAll(":scope > .wf-banner-line > *") : element.children;
                 // Scroll rows contain overflow rather than expanding to enclose it.
                 return { kind: element.className, enclosed: element.classList.contains("wf-scroll") || [...children].every((child) => {
-                  const real = child.matches(".wf-row-wrap, .wf-banner-wrap, .wf-content-wrap") ? child.querySelector(":scope > :is(.wf-row-size, .wf-banner-size, .wf-content-size) > *")! : child;
-                  return real.getBoundingClientRect().right <= box.right - Number.parseFloat(getComputedStyle(element).paddingRight) + 0.1;
+                  return realBox(child).right <= box.right - Number.parseFloat(getComputedStyle(element).paddingRight) + 0.1;
                 }) };
               }),
+              separated: [...image.closest(".wf-root")!.querySelectorAll(".wf-row[data-line]")].every((row) =>
+                [...row.children].every((child, index, children) => index === 0 || realBox(children[index - 1]!).right <= realBox(child).left + 0.1)),
             };
           });
-          expect(geometry.imageWidth, `${source}, ${layout}, ${width}`).toBeCloseTo(Math.min(geometry.declaredWidth, geometry.cap), 1);
+          expect(geometry.imageWidth, `${source}, ${layout}, ${width}`).toBeCloseTo(Math.min(geometry.declaredWidth, Math.max(0, geometry.cap)), 1);
           expect(geometry.enclosures, `${source}, ${layout}, ${width}`).toEqual(geometry.enclosures.map(({ kind }) => ({ kind, enclosed: true })));
+          expect(geometry.separated, `${source}, ${layout}, ${width}`).toBe(true);
           expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         }
       }

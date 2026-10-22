@@ -242,20 +242,22 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
-  if (["dialog", "page", "frame", "phone"].includes(node.kind) && body.querySelector(":scope > .wf-row-wrap") !== null) {
-    // Keep the row's real minimum in its surrounding content box. Put the
-    // available-width boundary outside that box, so unfitting rows widen the
-    // card, scrim, page or frame instead of escaping their borders.
-    const rows = [...body.querySelectorAll(":scope > .wf-row-wrap")];
+  if (["dialog", "page", "frame", "phone"].includes(node.kind) && body.querySelector(":scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
+    // Keep wrapped rows and misplaced content boxes in the intrinsic sizing
+    // path at every level. The boundary sits outside the enclosing box, so
+    // unfitting content widens its borders instead of escaping them.
+    const children = [...body.querySelectorAll(":scope > .wf-row-wrap, :scope > .wf-content-wrap")];
     if (phoneViewport !== undefined) {
       const next = body.nextSibling;
       phoneViewport.insertBefore(sizingBoundary(document, body, "content"), next);
-      for (const row of rows) row.classList.add("wf-content-row");
+      for (const child of children) child.classList.add("wf-content-item");
     } else {
       const wrap = sizingBoundary(document, element, "content");
-      for (const row of rows) row.classList.add("wf-content-row");
+      for (const child of children) child.classList.add("wf-content-item");
       if (node.kind === "page" && element.style.width !== "") {
         wrap.style.width = element.style.width;
+        const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
+        if (width !== undefined) wrap.style.setProperty("--_wf-content-limit", `${width}px`);
         element.style.width = "100%";
       }
       return wrap;
@@ -285,7 +287,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       return sizingBoundary(document, element, "banner");
     }
   }
-  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap") !== null) {
+  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
     // A misplaced banner still shrinks and wraps beside row siblings. Measure
     // its image cap against the row's available width, before content widens
     // the row, rather than against the banner's remaining slice of that line.
@@ -318,7 +320,7 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
   // Nested boundaries contribute through their sizing copies. Drop contained
   // real boxes so each nested banner or row is measured only once.
   for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size")) child.remove();
-  for (const child of intrinsic.querySelectorAll(".wf-content-row")) child.classList.remove("wf-content-row");
+  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
   for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
   const size = create(document, "div", [`wf-${kind}-size`]);
   size.append(element);

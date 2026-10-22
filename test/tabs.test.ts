@@ -122,12 +122,29 @@ describe("tabs", () => {
     expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
       .toEqual(Array.from({ length: 13 }, (_, index) => String(index + 1)));
     const scope = root.querySelector(".wf-content-size")!;
-    expect(scope.querySelectorAll(".wf-content-row")).toHaveLength(1);
+    expect(scope.querySelectorAll(".wf-content-item")).toHaveLength(1);
     const copy = root.querySelector(".wf-content-intrinsic")!;
     expect(copy.getAttribute("aria-hidden")).toBe("true");
-    expect(copy.querySelector("[data-line], .wf-content-row, .wf-banner-size, .wf-row-size, .wf-content-size")).toBeNull();
+    expect(copy.querySelector("[data-line], .wf-content-item, .wf-banner-size, .wf-row-size, .wf-content-size")).toBeNull();
     expect(copy.querySelectorAll(".wf-image")).toHaveLength(2);
     expect(root.querySelectorAll(".wf-image[data-line]")).toHaveLength(2);
+  });
+
+  it.each(["dialog Confirm", "page width=300", "frame Preview", "phone", "row"])("propagates nested content sizing through %s without duplicating source", (outer) => {
+    const source = `${outer}\n  page.window width=256 Settings\n    row\n      button Back\n      banner\n        image width=9999 Preview\n        tabs\n          option.current Overview\n      button Next`;
+    const root = renderWireframe(parseWireframe(source))!;
+    expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(Array.from({ length: 9 }, (_, index) => String(index + 1)));
+    const page = root.querySelector('.wf-page[data-line="2"]')!;
+    const wrap = page.parentElement!.parentElement!;
+    expect(wrap.classList.contains("wf-content-wrap")).toBe(true);
+    expect(wrap.classList.contains("wf-content-item")).toBe(outer !== "row");
+    expect(wrap.style.getPropertyValue("--_wf-content-limit")).toBe("256px");
+    expect(root.querySelectorAll(".wf-image[data-line]")).toHaveLength(1);
+    for (const copy of root.querySelectorAll(".wf-content-intrinsic, .wf-row-intrinsic, .wf-banner-intrinsic")) {
+      expect(copy.getAttribute("aria-hidden")).toBe("true");
+      expect(copy.querySelector("[data-line], .wf-content-item, .wf-banner-size, .wf-row-size, .wf-content-size")).toBeNull();
+    }
   });
 
   it.each([
