@@ -329,6 +329,112 @@ for (const scheme of ["light", "dark"] as const) {
     }
   });
 
+  for (const [name, row, imageWidth] of [
+    ["wrapping text", "row\n  button Back\n  banner\n    image width=80 Preview\n    text Your draft is saved on this device and will sync with the workspace as soon as you reconnect to the network.\n  button Next", 80],
+    ["fitting text", "row\n  button Back\n  banner\n    image width=48 Preview\n    text Your draft is saved here and will sync as soon as you get back online. Your edits stay here while you are away.\n  button Next", 48],
+    ["a lone oversized image", "row\n  banner\n    image width=800 Preview", 800],
+    ["an oversized image beside buttons", "row\n  button Back\n  banner\n    image width=9999 Preview\n    text Note\n  button Next", 9999],
+    ["an oversized avatar", "row.between\n  banner\n    image.round width=9999 Ana\n    text Ana joined.", 9999],
+  ] as const) {
+    test(`a row banner preserves ${name} in ${scheme}`, async ({ page }) => {
+      for (const layout of ["block", "fit-content", "grid-content"] as const) {
+        for (const width of [710, 400, 320]) {
+          for (const phone of [false, true]) {
+            const measurements = [];
+            for (const tabs of [false, true]) {
+              const source = tabs ? row.replace(/(\n {2}button Next)?$/, "\n    tabs\n      option.current Overview\n      option Details$1") : row;
+              await show(page, phone ? `phone\n  dock\n${source.split("\n").map((line) => `    ${line}`).join("\n")}` : source, { scheme, host: "column", width, layout });
+              const geometry = await page.locator(".wf-image[data-line]").evaluate((image) => {
+                const banner = image.closest(".wf-banner")!;
+                const row = banner.closest(".wf-banner-wrap")!.parentElement!;
+                const text = banner.querySelector(".wf-text[data-line]");
+                const box = banner.getBoundingClientRect();
+                const style = getComputedStyle(banner);
+                const root = image.closest(".wf-root")!;
+                const viewport = root.querySelector(".wf-phone-viewport") ?? root;
+                const previous = banner.closest(".wf-banner-wrap")!.previousElementSibling;
+                const next = banner.closest(".wf-banner-wrap")!.nextElementSibling;
+                return {
+                  imageWidth: image.getBoundingClientRect().width,
+                  rowWidth: row.getBoundingClientRect().width,
+                  cap: row.closest(".wf-row-size")!.getBoundingClientRect().width - Number.parseFloat(style.paddingLeft)
+                    - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderLeftWidth) - Number.parseFloat(style.borderRightWidth),
+                  left: box.left, right: box.right,
+                  previousRight: previous?.getBoundingClientRect().right,
+                  nextLeft: next?.getBoundingClientRect().left,
+                  textHeight: text?.getBoundingClientRect().height ?? 0,
+                  lineHeight: text ? Number.parseFloat(getComputedStyle(text).lineHeight) : 0,
+                  rootOverflow: root.scrollWidth - root.clientWidth,
+                  viewportOverflow: viewport.scrollWidth - viewport.clientWidth,
+                  enclosed: [...banner.querySelectorAll(":scope > .wf-banner-line > *")].every((child) => child.getBoundingClientRect().right <= box.right),
+                };
+              });
+              const context = `${layout}, ${width}, phone=${phone}, tabs=${tabs}`;
+              expect(geometry.imageWidth, context).toBeGreaterThan(0);
+              expect(geometry.imageWidth, context).toBeLessThanOrEqual(geometry.rowWidth);
+              expect(geometry.imageWidth, context).toBeCloseTo(Math.min(imageWidth, geometry.cap), 1);
+              expect(geometry.enclosed, context).toBe(true);
+              if (geometry.previousRight !== undefined) expect(geometry.left, context).toBeGreaterThan(geometry.previousRight);
+              if (geometry.nextLeft !== undefined) expect(geometry.right, context).toBeLessThan(geometry.nextLeft);
+              if (name === "wrapping text" || name === "fitting text") {
+                expect(geometry.imageWidth, context).toBe(imageWidth);
+                expect(geometry.textHeight, context).toBeGreaterThan(geometry.lineHeight);
+              }
+              if (name === "fitting text" || name === "a lone oversized image" || (name === "wrapping text" && width >= 400)) {
+                expect(geometry.rootOverflow, context).toBe(0);
+                expect(geometry.viewportOverflow, context).toBe(0);
+              }
+              expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+              measurements.push(geometry);
+            }
+            expect(measurements[1]).toEqual(measurements[0]);
+          }
+        }
+      }
+    });
+  }
+
+  test(`row banner sizing composes with surrounding layouts and resizing in ${scheme}`, async ({ page }) => {
+    for (const source of [
+      "card width=240\n  row\n    banner\n      image width=9999 Preview\n      text Note",
+      "row\n  button Back\n  card width=240\n    banner\n      image width=9999 Preview\n      text Note",
+      "row.between\n  row\n    banner\n      image width=9999 Preview\n      text Note\n  button Next",
+      // A scroll row contributes no intrinsic width; a sibling supplies the
+      // host's natural width when the host itself sizes to content.
+      "text Scroll preview\nrow.scroll\n  button Back\n  banner\n    image width=9999 Preview\n    text Note\n  button Next",
+      "banner\n  image width=48 Outer\n  text Outer\n  row\n    button Back\n    banner\n      image width=9999 Preview\n      text Note\n    button Next",
+      "dialog\n  row.end\n    button Back\n    banner\n      image width=9999 Preview\n      text Note\n    button Next",
+    ]) {
+      for (const layout of ["block", "fit-content", "grid-content"] as const) {
+        await show(page, source, { scheme, host: "column", layout });
+        for (const width of [710, 400, 320, 710]) {
+          await page.locator(".column").evaluate((column, width) => { (column as HTMLElement).style.width = `${width}px`; }, width);
+          const geometry = await page.locator(".wf-image[data-line]").last().evaluate((image) => {
+            const banner = image.closest(".wf-banner")!;
+            const style = getComputedStyle(banner);
+            let boundary = image.parentElement!;
+            while (getComputedStyle(boundary).containerType !== "inline-size") boundary = boundary.parentElement!;
+            const insets = (style: CSSStyleDeclaration) => Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
+              + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.borderRightWidth);
+            return {
+              imageWidth: image.getBoundingClientRect().width,
+              cap: boundary.getBoundingClientRect().width - insets(getComputedStyle(boundary)) - insets(style),
+              enclosures: [...image.closest(".wf-root")!.querySelectorAll(".wf-banner[data-line], .wf-row[data-line]")].every((element) => {
+                const box = element.getBoundingClientRect();
+                const children = element.classList.contains("wf-banner") ? element.querySelectorAll(":scope > .wf-banner-line > *") : element.children;
+                // Scroll rows contain overflow rather than expanding to enclose it.
+                return element.classList.contains("wf-scroll") || [...children].every((child) => child.getBoundingClientRect().right <= box.right);
+              }),
+            };
+          });
+          expect(geometry.imageWidth, `${source}, ${layout}, ${width}`).toBeCloseTo(geometry.cap, 1);
+          expect(geometry.enclosures, `${source}, ${layout}, ${width}`).toBe(true);
+          expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        }
+      }
+    }
+  });
+
   test(`nested banner image caps follow the outer available width in ${scheme}`, async ({ page }) => {
     for (const kind of ["image", "image.round"]) {
       for (const sizedOuter of [false, true]) {

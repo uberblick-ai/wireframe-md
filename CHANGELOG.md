@@ -16,8 +16,9 @@ format, the vocabulary and the rendering may change in any minor version.
   their intrinsic width in hosts that size to content, including misplaced
   nested banners. Nested images keep their declared width up to the outer
   banner's available space, including when that banner has no direct image.
-  Misplaced sized banners in rows keep room beside their siblings; unfitting
-  content scrolls inside the wireframe.
+  Misplaced sized banners in rows wrap text and cap images at the row's
+  available width while keeping room beside siblings; unfitting content
+  scrolls inside the wireframe.
 
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text

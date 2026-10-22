@@ -94,6 +94,19 @@ describe("tabs", () => {
     expect(copy.querySelectorAll(".wf-banner-intrinsic")).toHaveLength(1);
   });
 
+  it("keeps row sizing copies hidden and source annotations unique through nested boundaries", () => {
+    const parsed = parseWireframe("row\n  button Back\n  row\n    banner\n      image width=9999 Preview\n      row\n        banner\n          image width=80 Inner\n      tabs\n        option.current Overview\n  button Next");
+    const root = renderWireframe(parsed)!;
+    expect(root.firstElementChild!.className).toBe("wf-row-wrap");
+    expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(Array.from({ length: 11 }, (_, index) => String(index + 1)));
+    const copy = root.querySelector(":scope > .wf-row-wrap > .wf-row-intrinsic")!;
+    expect(copy.getAttribute("aria-hidden")).toBe("true");
+    expect(copy.querySelector("[data-line], .wf-banner-size, .wf-row-size, .wf-tabs")).toBeNull();
+    expect(copy.querySelectorAll(".wf-image")).toHaveLength(2);
+    expect(root.querySelectorAll(".wf-image[data-line]")).toHaveLength(2);
+  });
+
   it("keeps toggle and dock behavior when several options are current", () => {
     for (const prefix of ["page\n  toggle\n", "phone\n  dock\n    toggle\n"]) {
       const indent = prefix.includes("dock") ? "      " : "    ";

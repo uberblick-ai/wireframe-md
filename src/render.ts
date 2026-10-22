@@ -263,23 +263,16 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       // Nested sized banners need the outer boundary even without a direct image.
       // A size container cannot supply an intrinsic width. Keep a hidden sizing
       // copy beside it so shrink-to-fit hosts can still measure the content.
-      const intrinsic = create(document, "div", ["wf-banner-intrinsic"]);
-      intrinsic.setAttribute("aria-hidden", "true");
-      for (const child of element.children) {
-        if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
-      }
-      // Nested banners contribute through their sizing copies too. Drop their
-      // contained real boxes so each nested banner is measured only once.
-      for (const child of intrinsic.querySelectorAll(".wf-banner-size")) child.remove();
-      for (const child of intrinsic.querySelectorAll("[data-line]")) {
-        child.removeAttribute("data-line");
-      }
-      const size = create(document, "div", ["wf-banner-size"]);
-      size.append(element);
-      const wrap = create(document, "div", ["wf-banner-wrap"]);
-      wrap.append(size, intrinsic);
-      return wrap;
+      return sizingBoundary(document, element, "banner");
     }
+  }
+  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap") !== null) {
+    // A misplaced banner still shrinks and wraps beside row siblings. Measure
+    // its image cap against the row's available width, before content widens
+    // the row, rather than against the banner's remaining slice of that line.
+    // Scroll rows already have inline-size containment and need no wrapper.
+    if (!element.classList.contains("wf-scroll")) return sizingBoundary(document, element, "row");
+    element.classList.add("wf-row-cap");
   }
   if (node.kind === "input" || node.kind === "select") {
     const label = node.attributes.find((attribute) => attribute.key === "label");
@@ -293,6 +286,30 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     }
   }
   return element;
+}
+
+/** Keep available-width image caps independent of intrinsic content sizing. */
+function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row"): HTMLElement {
+  const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
+  intrinsic.setAttribute("aria-hidden", "true");
+  if (kind === "row") intrinsic.append(element.cloneNode(true));
+  else for (const child of element.children) {
+    if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
+  }
+  // Nested boundaries contribute through their sizing copies. Drop contained
+  // real boxes so each nested banner or row is measured only once.
+  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size")) child.remove();
+  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
+  const size = create(document, "div", [`wf-${kind}-size`]);
+  size.append(element);
+  const wrap = create(document, "div", [`wf-${kind}-wrap`]);
+  if (kind === "row") {
+    for (const variant of ["wf-row-group", "wf-end"]) {
+      if (element.classList.contains(variant)) wrap.classList.add(variant);
+    }
+  }
+  wrap.append(size, intrinsic);
+  return wrap;
 }
 
 /** A dashed box showing the kind as written, the label and the children. */
