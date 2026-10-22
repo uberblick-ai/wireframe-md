@@ -984,6 +984,12 @@ const STYLES = `.wf-root {
   flex-wrap: wrap;
 }
 
+/* Keep text beside the icon and actions instead of wrapping its flex item. */
+.wf-root .wf-banner:has(> .wf-tabs) > .wf-text {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .wf-root .wf-banner > .wf-tabs {
   flex: 0 1 100%;
 }

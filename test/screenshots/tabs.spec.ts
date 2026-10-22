@@ -68,6 +68,46 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 
+  test(`banner tabs keep long text beside the icon and actions in ${scheme}`, async ({ page }) => {
+    const source = "banner.warning\n  icon alert-triangle\n  text You are offline. Your changes will sync when you reconnect to the network, and comments stay drafts until then.\n  row.end\n    button Retry";
+    const measure = () => page.locator(".wf-banner").evaluate((banner) => {
+      const box = banner.getBoundingClientRect();
+      const style = getComputedStyle(banner);
+      const rect = (selector: string) => {
+        const child = banner.querySelector(selector)!.getBoundingClientRect();
+        return { left: child.left, right: child.right, top: child.top - box.top, bottom: child.bottom - box.top, height: child.height };
+      };
+      return {
+        icon: rect(":scope > .wf-icon"), text: rect(":scope > .wf-text"), actions: rect(":scope > .wf-row.wf-end"),
+        lineHeight: Number.parseFloat(getComputedStyle(banner.querySelector(".wf-text")!).lineHeight),
+        contentLeft: box.left + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft),
+        contentRight: box.right - Number.parseFloat(style.borderRightWidth) - Number.parseFloat(style.paddingRight),
+        tabs: banner.querySelector(".wf-tabs") === null ? null : rect(".wf-tabs"),
+      };
+    });
+    for (const width of [710, 320]) {
+      await show(page, source, { scheme, host: "column", width });
+      const before = await measure();
+      await show(page, `${source}\n${strip}`, { scheme, host: "column", width });
+      const after = await measure();
+      // Adding a strip must not reflow the existing banner content onto separate lines.
+      expect(after.icon).toEqual(before.icon);
+      expect(after.text).toEqual(before.text);
+      expect(after.actions).toEqual(before.actions);
+      expect(after.text.height).toBeGreaterThan(after.lineHeight);
+      expect(after.icon.right).toBeLessThan(after.text.left);
+      expect(after.text.right).toBeLessThan(after.actions.left);
+      for (const child of [after.icon, after.actions]) {
+        expect((child.top + child.bottom) / 2).toBeCloseTo((after.text.top + after.text.bottom) / 2, 1);
+      }
+      expect(after.tabs!.top).toBeGreaterThan(after.text.bottom);
+      expect(after.tabs!.left).toBeCloseTo(after.contentLeft, 1);
+      expect(after.tabs!.right).toBeCloseTo(after.contentRight, 1);
+      expect(after.actions.right).toBeCloseTo(after.contentRight, 1);
+      expect(await page.locator(".wf-root").evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+    }
+  });
+
   test(`overflow stays in the tab strip across containers and host layouts in ${scheme}`, async ({ page }) => {
     for (const layout of ["block", "flex", "grid"] as const) {
       for (const kind of ["page", "page.window Settings", "dialog", "banner", "frame", "phone", "card", "card width=240"]) {
