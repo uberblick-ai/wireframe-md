@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `tabs` draws an inert tab strip directly inside roots and cards, with an ink
+  underline on the first `option.current`. Options may hold an icon. Overflow
+  scrolls inside the strip with a native keyboard stop and a visible focus ring.
+
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text
   wrapping inside the group at narrow widths. Layout variants on the inner row

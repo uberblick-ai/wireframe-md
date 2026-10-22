@@ -232,6 +232,10 @@ function checkNode(
   if (node.variants.filter((variant) => exclusive.includes(variant)).length > 1) {
     warn(`${kind} takes one of ${list(exclusive.map((variant) => `.${variant}`))}: the first is used`);
   }
+  if (kind === "option" && parent?.kind === "tabs" && node.variants.includes("current") &&
+    parent.children.filter((child) => child.kind === "option" && child.variants.includes("current")).length > 1) {
+    warn("tabs takes one current option: the first is used");
+  }
   if (kind === "icon") {
     if (parent?.kind === "option" && parent.children.filter((child) => child.kind === "icon").length > 1) {
       warn("option takes only one icon");
@@ -250,10 +254,9 @@ function checkNode(
     if (parent !== undefined) warn(`${kind} must be at the top level`);
     return;
   }
-  // A divider belongs only to stacking roots, including in a table row where
-  // its own placement warning takes precedence over the expected-cell warning.
-  if (kind === "divider" || kind === "dock") {
-    if (!rule.place.some((place) => place === parent?.kind)) {
+  // These kinds keep their own placement warning even in a table row.
+  if (kind === "divider" || kind === "dock" || kind === "tabs") {
+    if (!rule.place.some((place) => place === parent?.kind || (place === "root" && ROOTS.includes(parent?.kind ?? "")))) {
       warn(`${kind} must be directly inside ${inside(rule.place)}`);
     }
     return;
@@ -287,7 +290,7 @@ function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode |
   if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "tabs" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option") return parent.kind;
   return undefined;
 }
 

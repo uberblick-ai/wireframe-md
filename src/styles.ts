@@ -22,7 +22,7 @@
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
 //   --wf-danger        the destructive colour: button.danger and banner.danger's icon
 //   --wf-danger-ink    the caption on a filled button.primary.danger
-//   --wf-focus         button.focus's ring and keyboard-focused phone screens and scroll rows
+//   --wf-focus         button.focus's ring and keyboard-focused phone screens, scroll rows and tab strips
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
@@ -367,7 +367,8 @@ const STYLES = `.wf-root {
   outline-offset: var(--_wf-focus-width);
 }
 
-.wf-root .wf-row.wf-scroll:focus-visible {
+.wf-root .wf-row.wf-scroll:focus-visible,
+.wf-root .wf-tabs:focus-visible {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: calc(-1 * var(--_wf-focus-width));
 }
@@ -939,6 +940,52 @@ const STYLES = `.wf-root {
 .wf-root .wf-option > .wf-icon {
   color: inherit;
   margin-inline-end: 0.375em;
+}
+
+/* Tab strips own their overflow. The inset rule stays across the visible
+   content width while the tabs scroll; only the current tab underlines it. */
+.wf-root .wf-tabs {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  justify-self: stretch;
+  gap: 0.5em;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  contain: inline-size;
+  overflow: auto hidden;
+  overscroll-behavior: auto;
+  box-shadow: inset 0 calc(-1 * var(--_wf-stroke)) 0 var(--_wf-line);
+}
+
+.wf-root .wf-tabs > * {
+  flex: none;
+}
+
+.wf-root .wf-tabs > .wf-option {
+  position: relative;
+  padding: 0.5em 0.75em 0.625em;
+}
+
+.wf-root .wf-tabs > .wf-option.wf-current::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(2 * var(--_wf-stroke));
+  background: var(--_wf-ink);
+}
+
+/* A banner normally uses one line; a tab strip needs a content-width line. */
+.wf-root .wf-banner:has(> .wf-tabs) {
+  flex-wrap: wrap;
+}
+
+.wf-root .wf-banner > .wf-tabs {
+  flex: 0 1 100%;
 }
 
 .wf-root .wf-dock > .wf-toggle {

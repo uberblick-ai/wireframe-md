@@ -11,10 +11,10 @@ export const LIMITS = {
 
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
- * a root, a row, a table, a table row (a row directly inside a table), a toggle
- * or a cell. A dock holds the phone vocabulary; a card holds text, images and rows.
+ * a root, a row, a table, a table row (a row directly inside a table), a toggle,
+ * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, rows and tabs.
  */
-export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "table" | "table row" | "toggle" | "option" | "cell" | "button";
+export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -59,7 +59,8 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   // The label is the chosen value.
   ["select", { place: ["root", "dock", "row"], variants: [], label: true }],
   ["toggle", { place: ["root", "dock", "row"], variants: [], label: false }],
-  ["option", { place: ["toggle"], variants: ["current"], label: true }],
+  ["tabs", { place: ["root", "card"], variants: [], label: false }],
+  ["option", { place: ["toggle", "tabs"], variants: ["current"], label: true }],
   ["table", { place: ["root", "dock"], variants: [], label: false }],
   ["cell", { place: ["table row"], variants: ["end", ...CELL_SORT_VARIANTS], label: true }],
   ["chip", { place: ["row", "cell"], variants: ["more"], label: true }],

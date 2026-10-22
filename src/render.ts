@@ -73,6 +73,8 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       (!rowGroup || !ROW_LAYOUT_VARIANTS.includes(variant)) &&
       (!colours.includes(variant) || index === colourIndex) &&
       (!exclusive.includes(variant) || index === exclusiveIndex) &&
+      (node.kind !== "option" || parent?.kind !== "tabs" || variant !== "current" ||
+        node === parent.children.find((child) => child.kind === "option" && child.variants.includes("current"))) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);

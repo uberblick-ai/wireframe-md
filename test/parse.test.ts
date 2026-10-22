@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, tabs, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -241,10 +241,10 @@ describe("warnings", () => {
     }
   });
 
-  it("warns about every known kind except text, image and row directly inside a card", () => {
+  it("warns about every known kind except text, image, row and tabs directly inside a card", () => {
     for (const prefix of ["card\n  ", "frame\n  card\n    "]) {
       for (const kind of KINDS.keys()) {
-        if (["text", "image", "row"].includes(kind)) continue;
+        if (["text", "image", "row", "tabs"].includes(kind)) continue;
         const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : ""}`);
         expect(diagnostics).toHaveLength(1);
         expect(diagnostics[0]).toMatchObject({ line: prefix.split("\n").length, severity: "warning" });
@@ -514,10 +514,10 @@ describe("warnings", () => {
     expect(warnings("page\n  input Search\n  select Any\n  toggle\n  row\n    input A\n    select B\n    toggle")).toEqual([]);
   });
 
-  it("warns about an option outside a toggle, and a toggle's label", () => {
+  it("warns about an option outside a toggle or tabs, and a toggle's label", () => {
     expect(warnings("page\n  option Day\n  row\n    option Week\n  toggle Period\n    option.current Day")).toEqual([
-      warning(2, "option must be directly inside toggle"),
-      warning(4, "option must be directly inside toggle"),
+      warning(2, "option must be directly inside toggle or tabs"),
+      warning(4, "option must be directly inside toggle or tabs"),
       warning(5, "toggle takes no label"),
     ]);
   });

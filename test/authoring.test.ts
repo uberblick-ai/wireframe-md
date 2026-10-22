@@ -131,6 +131,7 @@ describe("AUTHORING.md", () => {
       table: "a `table`",
       "table row": "a table `row`",
       toggle: "a `toggle`",
+      tabs: "a `tabs`",
       option: "an `option`",
       cell: "a `cell`",
       button: "a `button`",
