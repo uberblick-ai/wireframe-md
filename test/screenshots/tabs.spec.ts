@@ -108,13 +108,20 @@ for (const scheme of ["light", "dark"] as const) {
     }
   });
 
-  for (const [name, content] of [
+  const bannerCases: readonly (readonly [string, string, number?])[] = [
     ["an unbroken word", "  icon alert-triangle\n  text Visit https://example.com/a/very/long/unbreakable/path/segment/that/keeps/going/and/going/forever now\n  row.end\n    button Retry"],
     ["two direct texts", "  icon alert-triangle\n  text.strong Offline\n  text Your changes will sync when you reconnect to the network, and comments stay drafts until then.\n  row.end\n    button Retry"],
     ["a toggle", "  text View\n  toggle\n    option.current List\n    option Grid\n  row.end\n    button Apply"],
     ["an input", "  icon search\n  text Filter\n  input Search\n  row.end\n    button Go"],
     ["labelled fields", "  text Filter\n  input label=Search Search\n  select label=Scope Everything\n  row.end\n    button Go"],
-  ]) {
+    ...[200, 400, 800, 9999].map((width) => [
+      `an image width=${width}`,
+      `  image width=${width} Preview\n  text You are offline. Your changes will sync when you reconnect to the network.\n  row.end\n    button Retry`,
+      width,
+    ] as const),
+    ["a default image", "  icon alert-triangle\n  image Preview\n  text You are offline. Your changes will sync when you reconnect to the network.\n  row.end\n    button Retry"],
+  ];
+  for (const [name, content, imageWidth] of bannerCases) {
     test(`banner tabs preserve the layout of ${name} in ${scheme}`, async ({ page }) => {
       const source = `banner.warning\n${content}`;
       const measure = () => page.locator(".wf-banner").evaluate((banner) => {
@@ -136,10 +143,12 @@ for (const scheme of ["light", "dark"] as const) {
           }),
         };
       });
-      for (const width of [710, 320]) {
-        await show(page, source, { scheme, host: "column", width });
+      const hosts = [710, 500, 400, 320].flatMap((width) =>
+        (["block", "flex", "grid"] as const).map((layout) => ({ width, layout })));
+      for (const { width, layout } of hosts) {
+        await show(page, source, { scheme, host: "column", width, layout });
         const before = await measure();
-        await show(page, `${source}\n${strip}`, { scheme, host: "column", width });
+        await show(page, `${source}\n${strip}`, { scheme, host: "column", width, layout });
         const after = await measure();
         expect(after.children).toEqual(before.children);
         expect(after.width).toBe(before.width);
@@ -147,6 +156,17 @@ for (const scheme of ["light", "dark"] as const) {
         expect(after.tabs[0]!.top).toBeGreaterThan(Math.max(...after.children.map((child) => child.bottom)));
         expect(after.tabs[0]!.left).toBeCloseTo(after.contentLeft, 1);
         expect(after.tabs[0]!.right).toBeCloseTo(after.contentRight, 1);
+        for (const child of after.children) {
+          expect(child.left).toBeGreaterThanOrEqual(after.contentLeft);
+          expect(child.right).toBeLessThanOrEqual(after.contentRight);
+        }
+        if (imageWidth !== undefined) {
+          expect(after.children[0]!.right - after.children[0]!.left).toBe(imageWidth);
+          if (width === 320 || imageWidth >= width) expect(after.overflow).toBeGreaterThan(0);
+        }
+        if (name === "a default image") {
+          expect(after.children[1]!.right - after.children[1]!.left).toBeGreaterThan(0);
+        }
         if (name === "an unbroken word") {
           expect(after.overflow).toBeGreaterThan(0);
           expect(after.children[1]!.right).toBeLessThan(after.children[2]!.left);

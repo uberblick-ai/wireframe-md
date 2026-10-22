@@ -83,16 +83,17 @@ describe("samples", () => {
   it("draws the archived banner as a warning strip with its icon, text and buttons", () => {
     expect(drawn(archivedBanner)).toEqual([
       "div.wf-banner.wf-warning",
-      "  span.wf-icon",
-      "    svg.wf-icon-glyph.wf-icon-outline",
-      "      path",
-      "      path",
-      "      path",
-      "  div.wf-text Archived. Read-only and hidden from the document list.",
-      "  div.wf-row.wf-end",
-      "    span.wf-button Restore",
-      "    span.wf-button.wf-link.wf-danger",
-      "      span.wf-button-caption Delete…",
+      "  div.wf-banner-line",
+      "    span.wf-icon",
+      "      svg.wf-icon-glyph.wf-icon-outline",
+      "        path",
+      "        path",
+      "        path",
+      "    div.wf-text Archived. Read-only and hidden from the document list.",
+      "    div.wf-row.wf-end",
+      "      span.wf-button Restore",
+      "      span.wf-button.wf-link.wf-danger",
+      "        span.wf-button-caption Delete…",
     ]);
   });
 
@@ -298,12 +299,13 @@ describe("kinds and variants", () => {
   it("draws a success banner with its archive icon and message", () => {
     expect(drawn("banner.success\n  icon archive\n  text Restored")).toEqual([
       "div.wf-banner.wf-success",
-      "  span.wf-icon",
-      "    svg.wf-icon-glyph.wf-icon-outline",
-      "      path",
-      "      path",
-      "      path",
-      "  div.wf-text Restored",
+      "  div.wf-banner-line",
+      "    span.wf-icon",
+      "      svg.wf-icon-glyph.wf-icon-outline",
+      "        path",
+      "        path",
+      "        path",
+      "    div.wf-text Restored",
     ]);
   });
 
@@ -560,17 +562,18 @@ describe("warnings", () => {
     ]);
     expect(drawn("banner\n  dialog Nested\n  row\n    text In a row\n    icon archive\n  button Loose")).toEqual([
       "div.wf-banner",
-      "  div.wf-dialog",
-      "    div.wf-dialog-card",
-      "      div.wf-dialog-title Nested",
-      "  div.wf-row",
-      "    div.wf-text In a row",
-      "    span.wf-icon",
-      "      svg.wf-icon-glyph.wf-icon-outline",
-      "        path",
-      "        path",
-      "        path",
-      "  span.wf-button Loose",
+      "  div.wf-banner-line",
+      "    div.wf-dialog",
+      "      div.wf-dialog-card",
+      "        div.wf-dialog-title Nested",
+      "    div.wf-row",
+      "      div.wf-text In a row",
+      "      span.wf-icon",
+      "        svg.wf-icon-glyph.wf-icon-outline",
+      "          path",
+      "          path",
+      "          path",
+      "    span.wf-button Loose",
     ]);
   });
 
@@ -622,20 +625,22 @@ describe("warnings", () => {
   it("draws an unknown icon as a box showing its name", () => {
     expect(drawn("banner\n  icon pinn\n  icon")).toEqual([
       "div.wf-banner",
-      "  span.wf-icon",
-      "    span.wf-icon-unknown pinn",
-      "  span.wf-icon",
-      "    span.wf-icon-unknown",
+      "  div.wf-banner-line",
+      "    span.wf-icon",
+      "      span.wf-icon-unknown pinn",
+      "    span.wf-icon",
+      "      span.wf-icon-unknown",
     ]);
   });
 
   it("draws a label on a kind that takes none as text", () => {
     expect(drawn("banner Archived\n  row Actions\n    button Go")).toEqual([
       "div.wf-banner",
-      "  span.wf-text Archived",
-      "  div.wf-row",
-      "    span.wf-text Actions",
-      "    span.wf-button Go",
+      "  div.wf-banner-line",
+      "    span.wf-text Archived",
+      "    div.wf-row",
+      "      span.wf-text Actions",
+      "      span.wf-button Go",
     ]);
   });
 
@@ -718,7 +723,7 @@ describe("inert output", () => {
     );
     expect(root.querySelector(".wf-button.wf-primary")?.textContent).toBe("<b>Go</b>");
     expect(root.querySelector(".wf-icon-unknown")?.textContent).toBe("<svg onload=alert(1)>");
-    expect(root.querySelector(".wf-banner > .wf-text")?.textContent).toBe("<%= x %> {{x}} </div><div>");
+    expect(root.querySelector(".wf-banner-line > .wf-text")?.textContent).toBe("<%= x %> {{x}} </div><div>");
     expect(root.querySelector(".wf-select")?.textContent).toBe("<img src=x onerror=alert(1)>");
     expect(root.querySelector(".wf-input")?.textContent).toBe("javascript:alert(1)");
     expect(root.querySelector(".wf-option")?.textContent).toBe("<b>Day</b>");

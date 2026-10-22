@@ -10,6 +10,8 @@ format, the vocabulary and the rendering may change in any minor version.
   scrolls inside the strip with a native keyboard stop and a visible focus ring.
   Banner strips take their own line while surrounding content keeps its normal
   spacing, word wrapping and long-word scrolling beside icons and actions.
+  Banners use the same sizing with or without strips, enclosing declared-width
+  images and letting fluid images share a line with text and actions.
 
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text

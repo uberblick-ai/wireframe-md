@@ -646,6 +646,8 @@ the mark. The label never determines the box's width or height.
 
 Inside a root, dock or card, an image fills the available width at 16:9;
 `.square` makes it 1:1. Inside a non-table row it is 48 px wide beside text.
+In a banner, a fluid image shares the line's available width with text and
+actions; declared widths keep their size and can widen the banner.
 `.round` is a 40 px circle by default, including at the start of a root or card.
 A valid `width=` overrides the default, and the ratio determines the height.
 Use only one shape variant: `.square.round` warns and uses the first.

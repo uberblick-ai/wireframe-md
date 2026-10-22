@@ -242,9 +242,10 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
-  if (node.kind === "banner" && node.children.some((child) => child.kind === "tabs")) {
+  if (node.kind === "banner") {
     // Each strip gets its own line. Keep intervening source in the banner's
-    // usual nowrap flex line, including its intrinsic minimum width.
+    // usual nowrap flex line. Use the same layout without strips, so adding
+    // tabs cannot change percentage media's intrinsic sizing pass.
     let line: HTMLElement | undefined;
     for (const child of [...element.children]) {
       if (child.classList.contains("wf-tabs")) line = undefined;

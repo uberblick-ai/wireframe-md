@@ -428,9 +428,9 @@ test.describe("fit", () => {
 
   test("the banner is one line at 710 px: icon, text, then the buttons on the right", async ({ page }) => {
     await show(page, archivedBanner, { host: "column" });
-    expect(await lines(page, ".wf-banner > .wf-text")).toBe(1);
+    expect(await lines(page, ".wf-banner-line > .wf-text")).toBe(1);
     const boxes = await page.evaluate(() =>
-      [...document.querySelector(".wf-banner")!.children].map((child) => {
+      [...document.querySelector(".wf-banner-line")!.children].map((child) => {
         const { left, right, top, bottom } = child.getBoundingClientRect();
         return { left, right, top, bottom };
       }),
@@ -712,7 +712,7 @@ test.describe("theming", () => {
     test(`the long banner example wraps without widening a ${scheme} document column`, async ({ page }) => {
       const source = readFileSync(new URL("../../examples/badges-and-banners/2-banners/wrapping-text.wireframe", import.meta.url), "utf8");
       await show(page, source, { scheme, host: "column" });
-      expect(await lines(page, ".wf-banner > .wf-text")).toBeGreaterThan(1);
+      expect(await lines(page, ".wf-banner-line > .wf-text")).toBeGreaterThan(1);
       expect(await measure(page)).toEqual({
         root: { width: 710, scrollWidth: 710 }, column: { width: 710, scrollWidth: 710 }, escaped: [],
       });

@@ -168,8 +168,9 @@ const STYLES = `.wf-root {
 .wf-root .wf-banner {
   --_wf-tone: var(--_wf-muted);
   --_wf-tint: var(--_wf-neutral-tint);
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr);
+  align-items: stretch;
   gap: 0.625em;
   box-sizing: border-box;
   margin: 0;
@@ -979,18 +980,25 @@ const STYLES = `.wf-root {
   background: var(--_wf-ink);
 }
 
-/* Strips stack in source order; each intervening run keeps the banner's
-   original one-line layout and lets unbroken content widen the whole banner. */
-.wf-root .wf-banner:has(> .wf-tabs) {
-  flex-direction: column;
-  align-items: stretch;
-}
-
+/* All banners use the same line layout, with or without strips. The grid's
+   minimum track encloses each line, including percentage-sized media. */
 .wf-root .wf-banner-line {
   display: flex;
   align-items: center;
   gap: inherit;
   min-width: min-content;
+}
+
+/* Fluid media shares the line with text and actions rather than taking 100%
+   of that line in addition to them. Declared widths and avatars stay fixed. */
+.wf-root .wf-banner-line > .wf-image:not(.wf-sized):not(.wf-round) {
+  flex-shrink: 1;
+}
+
+/* Keep a declared width in the line's intrinsic contribution. max-width still
+   caps the image to its line; min(Npx, 100%) would lose N during that pass. */
+.wf-root .wf-banner-line > .wf-image.wf-sized {
+  width: var(--_wf-width);
 }
 
 .wf-root .wf-dock > .wf-toggle {
