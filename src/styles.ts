@@ -1070,8 +1070,7 @@ const STYLES = `.wf-root {
   --_wf-content-limit: initial;
 }
 
-.wf-root .wf-content-wrap.wf-content-item,
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) .wf-content-wrap {
+.wf-root .wf-content-wrap.wf-shared {
   --_wf-content-available: var(--_wf-content-width, 100cqi);
 }
 
@@ -1100,7 +1099,8 @@ const STYLES = `.wf-root {
 
 /* Nested rows and banners reuse the outer cap. Nested content boxes subtract
    their own insets from the snapshotted available width instead. */
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size) {
+.wf-root .wf-shared > :is(.wf-banner-size, .wf-row-size, .wf-content-size),
+.wf-root .wf-row-cap.wf-shared {
   --_wf-banner-cap: inherit;
   --_wf-content-width: inherit;
 }
@@ -1113,21 +1113,23 @@ const STYLES = `.wf-root {
    outer sizing container's cap instead of capping each image at the leftover
    space in its parent's flex line. Without containment the real nested box
    supplies its own width, so only the outer copy is needed for sizing. */
-.wf-root .wf-content-item,
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap).wf-shared {
   grid-template-columns: minmax(min-content, 1fr);
   min-width: min-content;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap) {
+.wf-root .wf-shared > :is(.wf-banner-size, .wf-row-size, .wf-content-size),
+.wf-root .wf-row-cap.wf-shared {
   container-type: normal;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-item, .wf-row-cap) :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
+.wf-root .wf-shared > :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
   display: none;
 }
 
 .wf-root .wf-row-cap {
+  --_wf-banner-cap: initial;
+  --_wf-content-width: initial;
   container-type: inline-size;
 }
 

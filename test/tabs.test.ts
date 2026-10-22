@@ -147,6 +147,14 @@ describe("tabs", () => {
     }
   });
 
+  it.each(["page", "row"])("keeps sibling card boundaries independent inside nested content in a %s", (outer) => {
+    const source = `${outer}\n  dialog Confirm\n    row\n      banner\n        image width=80 Preview\n    card width=240\n      row\n        banner\n          image width=9999 Independent`;
+    const root = renderWireframe(parseWireframe(source))!;
+    const rows = [...root.querySelectorAll('.wf-dialog[data-line] .wf-row[data-line]')];
+    expect(rows.map((row) => row.closest(".wf-row-wrap")!.classList.contains("wf-shared"))).toEqual([true, false]);
+    expect(root.querySelectorAll('[aria-hidden="true"] .wf-shared')).toHaveLength(0);
+  });
+
   it.each([
     ["top level", "\ntabs", 2],
     ...[...KINDS.keys(), "unknown"].filter((kind) => !["dialog", "banner", "page", "frame", "phone", "card"].includes(kind))

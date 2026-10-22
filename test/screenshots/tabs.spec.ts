@@ -420,6 +420,8 @@ for (const scheme of ["light", "dark"] as const) {
       "page\n  text.title Settings\n  dialog Confirm\n    row.end\n      button Back\n      banner\n        image width=9999 Preview\n        text Note\n      button Next",
       "row\n  button Back\n  frame Preview\n    row\n      button Back\n      banner\n        image width=9999 Preview\n        text Note\n      button Next\n  button Next",
       "page width=300\n  dialog Confirm\n    page.window width=256 Inner\n      frame Preview\n        row\n          button Back\n          banner\n            image width=9999 Preview\n            text Note\n          button Next",
+      "page\n  dialog Confirm\n    row\n      banner\n        image width=80 Preview\n        text Draft saved\n    card width=240\n      row\n        banner\n          image width=9999 Independent\n          text Note",
+      "row\n  button Back\n  dialog Confirm\n    row\n      banner\n        image width=80 Preview\n        text Draft saved\n    card width=240\n      row\n        banner\n          image width=9999 Independent\n          text Note\n  button Next",
     ].flatMap((source) => [source, source.replace(/(^|\n)( *)banner(?=\n)/g, "$1$2banner\n$2  tabs\n$2    option.current Overview\n$2    option Details")])) {
       for (const layout of ["block", "fit-content", "grid-content"] as const) {
         await show(page, source, { scheme, host: "column", layout });

@@ -47,6 +47,16 @@ export function renderWireframe(
     const root = document.createElement("div");
     root.className = ROOT_CLASS;
     for (const node of result.nodes) root.append(draw(document, node));
+    // Share sizing only with the nearest boundary. A content boundary shares
+    // with its affected direct children; independent boxes inside sibling cards
+    // keep their own caps, even when that content box is itself nested in a row.
+    for (const wrap of root.querySelectorAll(".wf-banner-wrap, .wf-row-wrap, .wf-content-wrap, .wf-row-cap")) {
+      if (wrap.closest('[aria-hidden="true"]') !== null) continue;
+      const boundary = wrap.parentElement?.closest(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap");
+      if (boundary && (!boundary.classList.contains("wf-content-size") || wrap.classList.contains("wf-content-item"))) {
+        wrap.classList.add("wf-shared");
+      }
+    }
     return root;
   } catch {
     // Only a result that did not come from parseWireframe, or a missing
