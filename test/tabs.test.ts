@@ -116,6 +116,20 @@ describe("tabs", () => {
     }
   });
 
+  it.each(["dialog Confirm", "page", "page.browser", "frame Preview", "phone"])("keeps %s content sizing copies hidden without duplicating source annotations", (kind) => {
+    const source = `${kind}\n  row.end\n    button Cancel\n    banner\n      image width=80 Preview\n      text Draft saved\n      tabs\n        option.current Overview\n    button Save\n  card width=240\n    row\n      banner\n        image width=9999 Independent`;
+    const root = renderWireframe(parseWireframe(source))!;
+    expect([...root.querySelectorAll("[data-line]")].map((node) => node.getAttribute("data-line")))
+      .toEqual(Array.from({ length: 13 }, (_, index) => String(index + 1)));
+    const scope = root.querySelector(".wf-content-size")!;
+    expect(scope.querySelectorAll(".wf-content-row")).toHaveLength(1);
+    const copy = root.querySelector(".wf-content-intrinsic")!;
+    expect(copy.getAttribute("aria-hidden")).toBe("true");
+    expect(copy.querySelector("[data-line], .wf-content-row, .wf-banner-size, .wf-row-size, .wf-content-size")).toBeNull();
+    expect(copy.querySelectorAll(".wf-image")).toHaveLength(2);
+    expect(root.querySelectorAll(".wf-image[data-line]")).toHaveLength(2);
+  });
+
   it.each([
     ["top level", "\ntabs", 2],
     ...[...KINDS.keys(), "unknown"].filter((kind) => !["dialog", "banner", "page", "frame", "phone", "card"].includes(kind))

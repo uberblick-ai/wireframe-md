@@ -242,6 +242,25 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
+  if (["dialog", "page", "frame", "phone"].includes(node.kind) && body.querySelector(":scope > .wf-row-wrap") !== null) {
+    // Keep the row's real minimum in its surrounding content box. Put the
+    // available-width boundary outside that box, so unfitting rows widen the
+    // card, scrim, page or frame instead of escaping their borders.
+    const rows = [...body.querySelectorAll(":scope > .wf-row-wrap")];
+    if (phoneViewport !== undefined) {
+      const next = body.nextSibling;
+      phoneViewport.insertBefore(sizingBoundary(document, body, "content"), next);
+      for (const row of rows) row.classList.add("wf-content-row");
+    } else {
+      const wrap = sizingBoundary(document, element, "content");
+      for (const row of rows) row.classList.add("wf-content-row");
+      if (node.kind === "page" && element.style.width !== "") {
+        wrap.style.width = element.style.width;
+        element.style.width = "100%";
+      }
+      return wrap;
+    }
+  }
   if (node.kind === "banner") {
     // Each strip gets its own line. Keep intervening source in the banner's
     // usual nowrap flex line. Use the same layout without strips, so adding
@@ -289,16 +308,17 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
 }
 
 /** Keep available-width image caps independent of intrinsic content sizing. */
-function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row"): HTMLElement {
+function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
   const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
   intrinsic.setAttribute("aria-hidden", "true");
-  if (kind === "row") intrinsic.append(element.cloneNode(true));
+  if (kind !== "banner") intrinsic.append(element.cloneNode(true));
   else for (const child of element.children) {
     if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
   }
   // Nested boundaries contribute through their sizing copies. Drop contained
   // real boxes so each nested banner or row is measured only once.
-  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size")) child.remove();
+  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size")) child.remove();
+  for (const child of intrinsic.querySelectorAll(".wf-content-row")) child.classList.remove("wf-content-row");
   for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
   const size = create(document, "div", [`wf-${kind}-size`]);
   size.append(element);

@@ -1000,7 +1000,7 @@ const STYLES = `.wf-root {
    intrinsic sizing; a percentage of the growing flex line would be circular.
    Banners with direct or nested sized images need this sizing container.
    Its sibling supplies the intrinsic width that size containment removes. */
-.wf-root :is(.wf-banner-wrap, .wf-row-wrap) {
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-self: stretch;
@@ -1008,7 +1008,7 @@ const STYLES = `.wf-root {
   min-width: 0;
 }
 
-.wf-root :is(.wf-banner-wrap, .wf-row-wrap) > * {
+.wf-root :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) > * {
   grid-area: 1 / 1;
 }
 
@@ -1025,7 +1025,7 @@ const STYLES = `.wf-root {
   align-self: center;
 }
 
-.wf-root :is(.wf-banner-intrinsic, .wf-row-intrinsic) {
+.wf-root :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
   min-width: 0;
   height: 0;
   visibility: hidden;
@@ -1041,7 +1041,8 @@ const STYLES = `.wf-root {
   border-inline: var(--_wf-stroke) solid transparent;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size) {
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-size) {
+  --_wf-banner-cap: initial;
   container-type: inline-size;
   align-self: stretch;
   justify-self: stretch;
@@ -1050,12 +1051,38 @@ const STYLES = `.wf-root {
 }
 
 .wf-root .wf-banner-size > .wf-banner,
-.wf-root .wf-row-size > .wf-row {
+.wf-root .wf-row-size > .wf-row,
+.wf-root .wf-content-size > * {
   min-width: min-content;
 }
 
 .wf-root .wf-banner-line > .wf-image.wf-sized {
-  width: min(var(--_wf-width), max(0px, calc(100cqi - 1.5em - 2 * var(--_wf-stroke))));
+  width: min(var(--_wf-width), max(0px, var(--_wf-banner-cap, calc(100cqi - 1.5em - 2 * var(--_wf-stroke)))));
+}
+
+/* A surrounding content box supplies the row's available width before it
+   expands. Subtract its normal insets and the banner's own border/padding.
+   The dialog's card also has its usual 32em preferred width. */
+.wf-root .wf-content-size > .wf-dialog {
+  --_wf-banner-cap: calc(min(32em, 100cqi - 2.5em) - 4.5em - 4 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-page {
+  --_wf-banner-cap: calc(100cqi - 5em - 4 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-frame {
+  --_wf-banner-cap: calc(100cqi - 3.5em - 5 * var(--_wf-stroke));
+}
+
+.wf-root .wf-content-size > .wf-phone-content {
+  --_wf-banner-cap: calc(100cqi - 4em - 2 * var(--_wf-stroke));
+}
+
+/* A nested boundary continues to use the outermost cap. */
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size),
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) .wf-content-size > * {
+  --_wf-banner-cap: inherit;
 }
 
 .wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
@@ -1066,16 +1093,17 @@ const STYLES = `.wf-root {
    outer sizing container's cap instead of capping each image at the leftover
    space in its parent's flex line. Without containment the real nested box
    supplies its own width, so only the outer copy is needed for sizing. */
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-row-cap) :is(.wf-banner-wrap, .wf-row-wrap) {
+.wf-root .wf-content-row,
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-wrap, .wf-row-wrap, .wf-content-wrap) {
   grid-template-columns: minmax(min-content, 1fr);
   min-width: min-content;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-row-cap) {
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap) {
   container-type: normal;
 }
 
-.wf-root :is(.wf-banner-size, .wf-row-size, .wf-row-cap) :is(.wf-banner-intrinsic, .wf-row-intrinsic) {
+.wf-root :is(.wf-banner-size, .wf-row-size, .wf-content-row, .wf-row-cap) :is(.wf-banner-intrinsic, .wf-row-intrinsic, .wf-content-intrinsic) {
   display: none;
 }
 

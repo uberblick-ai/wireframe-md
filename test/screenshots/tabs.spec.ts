@@ -404,7 +404,15 @@ for (const scheme of ["light", "dark"] as const) {
       "text Scroll preview\nrow.scroll\n  button Back\n  banner\n    image width=9999 Preview\n    text Note\n  button Next",
       "banner\n  image width=48 Outer\n  text Outer\n  row\n    button Back\n    banner\n      image width=9999 Preview\n      text Note\n    button Next",
       "dialog\n  row.end\n    button Back\n    banner\n      image width=9999 Preview\n      text Note\n    button Next",
-    ]) {
+      "dialog Confirm\n  text Save your changes before leaving?\n  row.end\n    button Cancel\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Save\n    button Publish now",
+      "dialog Invite\n  text Ana will join the workspace.\n  row.end\n    button Cancel\n    banner\n      image.round width=32 Ana\n      text Ana Lopez\n    button Send invite",
+      "frame Preview\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Next\n    button Another action",
+      "page.browser\n  text.title Settings\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Saved\n    button Next\n    button Done",
+      "phone\n  text Home\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved here\n    button Next\n    button More",
+      "page width=256\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Next",
+      "page.window width=320 Settings\n  row\n    button Back\n    banner\n      image width=80 Preview\n      text Draft saved\n    button Next",
+      "page\n  row\n    banner\n      image width=80 Preview\n      text Draft saved\n  card width=240\n    row\n      banner\n        image width=9999 Independent\n        text Note",
+    ].flatMap((source) => [source, source.replace(/(^|\n)( *)banner(?=\n)/g, "$1$2banner\n$2  tabs\n$2    option.current Overview\n$2    option Details")])) {
       for (const layout of ["block", "fit-content", "grid-content"] as const) {
         await show(page, source, { scheme, host: "column", layout });
         for (const width of [710, 400, 320, 710]) {
@@ -416,19 +424,33 @@ for (const scheme of ["light", "dark"] as const) {
             while (getComputedStyle(boundary).containerType !== "inline-size") boundary = boundary.parentElement!;
             const insets = (style: CSSStyleDeclaration) => Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
               + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.borderRightWidth);
+            let available = boundary.getBoundingClientRect().width - insets(getComputedStyle(boundary));
+            if (boundary.classList.contains("wf-content-size")) {
+              const ancestors = [];
+              for (let parent = banner.parentElement!; parent !== boundary; parent = parent.parentElement!) ancestors.unshift(parent);
+              for (const parent of ancestors) {
+                const style = getComputedStyle(parent);
+                if (parent.classList.contains("wf-dialog-card")) available = Math.min(available, 32 * Number.parseFloat(style.fontSize));
+                available -= insets(style);
+              }
+            }
             return {
               imageWidth: image.getBoundingClientRect().width,
-              cap: boundary.getBoundingClientRect().width - insets(getComputedStyle(boundary)) - insets(style),
-              enclosures: [...image.closest(".wf-root")!.querySelectorAll(".wf-banner[data-line], .wf-row[data-line]")].every((element) => {
+              declaredWidth: Number.parseFloat((image as HTMLElement).style.getPropertyValue("--_wf-width")),
+              cap: available - insets(style),
+              enclosures: [...image.closest(".wf-root")!.querySelectorAll(".wf-banner[data-line], .wf-row[data-line], .wf-dialog, .wf-dialog-card, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content")].filter((element) => !element.closest('[aria-hidden="true"]')).map((element) => {
                 const box = element.getBoundingClientRect();
                 const children = element.classList.contains("wf-banner") ? element.querySelectorAll(":scope > .wf-banner-line > *") : element.children;
                 // Scroll rows contain overflow rather than expanding to enclose it.
-                return element.classList.contains("wf-scroll") || [...children].every((child) => child.getBoundingClientRect().right <= box.right);
+                return { kind: element.className, enclosed: element.classList.contains("wf-scroll") || [...children].every((child) => {
+                  const real = child.matches(".wf-row-wrap, .wf-banner-wrap, .wf-content-wrap") ? child.querySelector(":scope > :is(.wf-row-size, .wf-banner-size, .wf-content-size) > *")! : child;
+                  return real.getBoundingClientRect().right <= box.right - Number.parseFloat(getComputedStyle(element).paddingRight) + 0.1;
+                }) };
               }),
             };
           });
-          expect(geometry.imageWidth, `${source}, ${layout}, ${width}`).toBeCloseTo(geometry.cap, 1);
-          expect(geometry.enclosures, `${source}, ${layout}, ${width}`).toBe(true);
+          expect(geometry.imageWidth, `${source}, ${layout}, ${width}`).toBeCloseTo(Math.min(geometry.declaredWidth, geometry.cap), 1);
+          expect(geometry.enclosures, `${source}, ${layout}, ${width}`).toEqual(geometry.enclosures.map(({ kind }) => ({ kind, enclosed: true })));
           expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         }
       }

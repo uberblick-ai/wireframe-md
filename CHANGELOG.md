@@ -18,7 +18,8 @@ format, the vocabulary and the rendering may change in any minor version.
   banner's available space, including when that banner has no direct image.
   Misplaced sized banners in rows wrap text and cap images at the row's
   available width while keeping room beside siblings; unfitting content
-  scrolls inside the wireframe.
+  widens enclosing dialogs, pages, frames and phone content, then scrolls
+  inside the wireframe or phone screen.
 
 - Plain rows can group content inside a non-table row. An author, icon and
   timestamp stay together beside a trailing action in `row.between`, with text
