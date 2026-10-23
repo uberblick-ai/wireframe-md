@@ -112,7 +112,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 ## Kinds
 
 `dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
-rest. A `card` may also stand at the top level, but holds text, images, rows and tabs.
+rest. A `card` may also stand at the top level, but holds text, images, rows, switches and tabs.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows and
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows and tabs; optional `width=` and `padding=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; these three belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
@@ -131,6 +131,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows and
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
+| `switch` | directly inside a root or a `dock` or a `card` or a `row` | `.on`: the on state; off by default | the caption, or none for a bare switch |
 | `toggle` | directly inside a root or a `dock` or a `row` | none | none: its choices are `option` lines |
 | `tabs` | directly inside a root or a `card` | none | none: its tabs are `option` lines |
 | `option` | directly inside a `toggle` or a `tabs` | `.current`: the chosen one | the caption; it may hold one icon |
@@ -258,11 +259,11 @@ A frame's summary names its label, for example `Wireframe: frame “Figma · Pay
 without a label it is `Wireframe: frame`.
 
 A `card` is a box on the paper ground with a 1 px border in the line colour, the
-base radius and no shadow. `text`, `image`, `row` and `tabs` lines belong in a card and stack inside at full width.
+base radius and no shadow. `text`, `image`, `row`, `switch` and `tabs` lines belong in a card and stack inside at full width.
 Other children warn and still draw where written. Cards may also stand inside a
 non-table row. Their text wraps between words within their width.
 Neither `frame` nor `card` takes variants, and a card takes no label.
-A card at the top level is still not a root for placement: an icon, other control
+A card at the top level is still not a root for placement: an icon, a control other than a switch
 or another card directly inside it warns. Adjacent cards stack at full width with a small
 gap. Directly inside a card, `text.title` is bold at a dialog title's size,
 larger than body text and smaller than a page's title. Elsewhere it keeps the
@@ -292,6 +293,44 @@ page
 
 A `toggle` draws its options on one line, separated by `·`. A `chip` is a small
 neutral tag, and `chip.more` the count of the tags that don't show.
+
+A `switch` draws a small rounded track and round thumb, sized from
+`--wf-text-size`. Off by default, it uses a neutral `--wf-line` track with a
+`--wf-paper` thumb at the start. `switch.on` uses a `--wf-primary` track and
+`--wf-primary-ink` thumb at the end, like `button.primary`. The thumb stays
+visible in light and dark. The caption follows on the same line; long captions
+wrap beside the track, with every line starting under the caption's first line
+and the track beside that first line. Captions also break unbroken strings and
+never widen the card, wireframe or document. Backticks stay literal.
+
+```wireframe
+page
+  text.title Review settings
+  switch.on Collapse unchanged
+  switch Show whitespace changes
+```
+
+Without a caption only the track draws, so a bare switch can trail a `row.between`:
+
+```wireframe
+card
+  row.between
+    text Email me about mentions
+    switch.on
+```
+
+Switches are inert: never focusable or operable, with no interactive role.
+Assistive technology reads each once as its caption followed by its state:
+“Collapse unchanged, on” or “Show whitespace changes, off”. A bare switch reads
+“switch, on” or “switch, off”. Switch captions never name roots, so these
+examples summarize as `Wireframe: page “Review settings”` and `Wireframe: card`.
+
+| Source | Warning (the wireframe still draws) |
+| --- | --- |
+| `switch` at the top level or inside another kind such as `cell`, `toggle`, `tabs`, `option` or `button` | `switch must be directly inside dialog, banner, page, frame, phone, dock, card or row` |
+| `switch` directly in a table row | `switch in a table row: expected cell` |
+| A child under `switch`, such as `text` | That child's placement warning, e.g. `text must be directly inside dialog, banner, page, frame, phone, dock, card or row`; the child draws inside the switch |
+| Another variant, such as `.off` or `.disabled` | `unknown variant ".off" on switch: expected .on` (using the written variant) |
 
 `tabs` draws a left-aligned line of `option` captions without separators, above
 a hairline rule across the container's content width inside its padding. The
@@ -1128,7 +1167,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, toggle, tabs, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

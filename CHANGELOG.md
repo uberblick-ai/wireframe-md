@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `switch` draws an inert on/off switch with an optional caption; `.on` moves
+  its thumb to the end and uses the primary colours. Long captions wrap beside
+  the track. Assistive technology reads the caption and state once, while
+  switch captions leave root summaries unchanged.
+
 - `tabs` draws an inert tab strip directly inside roots and cards, with an ink
   underline on the first `option.current`. Options may hold an icon. Overflow
   scrolls inside the strip with a native keyboard stop and a visible focus ring.

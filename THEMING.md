@@ -10,14 +10,14 @@ inherits.
 
 | Property | Controls | Light default | Dark default |
 | --- | --- | --- | --- |
-| `--wf-ink` | text, the secondary button's caption, ascending and descending sort arrows | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--wf-ink` | text, switch captions, the secondary button's caption, ascending and descending sort arrows | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
 | `--wf-muted` | `text.muted`, a frame's bar and caption label, a neutral banner's icon, an icon outside a banner or button, an unknown kind's name, an input's placeholder, a select's chevron-down, options but the current one, a table's header row, sortable arrows, `chip.more` | `oklch(0.511 0 0)` | `oklch(0.708 0 0)` |
-| `--wf-paper` | cards, a page, a phone screen including its fixed bands, and the secondary button's fill | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
-| `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
+| `--wf-paper` | cards, a page, a phone screen including its fixed bands, the secondary button's fill and an off switch's thumb | `oklch(1 0 0)` | `oklch(0.215 0 0)` |
+| `--wf-line` | borders: cards, a page, buttons, inputs, selects, a banner's base border, unknown boxes; a table's rules; mixed into a chip's fill; an off switch's track | `oklch(0.86 0.004 75)` | `oklch(1 0 0 / 20%)` |
 | `--wf-scrim` | the faint backdrop behind a dialog's card | `oklch(0.145 0 0 / 9%)` | `oklch(0 0 0 / 40%)` |
 | `--wf-shadow` | the dialog card's `box-shadow` | `0 6px 20px oklch(0 0 0 / 10%)` | `0 6px 20px oklch(0 0 0 / 45%)` |
-| `--wf-primary` | `button.primary`'s fill, and `button.link.primary`'s caption | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
-| `--wf-primary-ink` | `button.primary`'s caption | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
+| `--wf-primary` | `button.primary`'s fill, `button.link.primary`'s caption and an on switch's track | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
+| `--wf-primary-ink` | `button.primary`'s caption and an on switch's thumb | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
 | `--wf-danger` | the destructive colour: `button.danger`, and `banner.danger`'s icon and border; red icons and text | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
 | `--wf-danger-ink` | the caption on a filled `button.primary.danger`; a phone's island in dark | `oklch(1 0 0)` | `oklch(0.145 0 0)` |
 | `--wf-focus` | `button.focus`'s ring | `oklch(0.72 0.16 65)` | `oklch(0.8 0.18 65)` |
@@ -47,7 +47,7 @@ independent of `--wf-text-size`.
 | `--wf-focus-width` | the focus ring's width | `2px` |
 | `--wf-radius` | cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes | `6px` |
 | `--wf-radius-lg` | the dialog's card and scrim, and a page; a phone's outline uses six times it, with concentric screen corners | `10px` |
-| `--wf-text-size` | the base type size; spacing, chips and `text.small` scale with it | `0.875rem` |
+| `--wf-text-size` | the base type size; spacing, chips, switches and `text.small` scale with it | `0.875rem` |
 | `--wf-title-size` | the dialog's title and a card's direct `text.title`; other `text.title` is one and a half times it, unless combined with `.small` | `1rem` |
 | `--wf-mono-font` | the font family of paired-backtick spans on `text` lines | `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace` |
 

@@ -782,6 +782,65 @@ const STYLES = `.wf-root {
 /* Field labels wrap instead of setting column widths. Controls keep their
    minimum content width, widening the surrounding boxes when needed. In a row,
    columns stretch together and label tracks absorb any extra wrapped lines. */
+/* Switch captions shrink and wrap independently of the first-line track. */
+.wf-root .wf-switch {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: flex-start;
+  gap: 0.5em;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.wf-root > .wf-switch,
+.wf-root :is(.wf-dialog-card, .wf-banner-line, .wf-page, .wf-page-content, .wf-frame, .wf-phone-content, .wf-dock, .wf-card) > .wf-switch {
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.wf-root .wf-switch-track {
+  display: flex;
+  flex: none;
+  box-sizing: border-box;
+  width: 2.25em;
+  height: 1.25em;
+  margin-top: 0.075em;
+  padding: 0.15em;
+  border-radius: calc(0.625 * var(--_wf-text-size));
+  background: var(--_wf-line);
+}
+
+.wf-root .wf-switch-thumb {
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--_wf-paper);
+}
+
+.wf-root .wf-switch.wf-on > .wf-switch-track {
+  justify-content: flex-end;
+  background: var(--_wf-primary);
+}
+
+.wf-root .wf-switch.wf-on > .wf-switch-track > .wf-switch-thumb {
+  background: var(--_wf-primary-ink);
+}
+
+.wf-root .wf-switch-caption {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Keep the state in the reading order without drawing extra On/Off labels. */
+.wf-root .wf-switch-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .wf-root .wf-field {
   display: grid;
   grid-template-columns: minmax(min-content, 1fr);
