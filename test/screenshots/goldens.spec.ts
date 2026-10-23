@@ -82,6 +82,11 @@ const samples = [
     intro: "Long card titles and footers wrap inside the paper box.",
   },
   {
+    name: "card-equal-height-panes",
+    source: readFileSync(new URL("../../examples/blocks/2-cards/equal-height-panes.wireframe", import.meta.url), "utf8"),
+    intro: "Sidebar and content panes share a height, with content and the trailing action aligned to the top.",
+  },
+  {
     name: "card-comment-header",
     source: readFileSync(new URL("../../examples/blocks/2-cards/comment-header.wireframe", import.meta.url), "utf8"),
     intro: "The author group stays together beside Resolve, with wrapping text in the narrow card.",

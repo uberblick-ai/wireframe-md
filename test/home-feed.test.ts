@@ -76,7 +76,7 @@ describe("home screen vocabulary", () => {
   it("lists the new image and row variants in unknown-variant warnings", () => {
     expect(warnings("page\n  image.wide Cover\n  row.start")).toEqual([
       '2: unknown variant ".wide" on image: expected .square or .round',
-      '3: unknown variant ".start" on row: expected .end, .between, .scroll or .head',
+      '3: unknown variant ".start" on row: expected .end, .between, .scroll, .stretch or .head',
     ]);
   });
 

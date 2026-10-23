@@ -1,0 +1,19 @@
+page
+  row.stretch
+    card width=272
+      text.strong History
+      text Today
+      text Yesterday
+    card
+      text.title Onboarding flow
+      text.muted lena · 2 hours ago
+      row.stretch
+        card
+          text.small.muted Before
+          text Goals
+        card
+          text.small.muted After
+          text Goals
+          text Steps
+          text Checklist
+    button.link More

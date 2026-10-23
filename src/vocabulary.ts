@@ -25,7 +25,11 @@ export interface KindRule {
 }
 
 export const CELL_SORT_VARIANTS: readonly string[] = ["sortable", "ascending", "descending"];
-export const ROW_LAYOUT_VARIANTS: readonly string[] = ["end", "between", "scroll"];
+export const ROW_LAYOUT_VARIANTS: readonly string[] = ["end", "between", "scroll", "stretch"];
+export const ROW_VARIANT_CONFLICTS: readonly (readonly string[])[] = [
+  ["end", "between", "scroll"],
+  ["stretch", "scroll"],
+];
 export const IMAGE_SHAPE_VARIANTS: readonly string[] = ["square", "round"];
 export const PAGE_CHROME_VARIANTS: readonly string[] = ["browser", "window"];
 export const HUE_VARIANTS: readonly string[] = ["red", "amber", "green", "blue"];
@@ -49,7 +53,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["image", { place: ["root", "dock", "card", "row"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
   ["text", { place: ["root", "dock", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS], label: true }],
   // Inside a table, a row holds cells; inside a layout row, it is a plain group.
-  ["row", { place: ["root", "dock", "card", "row", "table"], variants: ["end", "between", "scroll", "head"], label: false }],
+  ["row", { place: ["root", "dock", "card", "row", "table"], variants: [...ROW_LAYOUT_VARIANTS, "head"], label: false }],
   ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.

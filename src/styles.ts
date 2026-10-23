@@ -725,6 +725,15 @@ const STYLES = `.wf-root {
   justify-content: space-between;
 }
 
+/* Only direct cards fill the line's height; other children keep their height. */
+.wf-root .wf-row.wf-stretch > :not(.wf-card) {
+  align-self: flex-start;
+}
+
+.wf-root .wf-row.wf-stretch > .wf-card {
+  align-self: stretch;
+}
+
 /* A nested layout row stays content-width and shrinks so its text can wrap. */
 .wf-root .wf-row.wf-row-group {
   flex: 0 1 auto;
