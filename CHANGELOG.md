@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `row.stretch` gives direct child cards equal heights with content at the top.
+  Other children keep their height and align to the top. It combines with
+  `.end` or `.between`; `.scroll` conflicts and the first written wins.
+
 - `switch` draws an inert on/off switch with an optional caption; `.on` moves
   its thumb to the end and uses the primary colours. Long captions wrap beside
   the track. Bare switches keep their track width beside wrapping row text.

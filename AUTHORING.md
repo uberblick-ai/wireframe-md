@@ -125,7 +125,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows, sw
 | `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
-| `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; these three belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
+| `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
@@ -376,8 +376,10 @@ A `row` directly inside a `table` is a table row: it holds only `cell` lines, an
 each `cell` holds its text, `chip` lines or `button` lines. A table draws with
 rules under the header and between rows, and no other lines. Give every row the
 same number of cells, an empty `cell` where a column has nothing. `.head` is for
-a table row; `.end`, `.between` and `.scroll` are for rows elsewhere. Use only
-one of these three layout variants; more than one warns and the first is used.
+a table row; `.end`, `.between`, `.scroll` and `.stretch` belong only to rows
+directly in roots, docks and cards. Use only one of `.end`, `.between` and
+`.scroll`; more than one warns and the first is used. `.stretch` combines with
+`.end` or `.between`, while `.stretch` and `.scroll` compete in the same way.
 
 Header cells may take one of `.sortable`, `.ascending` or `.descending`. The
 stroked arrow follows the caption, which keeps the header row's muted colour.
@@ -721,11 +723,34 @@ card width=400
   text Ten feels low. Could we do twenty?
 ```
 
-This also fits at `card width=240`. `.end`, `.between` or `.scroll` on the inner
+This also fits at `card width=240`. `.end`, `.between`, `.scroll` or `.stretch` on the inner
 row warns that it must be directly inside `dialog`, `banner`, `page`, `frame`,
 `phone`, `dock` or `card`, and draws a plain group. `.head` still warns that it
 must be directly inside a table. A row in a cell or any other unsupported place
 still warns; a table row continues to hold only cells.
+
+`row.stretch` makes every direct child card as tall as the tallest child in the
+row. Card content starts at the top, with extra space below. Other direct
+children keep their own height and align to the top; compact groups keep their
+own internal alignment. Widths stay the same as a plain row, which still centres
+its children vertically. `.stretch` combines with `.end` or `.between`.
+`.end`, `.between` and `.scroll` compete, as do `.stretch` and `.scroll`;
+in each conflict the first written wins, even if it is itself ignored by another
+conflict. For example, `row.end.scroll.stretch` draws as `row.end` and gives both
+conflict warnings. `.stretch` on a table row warns and is ignored.
+
+```wireframe
+page
+  row.stretch
+    card width=272
+      text.strong History
+      text Today
+    card
+      text.title Onboarding flow
+      text Goals
+      text Steps
+      text Checklist
+```
 
 `row.scroll` keeps children on one line at their own width without shrinking.
 Only the row scrolls sideways; it never widens its root, screen or wireframe.

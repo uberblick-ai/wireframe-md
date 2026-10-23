@@ -1,7 +1,7 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
 import { paddingPixels, widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
-import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
 const ATTRIBUTE = /[A-Za-z][A-Za-z0-9_-]*=/y;
@@ -228,9 +228,11 @@ function checkNode(
   }
   const plainPage = kind === "page" && !node.variants.some((variant) => PAGE_CHROME_VARIANTS.includes(variant));
   if ((!rule.label || plainPage) && node.label !== "") warn(`${kind} takes no label`);
-  const exclusive = kind === "row" ? ROW_LAYOUT_VARIANTS : kind === "image" ? IMAGE_SHAPE_VARIANTS : kind === "page" ? PAGE_CHROME_VARIANTS : [];
-  if (node.variants.filter((variant) => exclusive.includes(variant)).length > 1) {
-    warn(`${kind} takes one of ${list(exclusive.map((variant) => `.${variant}`))}: the first is used`);
+  const conflicts = kind === "row" ? ROW_VARIANT_CONFLICTS : [kind === "image" ? IMAGE_SHAPE_VARIANTS : kind === "page" ? PAGE_CHROME_VARIANTS : []];
+  for (const exclusive of conflicts) {
+    if (node.variants.filter((variant) => exclusive.includes(variant)).length > 1) {
+      warn(`${kind} takes one of ${list(exclusive.map((variant) => `.${variant}`))}: the first is used`);
+    }
   }
   if (kind === "option" && parent?.kind === "tabs" && node.variants.includes("current") &&
     parent.children.filter((child) => child.kind === "option" && child.variants.includes("current")).length > 1) {

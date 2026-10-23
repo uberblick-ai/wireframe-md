@@ -345,7 +345,7 @@ describe("kinds and variants", () => {
     ]);
   });
 
-  it.each(["end", "between", "scroll", "end.between.scroll"])("draws a nested row.%s as a plain group", (variants) => {
+  it.each(["end", "between", "scroll", "stretch", "end.between.scroll.stretch"])("draws a nested row.%s as a plain group", (variants) => {
     const plain = render("card\n  row.between\n    row\n      text Name\n    button Resolve");
     const warned = render(`card\n  row.between\n    row.${variants}\n      text Name\n    button Resolve`);
     expect(warned.outerHTML).toBe(plain.outerHTML);

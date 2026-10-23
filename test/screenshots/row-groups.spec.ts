@@ -75,7 +75,7 @@ for (const scheme of ["light", "dark"] as const) {
   test(`nested layout variants keep the plain group layout in ${scheme}`, async ({ page }) => {
     await show(page, source, { host: "column", scheme });
     const plain = await page.locator(".wf-root").innerHTML();
-    for (const variant of ["end", "between", "scroll"]) {
+    for (const variant of ["end", "between", "scroll", "stretch"]) {
       await show(page, source.replaceAll("    row\n", `    row.${variant}\n`), { host: "column", scheme });
       expect(await page.locator(".wf-root").innerHTML()).toBe(plain);
     }

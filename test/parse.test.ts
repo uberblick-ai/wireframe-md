@@ -300,7 +300,7 @@ describe("warnings", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning, .danger or .success'),
       warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
-      warning(3, 'unknown variant ".start" on row: expected .end, .between, .scroll or .head'),
+      warning(3, 'unknown variant ".start" on row: expected .end, .between, .scroll, .stretch or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
@@ -571,12 +571,12 @@ describe("warnings", () => {
   });
 
   it("accepts plain row groups with the same children as a non-table row", () => {
-    for (const row of ["row", "row.end", "row.between", "row.scroll"]) {
+    for (const row of ["row", "row.end", "row.between", "row.scroll", "row.stretch"]) {
       expect(warnings(`page\n  ${row}\n    row\n      button.link\n        icon user-circle\n      text.strong Ana Lopez\n      text.small.muted 2 h ago\n      card\n        text Preview\n      image.round Avatar\n      input Hint\n      select Value\n      toggle\n        option Choice\n      chip Tag\n      row\n        button More\n    button.link ✓ Resolve`)).toEqual([]);
     }
   });
 
-  it.each(["end", "between", "scroll"])("warns about row.%s in a nested group", (variant) => {
+  it.each(["end", "between", "scroll", "stretch"])("warns about row.%s in a nested group", (variant) => {
     expect(warnings(`card\n  row.between\n    row.${variant}\n      text Name\n    button Resolve`)).toEqual([
       warning(3, `row.${variant} must be directly inside dialog, banner, page, frame, phone, dock or card`),
     ]);

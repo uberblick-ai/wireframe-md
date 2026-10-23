@@ -2,7 +2,7 @@ import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
-import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -75,14 +75,16 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   const sort = node.variants[sortIndex];
   const colours = colourVariants(node.kind);
   const colourIndex = node.variants.findIndex((variant) => colours.includes(variant));
-  const exclusive = node.kind === "row" ? ROW_LAYOUT_VARIANTS : node.kind === "image" ? IMAGE_SHAPE_VARIANTS : node.kind === "page" ? PAGE_CHROME_VARIANTS : [];
-  const exclusiveIndex = node.variants.findIndex((variant) => exclusive.includes(variant));
+  const conflicts = node.kind === "row" ? ROW_VARIANT_CONFLICTS : [node.kind === "image" ? IMAGE_SHAPE_VARIANTS : node.kind === "page" ? PAGE_CHROME_VARIANTS : []];
+  // Compare against source order, including variants ignored by another conflict.
+  const firstIndices = conflicts.map((exclusive) => node.variants.findIndex((variant) => exclusive.includes(variant)));
   // Only variants the kind knows become classes, so an unknown one adds no styling.
   const variants = node.variants
     .filter((variant, index) => rule.variants.includes(variant) &&
       (!rowGroup || !ROW_LAYOUT_VARIANTS.includes(variant)) &&
+      (node.kind !== "row" || parent?.kind !== "table" || variant !== "stretch") &&
       (!colours.includes(variant) || index === colourIndex) &&
-      (!exclusive.includes(variant) || index === exclusiveIndex) &&
+      conflicts.every((exclusive, group) => !exclusive.includes(variant) || index === firstIndices[group]) &&
       (node.kind !== "option" || parent?.kind !== "tabs" || variant !== "current" ||
         node === parent.children.find((child) => child.kind === "option" && child.variants.includes("current"))) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
@@ -117,7 +119,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   let phoneViewport: HTMLElement | undefined;
   switch (node.kind) {
     case "page": {
-      const chrome = node.variants[exclusiveIndex];
+      const chrome = node.variants[firstIndices[0] ?? -1];
       if (chrome === undefined) {
         // An unsupported plain-page label still draws as before.
         if (node.label !== "") element.append(text(document, "span", ["wf-text"], node.label));
