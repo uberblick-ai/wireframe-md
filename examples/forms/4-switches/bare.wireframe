@@ -1,0 +1,4 @@
+card
+  row.between
+    text Email me about mentions
+    switch.on

@@ -208,6 +208,23 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
           : document.createTextNode(run.text));
       }
       break;
+    case "switch": {
+      const track = create(document, "span", ["wf-switch-track"]);
+      track.setAttribute("aria-hidden", "true");
+      track.append(create(document, "span", ["wf-switch-thumb"]));
+      element.append(track);
+      // Plain text provides one reading without giving an inert mock control
+      // an interactive role. Only the state (and a bare switch's name) is hidden.
+      const state = node.variants.includes("on") ? "on" : "off";
+      const alternative = text(document, "span", ["wf-switch-state"], `${node.label === "" ? "switch" : ""}, ${state}`);
+      if (node.label === "") element.append(alternative);
+      else {
+        const caption = text(document, "span", ["wf-switch-caption"], node.label);
+        caption.append(alternative);
+        element.append(caption);
+      }
+      break;
+    }
     case "button":
     case "option": {
       // Icons precede the caption; every child still draws, including misplaced ones.

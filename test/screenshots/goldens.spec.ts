@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  ...["settings", "bare", "long-caption"].map((name) => ({
+    name: `forms-switches-${name}`,
+    source: readFileSync(new URL(`../../examples/forms/4-switches/${name}.wireframe`, import.meta.url), "utf8"),
+    intro: "Switches show on/off state with a track and thumb; captions wrap beside the track.",
+  })),
   ...["settings", "activity", "overflow"].map((name) => ({
     name: `navigation-tabs-${name}`,
     source: readFileSync(new URL(`../../examples/navigation/4-tab-bars/${name}.wireframe`, import.meta.url), "utf8"),

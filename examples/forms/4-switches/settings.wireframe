@@ -1,0 +1,4 @@
+page
+  text.title Review settings
+  switch.on Collapse unchanged
+  switch Show whitespace changes
