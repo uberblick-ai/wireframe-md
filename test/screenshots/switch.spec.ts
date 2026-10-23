@@ -30,7 +30,7 @@ for (const scheme of ["light", "dark"] as const) {
         expect(index === 1 ? track.start : track.end).toBeCloseTo(2.1, 1);
       }
       const row = (await page.locator(".wf-row").boundingBox())!;
-      const bare = (await page.locator(".wf-switch").last().boundingBox())!;
+      const bare = (await page.locator(".wf-switch-track").last().boundingBox())!;
       expect(bare.x + bare.width).toBeCloseTo(row.x + row.width, 1);
       expect(await page.locator(".wf-switch").last().locator(".wf-switch-caption").count()).toBe(0);
       await expect(page.locator(".wf-switch").nth(0)).toMatchAriaSnapshot('- text: Collapse unchanged , on');
@@ -38,6 +38,38 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.locator(".wf-switch").nth(2)).toMatchAriaSnapshot('- text: switch, on');
       await page.keyboard.press("Tab");
       expect(await page.locator(".wf-root").evaluate((root) => root.contains(document.activeElement))).toBe(false);
+    });
+
+    test(`bare switch tracks stay inside rows beside wrapping text in ${scheme}, ${host}`, async ({ page }) => {
+      const caption = "Email me about mentions and replies from every workspace and followed document";
+      for (const source of [
+        `card width=300\n  row.between\n    text ${caption}\n    switch.on`,
+        `card width=300\n  row.between\n    row\n      text.strong Notifications\n      text.muted ${caption}\n    switch.on`,
+        `phone\n  row.between\n    text ${caption}\n    switch`,
+      ]) {
+        await show(page, source, { scheme, host });
+        const geometry = await page.locator(".wf-switch").evaluate((node) => {
+          const box = node.getBoundingClientRect();
+          const track = node.querySelector(".wf-switch-track")!.getBoundingClientRect();
+          const row = node.parentElement!;
+          const rowBox = row.getBoundingClientRect();
+          const text = row.querySelectorAll(".wf-text");
+          const range = document.createRange();
+          range.selectNodeContents(text[text.length - 1]!);
+          return {
+            switchWidth: box.width, trackWidth: track.width,
+            trackLeft: track.left, trackRight: track.right,
+            rowLeft: rowBox.left, rowRight: rowBox.right,
+            textLines: range.getClientRects().length,
+            overflow: row.scrollWidth - row.clientWidth,
+          };
+        });
+        expect(geometry.textLines, source).toBeGreaterThan(1);
+        expect(geometry.trackRight, source).toBeCloseTo(geometry.rowRight, 1);
+        expect(geometry.trackLeft, source).toBeGreaterThanOrEqual(geometry.rowLeft);
+        expect(geometry.switchWidth, source).toBeGreaterThanOrEqual(geometry.trackWidth);
+        expect(geometry.overflow, source).toBe(0);
+      }
     });
 
     test(`long switch captions wrap beside their first-line track in ${scheme}, ${host}`, async ({ page }) => {

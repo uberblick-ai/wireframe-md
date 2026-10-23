@@ -779,16 +779,14 @@ const STYLES = `.wf-root {
   flex: 0 1 auto;
 }
 
-/* Field labels wrap instead of setting column widths. Controls keep their
-   minimum content width, widening the surrounding boxes when needed. In a row,
-   columns stretch together and label tracks absorb any extra wrapped lines. */
-/* Switch captions shrink and wrap independently of the first-line track. */
+/* The content minimum keeps bare switches as wide as their track beside
+   wrapping row text. Captions shrink and wrap beside the first-line track. */
 .wf-root .wf-switch {
   display: inline-flex;
   flex: 0 1 auto;
   align-items: flex-start;
   gap: 0.5em;
-  min-width: 0;
+  min-width: auto;
   max-width: 100%;
 }
 
@@ -841,6 +839,9 @@ const STYLES = `.wf-root {
   white-space: nowrap;
 }
 
+/* Field labels wrap instead of setting column widths. Controls keep their
+   minimum content width, widening the surrounding boxes when needed. In a row,
+   columns stretch together and label tracks absorb any extra wrapped lines. */
 .wf-root .wf-field {
   display: grid;
   grid-template-columns: minmax(min-content, 1fr);
