@@ -376,8 +376,10 @@ A `row` directly inside a `table` is a table row: it holds only `cell` lines, an
 each `cell` holds its text, `chip` lines or `button` lines. A table draws with
 rules under the header and between rows, and no other lines. Give every row the
 same number of cells, an empty `cell` where a column has nothing. `.head` is for
-a table row; `.end`, `.between` and `.scroll` are for rows elsewhere. Use only
-one of these three layout variants; more than one warns and the first is used.
+a table row; `.end`, `.between`, `.scroll` and `.stretch` belong only to rows
+directly in roots, docks and cards. Use only one of `.end`, `.between` and
+`.scroll`; more than one warns and the first is used. `.stretch` combines with
+`.end` or `.between`, while `.stretch` and `.scroll` compete in the same way.
 
 Header cells may take one of `.sortable`, `.ascending` or `.descending`. The
 stroked arrow follows the caption, which keeps the header row's muted colour.
