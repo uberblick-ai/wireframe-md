@@ -106,10 +106,10 @@ describe("home screen vocabulary", () => {
   });
 
   it("warns about misplaced images and icons, listing their allowed places", () => {
-    expect(warnings("image Cover")).toEqual(["1: image must be directly inside dialog, banner, page, frame, phone, dock, card or row"]);
-    expect(warnings("page\n  toggle\n    image Cover")).toEqual(["3: image must be directly inside dialog, banner, page, frame, phone, dock, card or row"]);
+    expect(warnings("image Cover")).toEqual(["1: image must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"]);
+    expect(warnings("page\n  toggle\n    image Cover")).toEqual(["3: image must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"]);
     expect(warnings("page\n  table\n    row\n      image Cover")).toEqual(["4: image in a table row: expected cell"]);
-    expect(warnings("page\n  card\n    icon home")).toEqual(["3: icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"]);
+    expect(warnings("page\n  card\n    icon home")).toEqual(["3: icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button, option or item"]);
     expect(render("image Cover").querySelector(".wf-image")!.getAttribute("aria-label")).toBe("Cover");
   });
 

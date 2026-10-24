@@ -3,7 +3,7 @@ import { markPosition, paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { cardFraction, fullWidthRow, rowFractions } from "./layout.js";
 import { textRuns } from "./text.js";
-import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROOTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -97,6 +97,8 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       conflicts.every((exclusive, group) => !exclusive.includes(variant) || index === firstIndices[group]) &&
       (node.kind !== "option" || parent?.kind !== "tabs" || variant !== "current" ||
         node === parent.children.find((child) => child.kind === "option" && child.variants.includes("current"))) &&
+      (node.kind !== "item" || parent === undefined || (!ROOTS.includes(parent.kind) && parent.kind !== "card") || variant !== "current" ||
+        node === parent.children.find((child) => child.kind === "item" && child.variants.includes("current"))) &&
       (node.kind !== "cell" || !SORT_PATHS.has(variant) || index === sortIndex))
     .map((variant) => `wf-${variant}`);
   const element = create(document, INLINE.includes(node.kind) ? "span" : "div", [`wf-${node.kind}`, ...variants]);
@@ -129,6 +131,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   let body: HTMLElement = element;
   let actions: HTMLElement | undefined;
   let phoneViewport: HTMLElement | undefined;
+  let leading: WireframeNode | undefined;
   switch (node.kind) {
     case "page": {
       const chrome = node.variants[firstIndices[0] ?? -1];
@@ -220,6 +223,25 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       // role. A bare fold keeps its name in the reading order, but draws empty.
       element.append(node.label !== "" ? document.createTextNode(node.label) : text(document, "span", ["wf-fold-name"], "fold"));
       break;
+    case "item": {
+      const first = node.children[0];
+      if (first?.kind === "icon" || (first?.kind === "image" && first.variants.find((variant) => IMAGE_SHAPE_VARIANTS.includes(variant)) === "round")) {
+        leading = first;
+        const drawing = draw(document, first, node, parent) as HTMLElement;
+        drawing.classList.add("wf-item-leading");
+        // The label names the entry; its leading picture is decorative.
+        drawing.setAttribute("aria-hidden", "true");
+        element.append(drawing);
+      }
+      body = create(document, "div", ["wf-item-lines"]);
+      const label = text(document, "div", ["wf-item-label"], node.label);
+      if (element.classList.contains("wf-current")) {
+        label.append(text(document, "span", ["wf-item-state"], node.label === "" ? "current" : ", current"));
+      }
+      body.append(label);
+      element.append(body);
+      break;
+    }
     case "text":
       for (const run of textRuns(node.label)) {
         element.append(run.mono
@@ -293,6 +315,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   }
   // Children of any kind draw inside it, even where they are misplaced.
   for (const child of node.children) {
+    if (child === leading) continue;
     if ((node.kind === "button" || node.kind === "option") && child.kind === "icon") continue;
     // Only the valid final dock gets a sticky track. Misplaced docks retain
     // their source position in the content, including the first of two docks.
@@ -330,7 +353,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     // tabs cannot change percentage media's intrinsic sizing pass.
     let line: HTMLElement | undefined;
     for (const child of [...element.children]) {
-      if (child.matches(`.wf-tabs, .wf-fold, .wf-text:is(${TEXT_BACKGROUND_VARIANTS.map((variant) => `.wf-${variant}`).join(", ")})`)) line = undefined;
+      if (child.matches(`.wf-tabs, .wf-fold, .wf-item, .wf-text:is(${TEXT_BACKGROUND_VARIANTS.map((variant) => `.wf-${variant}`).join(", ")})`)) line = undefined;
       else {
         if (line === undefined) {
           line = create(document, "div", ["wf-banner-line"]);
@@ -465,7 +488,7 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
     intrinsic.append(copy);
   }
   else for (const child of element.children) {
-    if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
+    if (!child.matches(".wf-tabs, .wf-item")) intrinsic.append(child.cloneNode(true));
   }
   cleanSizingCopy(intrinsic);
   const size = create(document, "div", [`wf-${kind}-size`]);

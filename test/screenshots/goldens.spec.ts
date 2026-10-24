@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 
 const samples = [
   {
+    name: "navigation-items-revision-history",
+    source: readFileSync(new URL("../../examples/navigation/5-list-entries/revision-history.wireframe", import.meta.url), "utf8"),
+    intro: "List entries group labels and metadata beside optional icons or avatars; the current entry has a full-width neutral tint.",
+  },
+  {
     name: "folds-collapsed-content",
     source: readFileSync(new URL("../../examples/blocks/4-folds/collapsed-content.wireframe", import.meta.url), "utf8"),
     intro: "Collapsed content stays visible as a dashed bar in a card or on its own banner line; long labels wrap and bare bars stay empty.",

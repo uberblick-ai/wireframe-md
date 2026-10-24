@@ -36,6 +36,8 @@ Text backgrounds leave text colour independent: ink by default, or the written
 text colour. Default ink and muted text reach 4.5:1 on all four tints in light
 and dark; other text hue/background combinations have no contrast promise.
 
+Current list items mix 10% `--wf-ink` with `--wf-paper` for their neutral tint.
+
 Phones use `--wf-muted` for their outline and `--wf-neutral-tint` for their
 bezel. The status time, icons and home indicator use `--wf-ink`. The island uses
 `--wf-ink` in light and `--wf-danger-ink` in dark, so both defaults are solid

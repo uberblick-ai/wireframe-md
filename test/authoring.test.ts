@@ -127,6 +127,7 @@ describe("AUTHORING.md", () => {
       phone: "a `phone`",
       dock: "a `dock`",
       card: "a `card`",
+      item: "an `item`",
       row: "a `row`",
       ruler: "a `ruler`",
       table: "a `table`",
