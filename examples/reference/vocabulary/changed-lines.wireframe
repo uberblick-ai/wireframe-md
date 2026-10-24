@@ -4,12 +4,12 @@ page
     card
       text.strong Before
       text New members land on an empty workspace.
-      text.removed They sign up with a password.
+      text.bg-red − They sign up with a password.
     card
       text.strong After
       text New members land on an empty workspace.
-      text.added They sign in with `GitHub`.
+      text.bg-green + They sign in with `GitHub`.
   text.strong Revision notes
   row
-    text.removed.small Password sign-up
-    text.added.small.strong GitHub sign-in
+    text.bg-amber.small Review password sign-up
+    text.red.bg-blue.small.strong Check GitHub sign-in

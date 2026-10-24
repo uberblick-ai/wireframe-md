@@ -2,7 +2,7 @@ import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { textRuns } from "./text.js";
-import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS } from "./vocabulary.js";
+import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
 
 // Draws a parse result as static DOM. Structure from the uberblick-2 spike: one
 // element per node, a class per kind and per known variant, everything styled
@@ -76,7 +76,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   const sort = node.variants[sortIndex];
   const colours = colourVariants(node.kind);
   const colourIndex = node.variants.findIndex((variant) => colours.includes(variant));
-  const conflicts = node.kind === "row" ? ROW_VARIANT_CONFLICTS : [node.kind === "image" ? IMAGE_SHAPE_VARIANTS : node.kind === "page" ? PAGE_CHROME_VARIANTS : []];
+  const conflicts = node.kind === "row" ? ROW_VARIANT_CONFLICTS : [node.kind === "image" ? IMAGE_SHAPE_VARIANTS : node.kind === "page" ? PAGE_CHROME_VARIANTS : node.kind === "text" ? TEXT_BACKGROUND_VARIANTS : []];
   // Compare against source order, including variants ignored by another conflict.
   const firstIndices = conflicts.map((exclusive) => node.variants.findIndex((variant) => exclusive.includes(variant)));
   // Only variants the kind knows become classes, so an unknown one adds no styling.
@@ -205,10 +205,6 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       break;
     }
     case "text":
-      // Read the winning colour, so ignored change variants add no alternative.
-      if (["added", "removed"].includes(node.variants[colourIndex] ?? "")) {
-        element.append(text(document, "span", ["wf-text-change"], `${node.variants[colourIndex]} `));
-      }
       for (const run of textRuns(node.label)) {
         element.append(run.mono
           ? text(document, "span", ["wf-mono"], run.text)
@@ -299,12 +295,12 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     }
   }
   if (node.kind === "banner") {
-    // Each strip or marked text gets its own line. Keep intervening source in the banner's
+    // Each strip or tinted text gets its own line. Keep intervening source in the banner's
     // usual nowrap flex line. Use the same layout without strips, so adding
     // tabs cannot change percentage media's intrinsic sizing pass.
     let line: HTMLElement | undefined;
     for (const child of [...element.children]) {
-      if (child.matches(".wf-tabs, .wf-text:is(.wf-added, .wf-removed)")) line = undefined;
+      if (child.matches(`.wf-tabs, .wf-text:is(${TEXT_BACKGROUND_VARIANTS.map((variant) => `.wf-${variant}`).join(", ")})`)) line = undefined;
       else {
         if (line === undefined) {
           line = create(document, "div", ["wf-banner-line"]);

@@ -12,7 +12,7 @@ const samples = [
   {
     name: "text-changed-lines",
     source: readFileSync(new URL("../../examples/reference/vocabulary/changed-lines.wireframe", import.meta.url), "utf8"),
-    intro: "Changed lines keep ink text on a tint, with red and green start-edge marks in cards and rows.",
+    intro: "Text backgrounds use four tints in cards and rows, with independent text colours.",
   },
   ...["settings", "bare", "long-caption"].map((name) => ({
     name: `forms-switches-${name}`,
