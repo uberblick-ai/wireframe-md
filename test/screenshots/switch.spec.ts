@@ -192,6 +192,53 @@ for (const scheme of ["light", "dark"] as const) {
     }
   });
 
+  test(`unbroken row captions keep their card's cap inside outer switch rows in ${scheme}`, async ({ page }) => {
+    const caption = "LongUnbrokenCaption".repeat(20);
+    for (const layout of ["block", "flex", "grid", "fit-content"] as const) {
+      for (const width of [710, 400]) {
+        for (const container of [
+          "page\n  row\n    switch.on Notify me\n    card",
+          "phone\n  row\n    switch.on Notify me\n    card",
+          "card\n  row.scroll\n    switch.on Notify me\n    card width=200",
+        ]) {
+          const source = `${container}\n      row\n        switch.on ${caption}`;
+          const context = `${container}, ${width}, ${layout}`;
+          await show(page, source, { scheme, host: "column", width, layout });
+          const overflow = await page.locator(".wf-root, .wf-card[data-line], .wf-phone-viewport, .column").evaluateAll((nodes) => nodes.map((node) => node.scrollWidth - node.clientWidth));
+          expect(overflow, context).toEqual(overflow.map(() => 0));
+          const shot = await show(page, `${source}\n        button.link Next`, { scheme, host: "column", width, layout });
+          const geometry = await page.locator(".wf-switch[data-line]").last().evaluate((node) => {
+            const card = node.closest(".wf-card")!;
+            const cardBox = card.getBoundingClientRect();
+            const style = getComputedStyle(card);
+            const viewport = card.closest(".wf-row.wf-scroll, .wf-phone-viewport, .wf-root")!.getBoundingClientRect();
+            const caption = node.querySelector(".wf-switch-caption")!;
+            const range = document.createRange();
+            range.selectNode(caption.firstChild!);
+            return {
+              cardLeft: cardBox.left + Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.borderLeftWidth),
+              cardRight: cardBox.right - Number.parseFloat(style.paddingRight) - Number.parseFloat(style.borderRightWidth),
+              cardBorderRight: cardBox.right,
+              viewportRight: viewport.right,
+              captionLeft: caption.getBoundingClientRect().left,
+              captionRight: caption.getBoundingClientRect().right,
+              lines: range.getClientRects().length,
+              overflow: node.scrollWidth - node.clientWidth,
+            };
+          });
+          expect(geometry.captionLeft, context).toBeGreaterThan(geometry.cardLeft);
+          expect(geometry.captionRight, context).toBeLessThanOrEqual(geometry.cardRight + 1);
+          if (!container.includes("row.scroll")) expect(geometry.cardBorderRight, context).toBeLessThanOrEqual(geometry.viewportRight + 1);
+          expect(geometry.lines, context).toBeGreaterThan(1);
+          expect(geometry.overflow, context).toBe(0);
+          expect(await page.locator(".column").evaluate((node) => node.scrollWidth - node.clientWidth), context).toBe(0);
+          expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), context).toBe(0);
+          if (container.startsWith("page") && width === 400 && layout === "block") await expect(shot).toHaveScreenshot(`switch-nested-card-caption-${scheme}-column.png`);
+        }
+      }
+    }
+  });
+
   test(`switches scale with text size and reuse host colours in ${scheme}`, async ({ page }) => {
     const host = await show(page, example("settings"), { scheme });
     const dimensions = () => page.locator(".wf-switch-track, .wf-switch-thumb").evaluateAll((nodes) => nodes.map((node) => {

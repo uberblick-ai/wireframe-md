@@ -24,6 +24,19 @@ describe("switch", () => {
   });
 
   it.each([
+    ["page", false],
+    ["card", false],
+    ["page\n  row", true],
+    ["page\n  row\n    row", true],
+    ["page\n  table\n    row", false],
+  ] as const)("uses row caption sizing only in layout rows: %s", (parent, rowCaption) => {
+    const indent = "  ".repeat(parent.split("\n").length);
+    const root = renderWireframe(parseWireframe(`${parent}\n${indent}switch.on Caption\n${indent}switch`))!;
+    const switches = [...root.querySelectorAll(".wf-switch[data-line]")];
+    expect(switches.map((node) => node.classList.contains("wf-switch-row"))).toEqual([rowCaption, false]);
+  });
+
+  it.each([
     ["top level", "\nswitch", 2],
     ...[...KINDS.keys(), "unknown"].filter((kind) => !["dialog", "banner", "page", "frame", "phone", "dock", "card", "row"].includes(kind))
       .map((kind) => [kind, `${kind}\n  switch`, 2]),
