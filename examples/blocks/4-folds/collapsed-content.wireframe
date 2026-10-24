@@ -1,0 +1,12 @@
+card width=360
+  text.title Before
+  text.strong Goals
+  fold 4 unchanged blocks · Steps, Checklist
+  text.bg-red − They sign up with a password.
+  text.strong Checklist
+  fold 8 unchanged blocks · Account setup, workspace invitations, document creation and review
+  fold
+banner.neutral
+  text.strong Document history
+  fold 4 unchanged blocks · Steps, Checklist
+  text.small.muted Comparing the previous version with the current document.

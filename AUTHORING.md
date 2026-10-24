@@ -113,7 +113,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 ## Kinds
 
 `dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
-rest. A `card` may also stand at the top level, but holds text, images, rows, switches and tabs.
+rest. A `card` may also stand at the top level, but holds text, images, folds, rows, switches and tabs.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
@@ -123,8 +123,9 @@ rest. A `card` may also stand at the top level, but holds text, images, rows, sw
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, folds, rows, switches and tabs; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
+| `fold` | directly inside a root or a `dock` or a `card` | none | the collapsed content's label, or none for an empty bar |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
@@ -141,7 +142,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows, sw
 | `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
 
 A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-width
-strip with its icon, text and buttons on one line; tabs take a full-width line.
+strip with its icon, text and buttons on one line; tabs, folds and tinted text take a full-width line.
 A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
@@ -149,6 +150,26 @@ secondary button. `button.primary.danger` is a filled destructive button, and
 underline follows its colour and uses `--wf-stroke` for its thickness, including
 on every wrapped line. Icons and the gap before the caption are not underlined;
 an icon-only `.link` stays a bare icon.
+
+`fold LABEL` shows collapsed content as a full-width bar inside a root, card or
+dock's padding. It uses a dashed `--wf-line` border at `--wf-stroke`, with the
+label centred in small `--wf-muted` text. Long labels wrap inside the bar,
+including unbroken words, without widening the container or document. A fold in
+a banner takes its own full-width line, like tabs and tinted text.
+
+It takes no variants, attributes or children; an optional `#id` works as on any
+kind. A bare `fold` draws an empty bar without warning. The bar is static and
+non-focusable: assistive technology reads its label once, or “fold” when bare,
+with no interactive role or expanded state. Its label never names its root in
+the accessible summary. Misplaced folds, variants, attributes and children get
+the usual diagnostics and still draw.
+
+```wireframe
+card
+  text.strong Goals
+  fold 4 unchanged blocks · Steps, Checklist
+  text.strong Checklist
+```
 
 `divider` draws a horizontal line directly inside a `dialog`, `page`, `frame`, `phone` or `dock`.
 It takes no variants, label, attributes or children; an optional `#id` works as
@@ -1274,7 +1295,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

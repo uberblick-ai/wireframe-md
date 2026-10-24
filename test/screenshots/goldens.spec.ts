@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 
 const samples = [
   {
+    name: "folds-collapsed-content",
+    source: readFileSync(new URL("../../examples/blocks/4-folds/collapsed-content.wireframe", import.meta.url), "utf8"),
+    intro: "Collapsed content stays visible as a dashed bar in a card or on its own banner line; long labels wrap and bare bars stay empty.",
+  },
+  {
     name: "text-changed-lines",
     source: readFileSync(new URL("../../examples/reference/vocabulary/changed-lines.wireframe", import.meta.url), "utf8"),
     intro: "Text backgrounds use four tints in cards and rows, with independent text colours.",
