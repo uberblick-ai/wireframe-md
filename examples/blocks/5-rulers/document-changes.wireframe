@@ -1,0 +1,32 @@
+page
+  text.strong Equal-height comparison
+  row.stretch
+    card width=1/3 padding=8
+      text.strong Before
+      text.red Removed heading
+    card width=2/3 padding=8
+      text.strong After
+      text.green New heading
+      text Goals
+      text Steps
+      text Checklist
+    text.small.muted Changes
+    ruler
+      mark.red at=0
+      mark at=50
+      mark.green at=100
+  text.strong Centred comparison
+  row
+    card padding=8
+      text.strong Before
+      text Earlier draft
+    card padding=8
+      text.strong After
+      text Updated draft
+      text Goals
+      text Steps
+      text Checklist
+    ruler
+      mark.green at=0
+      mark.red at=22
+      mark at=100

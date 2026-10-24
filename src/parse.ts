@@ -1,5 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { paddingPixels, widthFraction, widthPixels } from "./attributes.js";
+import { markPosition, paddingPixels, widthFraction, widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
 import { fullWidthRow, rowFractions } from "./layout.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
@@ -52,6 +52,11 @@ export function parseWireframe(source: string): WireframeParseResult {
       if (node.kind === "phone") {
         for (const child of node.children.slice(0, -1)) {
           if (child.kind === "dock") diagnostics.push({ line: child.line, severity: "warning", message: "dock must be its phone's last child" });
+        }
+      }
+      if (node.kind === "row" && parent?.kind !== "table") {
+        for (const child of node.children.slice(0, -1)) {
+          if (child.kind === "ruler") diagnostics.push({ line: child.line, severity: "warning", message: "ruler must be its row's last child" });
         }
       }
       checkChildren(node.children, node);
@@ -205,14 +210,16 @@ function checkNode(
   }
   const seenAttributes = new Set<string>();
   for (const { key, value } of node.attributes) {
-    if (key !== "label" && key !== "width" && key !== "padding") {
-      warn(`unknown attribute ${quote(key)}: expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)`);
+    if (key !== "label" && key !== "width" && key !== "padding" && key !== "at") {
+      warn(`unknown attribute ${quote(key)}: expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)`);
       continue;
     }
     if (seenAttributes.has(key)) warn(`repeated attribute ${quote(key)}: the first value is used`);
     seenAttributes.add(key);
     if (key === "label") {
       if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
+    } else if (key === "at") {
+      if (kind !== "mark") warn('attribute "at" is only allowed on mark');
     } else if (key === "padding") {
       if (kind !== "card") warn('attribute "padding" is only allowed on card');
       else if (paddingPixels(value) === undefined) {
@@ -227,6 +234,10 @@ function checkNode(
     } else if (widthPixels(value) === undefined) {
       warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240${kind === "card" ? ", or a fraction of the row such as width=1/3" : ""}`);
     }
+  }
+  if (kind === "mark") {
+    const at = node.attributes.find((attribute) => attribute.key === "at")?.value;
+    if (markPosition(at) === undefined) warn(`invalid at ${quote(at ?? "")}: expected a whole number from 0 to 100, such as at=22`);
   }
   if (rule === undefined) return;
 
@@ -272,6 +283,14 @@ function checkNode(
     return;
   }
   const place = placeOf(parent, grandparent);
+  if (kind === "ruler") {
+    if (place !== "row") warn("ruler must be directly inside a non-table row");
+    return;
+  }
+  if (kind === "mark") {
+    if (place !== "ruler") warn("mark must be directly inside ruler");
+    return;
+  }
   if (kind === "cell") {
     const sorts = node.variants.filter((variant) => CELL_SORT_VARIANTS.includes(variant));
     if (sorts.length > 0 && !(place === "table row" && parent?.variants.includes("head"))) {
@@ -300,7 +319,7 @@ function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode |
   if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "tabs" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "tabs" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option" || parent.kind === "ruler") return parent.kind;
   return undefined;
 }
 

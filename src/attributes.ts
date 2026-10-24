@@ -20,3 +20,10 @@ export function paddingPixels(value: string | undefined): number | undefined {
   const padding = Number(value);
   return padding >= 0 && padding <= 64 ? padding : undefined;
 }
+
+/** A ruler mark's position is a whole percentage, including both endpoints. */
+export function markPosition(value: string | undefined): number | undefined {
+  if (value === undefined || !/^[0-9]+$/.test(value)) return undefined;
+  const position = Number(value);
+  return position >= 0 && position <= 100 ? position : undefined;
+}

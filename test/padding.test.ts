@@ -67,7 +67,7 @@ describe("card padding", () => {
   it("names padding in the unknown-attribute warning without changing the drawing", () => {
     const result = parseWireframe("\ncard format=PDF");
     expect(result.diagnostics).toEqual([
-      warning(2, 'unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
     ]);
     expect(renderWireframe(result)!.outerHTML).toBe(render("\ncard").outerHTML);
   });

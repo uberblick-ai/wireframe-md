@@ -40,10 +40,10 @@ kind.variant#id key=value Label
   v0.1 defines `label` on `input` and `select`: `label=Role` or
   `label="Work email"`, `width` on `page`, `card` and `image`: `width=256`
   (also `width=1/3` on a card directly inside a full-width row),
-  and `padding` on `card`: `padding=8`.
+  `padding` on `card`: `padding=8`, and `at` on `mark`: `at=22`.
   Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
-  Other attributes get a warning. A repeated `label=`, `width=` or `padding=`
+  Other attributes get a warning. A repeated `label=`, `width=`, `padding=` or `at=`
   warns and uses the first value, even when invalid; an attribute on a kind
   that does not accept it warns and doesn't change its drawing.
 - **Label** is the rest of the line, without trailing spaces. On `text` lines,
@@ -129,6 +129,8 @@ rest. A `card` may also stand at the top level, but holds text, images, folds, r
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
+| `ruler` | directly inside a `row` | none | none: last child of a non-table row; holds marks |
+| `mark` | directly inside a `ruler` | `.red`, `.green`: semantic colours; warning by default | none: requires `at=0` to `at=100`; no children |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
@@ -549,7 +551,7 @@ These warnings still render:
 | `dialog width=256` (any kind other than `page`, `card` or `image`, whatever the value) | `attribute "width" is only allowed on page, card or image` | unchanged |
 | `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
 | `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
-| `page format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)` | unchanged |
+| `page format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
 
 ## Card padding
 
@@ -584,7 +586,7 @@ These warnings keep the block renderable and report the source line:
 | `page padding=8` (any kind other than `card`, whatever the value) | `attribute "padding" is only allowed on card` | unchanged |
 | `card padding=8px` (also `-1`, `8.5`, `65`, `1em` or an empty value) | `invalid padding "8px": expected a whole number of pixels from 0 to 64, such as padding=8` | default padding |
 | `card padding=8 padding=4` | `repeated attribute "padding": the first value is used` | the first padding; an invalid first value keeps the default padding |
-| `card format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)` | unchanged |
+| `card format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
 
 ## Page wrappers
 
@@ -834,9 +836,10 @@ still warns; a table row continues to hold only cells.
 
 `row.stretch` makes every direct child card as tall as the tallest child in the
 row. Card content starts at the top, with extra space below. Other direct
-children keep their own height and align to the top; compact groups keep their
+children keep their own height and align to the top, except a ruler, which always
+spans the row's full height; compact groups keep their
 own internal alignment. Widths stay the same as a plain row, which still centres
-its children vertically. `.stretch` combines with `.end` or `.between`.
+its children vertically, except the ruler. `.stretch` combines with `.end` or `.between`.
 `.end`, `.between` and `.scroll` compete, as do `.stretch` and `.scroll`;
 in each conflict the first written wins, even if it is itself ignored by another
 conflict. For example, `row.end.scroll.stretch` draws as `row.end` and gives both
@@ -909,6 +912,49 @@ colour unless it has a hue. A second icon warns `option takes only one icon`
 and still draws. A `toggle` directly inside a dock is a tab bar: equal-width
 options, icon above caption, no middle-dot separators, current option in ink
 and other options muted. Controls stay inert and summaries stay unchanged.
+
+## Overview rulers
+
+Put a `ruler` last in any non-table row to map changes beside long content.
+It draws a fixed 12 px vertical track at the row's full height, including in
+plain rows and compact groups. Cards share the remaining width, including
+fractional cards. It uses existing theme properties: `--wf-neutral-tint` for
+the track and `--wf-line` at `--wf-stroke` for its outline.
+
+```wireframe
+page
+  row.stretch
+    card
+      text Before
+      text.red Removed text
+    card
+      text After
+      text.green Added text
+    ruler
+      mark.red at=0
+      mark at=50
+      mark.green at=100
+```
+
+Each `mark at=N` draws a short line across the track N percent down, with 0
+touching the top and 100 touching the bottom; marks never leave the track.
+N is a whole number from 0 to 100 in digits without a unit, sign or decimal.
+Marks use `--wf-warning` by default, `--wf-danger` for `.red` and `--wf-success`
+for `.green`. Competing colours warn and use the first written.
+An empty ruler draws an empty track without warning. Neither kind takes a
+label; rulers take no variants or attributes and hold only marks. Marks take
+only `at=` and no children. Repeated `at=` warns and uses the first value.
+
+A missing or invalid first `at=` warns and draws no mark, because it has no
+fallback position. This is an exception to the usual warning recovery rule;
+misplaced children still draw. `at=` on another kind gets the usual attribute
+placement warning. A misplaced ruler warns and draws where written, including
+in a table row, whose warning says it belongs in a non-table row. A ruler
+before another row child warns `ruler must be its row's last child`.
+A mark outside a ruler warns and still draws when its position is valid.
+Both kinds are decorative, hidden from assistive technology, absent from
+accessible summaries and cannot be focused. There is no viewport thumb or
+clicking or dragging. This vocabulary is provisional until the vocabulary review.
 
 ## Figma blocks
 
@@ -984,11 +1030,13 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=`, `width=` or `padding=` on
+  `#id`, a label on a kind that takes none, `label=`, `width=`, `padding=` or `at=` on
   the wrong kind, a repeated attribute, an invalid width or padding and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
+  A mark with missing or invalid `at=` is the exception: it has no fallback
+  position and draws no mark; misplaced children still draw.
 
 ## Common mistakes
 
@@ -1137,7 +1185,7 @@ dialog Publish the page?
 
 The parser reads `format=PDF` as an attribute, so the label is only the rest of the
 line. Attributes are `label=` on `input` and `select`, `width=` on `page`, `card`
-and `image`, and `padding=` on `card`. Quote any line label that starts with
+and `image`, `padding=` on `card`, and `at=` on `mark`. Quote any line label that starts with
 `word=`, including a placeholder that starts with `label=`. Wrong:
 
 ```text
@@ -1148,7 +1196,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)
 ```
 
 Fixed:
@@ -1295,7 +1343,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

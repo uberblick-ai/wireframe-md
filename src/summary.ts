@@ -12,9 +12,10 @@ const TONES: readonly string[] = ["danger", "warning", "info", "success"];
  */
 export function summarizeWireframe(result: WireframeParseResult): string {
   if (!result.renderable) return "Wireframe with errors";
-  if (result.nodes.length === 0) return "Empty wireframe";
+  const nodes = result.nodes.filter((node) => node.kind !== "ruler" && node.kind !== "mark");
+  if (nodes.length === 0) return "Empty wireframe";
   // Labels hold no line breaks, but may hold other vertical space such as U+2028.
-  return `Wireframe: ${result.nodes.map(describe).join("; ")}`.replace(/[\s\u0085]+/g, " ");
+  return `Wireframe: ${nodes.map(describe).join("; ")}`.replace(/[\s\u0085]+/g, " ");
 }
 
 function describe(node: WireframeNode): string {
