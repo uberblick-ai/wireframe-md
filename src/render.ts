@@ -205,6 +205,10 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       break;
     }
     case "text":
+      // Read the winning colour, so ignored change variants add no alternative.
+      if (["added", "removed"].includes(node.variants[colourIndex] ?? "")) {
+        element.append(text(document, "span", ["wf-text-change"], `${node.variants[colourIndex]} `));
+      }
       for (const run of textRuns(node.label)) {
         element.append(run.mono
           ? text(document, "span", ["wf-mono"], run.text)
@@ -295,12 +299,12 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     }
   }
   if (node.kind === "banner") {
-    // Each strip gets its own line. Keep intervening source in the banner's
+    // Each strip or marked text gets its own line. Keep intervening source in the banner's
     // usual nowrap flex line. Use the same layout without strips, so adding
     // tabs cannot change percentage media's intrinsic sizing pass.
     let line: HTMLElement | undefined;
     for (const child of [...element.children]) {
-      if (child.classList.contains("wf-tabs")) line = undefined;
+      if (child.matches(".wf-tabs, .wf-text:is(.wf-added, .wf-removed)")) line = undefined;
       else {
         if (line === undefined) {
           line = create(document, "div", ["wf-banner-line"]);

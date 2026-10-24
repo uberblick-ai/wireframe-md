@@ -1,0 +1,15 @@
+page
+  text.title Onboarding changes
+  row.stretch
+    card
+      text.strong Before
+      text New members land on an empty workspace.
+      text.removed They sign up with a password.
+    card
+      text.strong After
+      text New members land on an empty workspace.
+      text.added They sign in with `GitHub`.
+  text.strong Revision notes
+  row
+    text.removed.small Password sign-up
+    text.added.small.strong GitHub sign-in

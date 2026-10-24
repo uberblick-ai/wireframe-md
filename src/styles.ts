@@ -26,6 +26,7 @@
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
+//   Added/removed text uses ink, success/danger marks and success/danger tints.
 //   --wf-neutral-tint  a neutral banner's, frame's, image's and phone bezel's fill;
 //                      --wf-muted is the frame's bar and caption and the phone's outline
 //   Phone island: light --wf-ink / dark --wf-danger-ink, solid dark in both schemes
@@ -709,6 +710,34 @@ const STYLES = `.wf-root {
   font-size: calc(0.85 * var(--_wf-text-size));
 }
 
+/* Change lines keep ink text on a tint; the short start-edge mark is decorative.
+   No width or flex change: stacked lines stretch, row text keeps its own width. */
+.wf-root .wf-text:is(.wf-added, .wf-removed) {
+  position: relative;
+  box-sizing: border-box;
+  padding: 0.2em 0.65em;
+  color: var(--_wf-ink);
+  background: var(--_wf-success-tint);
+}
+
+.wf-root .wf-text.wf-removed {
+  background: var(--_wf-danger-tint);
+}
+
+.wf-root .wf-text:is(.wf-added, .wf-removed)::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.4em;
+  width: calc(3 * var(--_wf-stroke));
+  height: 1em;
+  background: var(--_wf-success);
+}
+
+.wf-root .wf-text.wf-removed::before {
+  background: var(--_wf-danger);
+}
+
 .wf-root .wf-row {
   display: flex;
   flex: none;
@@ -849,8 +878,9 @@ const STYLES = `.wf-root {
   overflow-wrap: break-word;
 }
 
-/* Keep the state in the reading order without drawing extra On/Off labels. */
-.wf-root .wf-switch-state {
+/* Keep alternatives in reading order without drawing extra labels. */
+.wf-root .wf-switch-state,
+.wf-root .wf-text-change {
   position: absolute;
   width: 1px;
   height: 1px;

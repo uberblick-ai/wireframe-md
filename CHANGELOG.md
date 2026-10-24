@@ -5,6 +5,12 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `text.added` and `text.removed` draw ink text on green or red tints with a
+  short start-edge mark, using the existing success and danger theme properties.
+  They combine with strong, small and inline mono; competing text colours warn
+  and use the first. Assistive technology reads the change before the text,
+  while root summaries keep the text alone.
+
 - Switch captions in rows keep words whole beside children that cannot shrink.
   Words too wide for the row still wrap inside the caption; unfitting siblings
   scroll inside the wireframe or phone screen.
