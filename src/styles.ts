@@ -772,10 +772,17 @@ const STYLES = `.wf-root {
 }
 
 /* Only rows containing fractions use tracks. Their combined basis and growth
-   match ordinary unsized cards, preserving neighbouring controls' allocation. */
+   match ordinary unsized cards, preserving neighbouring controls' allocation.
+   Tracks may shrink below that basis, keeping large padding out of the row's
+   intrinsic minimum. Neighbours shrink first, as beside unsized cards; their
+   relative weights are unchanged. The priority is beyond layout precision. */
 .wf-root .wf-fractions > :is(.wf-card-track, .wf-card-space) {
-  flex: var(--_wf-grow) 0 calc(var(--_wf-card-basis) * var(--_wf-share));
+  flex: var(--_wf-grow) 1 calc(var(--_wf-card-basis) * var(--_wf-share));
   min-width: 0;
+}
+
+.wf-root .wf-fractions > :is(.wf-card.wf-sized, .wf-text, .wf-input, .wf-field, .wf-switch, .wf-row-group) {
+  flex-shrink: 1000000000;
 }
 
 .wf-root .wf-card-track {

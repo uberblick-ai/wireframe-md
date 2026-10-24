@@ -99,4 +99,12 @@ describe("fractional card widths", () => {
     expect(renderWireframe(parsed)!.outerHTML).toBe(draw(source.replace(" width=1/3", "")).outerHTML);
     expect(draw(source).querySelector("a, button, input, script, [tabindex], [onclick], [src], [href]")).toBeNull();
   });
+
+  it("retains unsupported row labels and unknown children alongside fractional cards", () => {
+    const source = "page\n  row Unsupported label\n    mystery Unknown child\n    card width=1/3\n      text First card\n    card\n      text Second card";
+    const root = draw(source);
+    expect(root.textContent).toBe("Unsupported labelmysteryUnknown childFirst cardSecond card");
+    expect([...root.querySelectorAll(".wf-card")].map((card) => card.textContent)).toEqual(["First card", "Second card"]);
+    expect(root.querySelector(".wf-unknown")!.getAttribute("data-line")).toBe("3");
+  });
 });

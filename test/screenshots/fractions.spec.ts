@@ -121,4 +121,31 @@ for (const scheme of ["light", "dark"] as const) {
       expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
     }
   });
+
+  test(`large padding cannot widen fractional cards in a narrow row, ${scheme}`, async ({ page }) => {
+    for (const width of [80, 120, 360]) {
+      await show(page, `page width=${width}\n  row\n    card width=1/3 padding=64\n      image.square\n    card width=2/3 padding=64\n      image.square`, { scheme });
+      const row = (await geometry(page))[0]!;
+      expect((await page.locator(".wf-page").boundingBox())!.width).toBe(width);
+      expect(row.children[0]!.width).toBeCloseTo((row.box.width - row.gap) / 3, 1);
+      expect(row.children[1]!.width).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
+      expect(row.children[1]!.right).toBeCloseTo(row.box.right, 1);
+    }
+  });
+
+  test(`fractions resize inside every full-width container without another render, ${scheme}`, async ({ page }) => {
+    for (const parent of ["dialog Title", "page", "page.browser Address", "frame", "phone", "phone\n  dock", "card"]) {
+      const indent = parent.includes("dock") ? "    " : "  ";
+      const body = "row.stretch\n  card width=1/3 padding=8\n    text First\n  card width=2/3 padding=8\n    text Second\n    text Taller";
+      await show(page, `${parent}\n${indent}${body.replaceAll("\n", `\n${indent}`)}`, { scheme, host: "column" });
+      for (const width of [710, 240]) {
+        await page.locator(".column").evaluate((node, width) => { (node as HTMLElement).style.width = `${width}px`; }, width);
+        const row = (await geometry(page))[0]!;
+        expect(row.children[0]!.width, parent).toBeCloseTo((row.box.width - row.gap) / 3, 1);
+        expect(row.children[1]!.width, parent).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
+        expect(row.children[0]!.height, parent).toBe(row.children[1]!.height);
+        expect(await page.locator(".wf-root").evaluate((node) => node.scrollWidth - node.clientWidth), parent).toBe(0);
+      }
+    }
+  });
 }
