@@ -32,6 +32,8 @@ pnpm add @uberblick/wireframe
 
 An ES module with type declarations and no runtime dependencies. Rendering needs
 a DOM and a browser with CSS `light-dark()` and `color-mix()`.
+CSS `calc-size()` improves minimum-width fitting for fractional cards. Without
+it, unbreakable text can extend past a narrow fractional card's border.
 
 ## Usage
 
