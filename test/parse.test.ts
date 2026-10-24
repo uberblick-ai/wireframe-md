@@ -305,7 +305,7 @@ describe("warnings", () => {
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
       warning(1, 'unknown variant ".wide": dialog takes no variants'),
       warning(2, 'unknown variant ".big" on icon: expected .filled, .red, .amber, .green or .blue'),
-      warning(4, 'unknown variant ".ghost" on button: expected .primary, .danger, .link or .focus'),
+      warning(4, 'unknown variant ".ghost" on button: expected .primary, .danger, .link, .focus or .disabled'),
     ]);
   });
 
@@ -318,7 +318,7 @@ describe("warnings", () => {
       warning(2, 'unknown variant ".purple" on icon: expected .filled, .red, .amber, .green or .blue'),
       warning(3, 'unknown variant ".purple" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue'),
       warning(5, 'unknown variant ".red" on chip: expected .more'),
-      warning(6, 'unknown variant ".green" on button: expected .primary, .danger, .link or .focus'),
+      warning(6, 'unknown variant ".green" on button: expected .primary, .danger, .link, .focus or .disabled'),
       warning(7, 'unknown variant ".blue": input takes no variants'),
       warning(8, 'unknown variant ".amber": select takes no variants'),
       warning(10, 'unknown variant ".red" on option: expected .current'),

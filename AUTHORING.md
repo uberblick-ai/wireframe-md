@@ -131,7 +131,7 @@ rest. A `card` may also stand at the top level, but holds text, images, folds, r
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
 | `ruler` | directly inside a `row` | none | none: last child of a non-table row; holds marks |
 | `mark` | directly inside a `ruler` | `.red`, `.green`: semantic colours; warning by default | none: requires `at=0` to `at=100`; no children |
-| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
+| `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring; `.disabled`: an unavailable action, muted | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
@@ -152,6 +152,23 @@ secondary button. `button.primary.danger` is a filled destructive button, and
 underline follows its colour and uses `--wf-stroke` for its thickness, including
 on every wrapped line. Icons and the gap before the caption are not underlined;
 an icon-only `.link` stays a bare icon.
+
+`button.disabled` mutes the whole button, including explicit icon colours, fill,
+border and focus ring. It combines in any order with `.primary`, `.danger`,
+`.link` and `.focus`, including icon-only buttons. Default captions keep at least
+3:1 contrast against their fill or paper in light and dark. Existing theme
+properties still apply; no new property is needed. Buttons stay inert spans
+without a role or focus target. Assistive technology reads a disabled button
+once as its caption followed by “unavailable”, such as “Restore, unavailable”.
+For an icon-only button it reads the icon's name, such as “archive, unavailable”.
+Other buttons read as before.
+
+```wireframe
+frame Revision 41
+  button.disabled Restore
+    icon restore
+  button.primary.disabled Publish
+```
 
 `fold LABEL` shows collapsed content as a full-width bar inside a root, card or
 dock's padding. It uses a dashed `--wf-line` border at `--wf-stroke`, with the

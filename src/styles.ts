@@ -1020,6 +1020,7 @@ const STYLES = `.wf-root {
 
 /* Keep names and state in the reading order without drawing extra labels. */
 .wf-root .wf-switch-state,
+.wf-root .wf-button-state,
 .wf-root .wf-fold-name {
   position: absolute;
   width: 1px;
@@ -1119,6 +1120,12 @@ const STYLES = `.wf-root {
 .wf-root .wf-button:where(.wf-focus) {
   outline: var(--_wf-focus-width) solid var(--_wf-focus);
   outline-offset: var(--_wf-focus-width);
+}
+
+/* Fade the complete drawing, including explicit icon hues and the ring.
+   Keep enough contrast for default captions on both paper and filled actions. */
+.wf-root .wf-button:where(.wf-disabled) {
+  opacity: 0.75;
 }
 
 /* Fields share their border, radius, padding and height, with no fill. They

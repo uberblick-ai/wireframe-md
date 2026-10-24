@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `button.disabled` draws unavailable actions muted, preserving variant styling
+  and at least 3:1 default caption contrast in light and dark. Assistive
+  technology reads the caption (or icon name) followed by “unavailable”.
+
 - `ruler` draws a slim overview track beside a row's content. Decorative
   `mark at=0` to `mark at=100` lines show changes in warning, red or green;
   the ruler spans the row's height beside ordinary and fractional cards.

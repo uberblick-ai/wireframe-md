@@ -59,7 +59,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
   ["ruler", { place: ["row"], variants: [], label: false }],
   ["mark", { place: ["ruler"], variants: ["red", "green"], label: false }],
-  ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
+  ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus", "disabled"], label: true }],
   // The label is the icon's name.
   ["icon", { place: ["root", "dock", "cell", "button", "option"], variants: ["filled", ...HUE_VARIANTS], label: true }],
   // The label is the placeholder.

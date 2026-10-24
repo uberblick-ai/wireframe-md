@@ -249,16 +249,27 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     case "option": {
       // Icons precede the caption; every child still draws, including misplaced ones.
       const icons = node.children.filter((child) => child.kind === "icon");
+      const disabled = node.kind === "button" && node.variants.includes("disabled");
       if (icons.length > 0) {
         element.classList.add("wf-has-icon");
         if (node.kind === "button" && node.label === "") element.classList.add("wf-icon-only");
       }
-      for (const child of icons) element.append(draw(document, child, node, parent));
+      for (const child of icons) {
+        const drawing = draw(document, child, node, parent);
+        // A disabled action reads as one label and state, without repeating
+        // its decorative icon or giving the inert span an interactive role.
+        if (disabled && "setAttribute" in drawing) drawing.setAttribute("aria-hidden", "true");
+        element.append(drawing);
+      }
       if (node.label !== "") {
         element.append((node.kind === "option" && icons.length > 0) || node.variants.includes("link")
           // A separate caption permits a dock's tab bar to stack icon and text.
           ? text(document, "span", [node.kind === "option" ? "wf-option-caption" : "wf-button-caption"], node.label)
           : document.createTextNode(node.label));
+      }
+      if (disabled) {
+        const name = node.label === "" ? icons.map((child) => child.label.replaceAll("-", " ")).join(", ") || "button" : "";
+        element.append(text(document, "span", ["wf-button-state"], `${name}, unavailable`));
       }
       break;
     }
