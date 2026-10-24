@@ -1,5 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
-import { paddingPixels, widthPixels } from "./attributes.js";
+import { markPosition, paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { cardFraction, fullWidthRow, rowFractions } from "./layout.js";
 import { textRuns } from "./text.js";
@@ -36,7 +36,8 @@ const INLINE: readonly string[] = ["button", "icon", "select", "option", "chip"]
  * roots in source order. A node with a warning still draws where it was written.
  *
  * Returns null when the result is not renderable, so the host can keep its last
- * good render; showing the diagnostics is the host's job. An empty block gives
+ * good render; showing the diagnostics is the host's job. Marks without a valid
+ * position draw nothing. An empty block gives
  * an empty root. Never throws.
  */
 export function renderWireframe(
@@ -67,7 +68,14 @@ export function renderWireframe(
   }
 }
 
-function draw(document: Document, node: WireframeNode, parent?: WireframeNode, grandparent?: WireframeNode): HTMLElement {
+function draw(document: Document, node: WireframeNode, parent?: WireframeNode, grandparent?: WireframeNode): HTMLElement | DocumentFragment {
+  const at = node.kind === "mark" ? markPosition(node.attributes.find((attribute) => attribute.key === "at")?.value) : undefined;
+  // A mark has no fallback position. This is the deliberate warning exception.
+  if (node.kind === "mark" && at === undefined) {
+    const children = document.createDocumentFragment();
+    for (const child of node.children) children.append(draw(document, child, node, parent));
+    return children;
+  }
   const rule = KINDS.get(node.kind);
   if (rule === undefined) return unknown(document, node);
   const rowGroup = node.kind === "row" && parent?.kind === "row" && grandparent?.kind !== "table";
@@ -95,6 +103,8 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   if (rowGroup) element.classList.add("wf-row-group");
   element.dataset.line = String(node.line);
   if (node.kind === "divider") element.setAttribute("role", "separator");
+  if (node.kind === "ruler" || node.kind === "mark") element.setAttribute("aria-hidden", "true");
+  if (at !== undefined) element.style.setProperty("--_wf-at", `${at}%`);
   if (["page", "card", "image"].includes(node.kind)) {
     const width = widthPixels(node.attributes.find((attribute) => attribute.key === "width")?.value);
     // Border-box sizing includes padding; min-content still widens a page for
@@ -373,12 +383,13 @@ function divideCards(document: Document, row: HTMLElement, node: WireframeNode):
     return slot;
   };
   // An unsupported row label still draws before the source children.
-  const children = [...row.children].slice(-node.children.length);
-  for (const [index, child] of node.children.entries()) {
+  const children = [...row.children] as HTMLElement[];
+  for (const child of node.children) {
     if (!flexible.includes(child)) continue;
     const fraction = cardFraction(child);
     const share = fraction === undefined ? remaining / unsized : fraction.numerator / fraction.denominator / (overfull ? total : 1);
-    const card = children[index] as HTMLElement;
+    const card = children.find((element) => element.dataset.line === String(child.line));
+    if (card === undefined) continue;
     const slot = track(share, "wf-card-track");
     card.classList.add("wf-sized");
     card.style.setProperty("--_wf-width", "100%");

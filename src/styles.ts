@@ -767,13 +767,51 @@ const STYLES = `.wf-root {
   justify-content: space-between;
 }
 
-/* Only direct cards fill the line's height; other children keep their height. */
-.wf-root .wf-row.wf-stretch > :not(.wf-card) {
+/* Cards and rulers fill the line's height; other children keep their height. */
+.wf-root .wf-row.wf-stretch > :not(.wf-card, .wf-ruler) {
   align-self: flex-start;
 }
 
 .wf-root .wf-row.wf-stretch > .wf-card {
   align-self: stretch;
+}
+
+/* Rulers stretch independently of row alignment, including compact/scroll rows.
+   Absolute marks do not set track height; an empty or misplaced track stays visible. */
+.wf-root .wf-ruler {
+  position: relative;
+  box-sizing: border-box;
+  width: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  flex: 0 0 12px;
+  background: var(--_wf-neutral-tint);
+  box-shadow: inset 0 0 0 var(--_wf-stroke) var(--_wf-line);
+}
+
+.wf-root .wf-row > .wf-ruler {
+  align-self: stretch;
+}
+
+.wf-root .wf-mark {
+  width: 12px;
+  height: 3px;
+  flex: none;
+  background: var(--_wf-warning);
+}
+
+.wf-root .wf-ruler > .wf-mark {
+  position: absolute;
+  left: 0;
+  top: clamp(0px, var(--_wf-at), calc(100% - 3px));
+}
+
+.wf-root .wf-mark.wf-red {
+  background: var(--_wf-danger);
+}
+
+.wf-root .wf-mark.wf-green {
+  background: var(--_wf-success);
 }
 
 /* A nested layout row stays content-width and shrinks so its text can wrap. */

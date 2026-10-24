@@ -69,7 +69,7 @@ describe("switch", () => {
       warning(2, 'attribute "label" is only allowed on input or select'),
       warning(2, 'attribute "width" is only allowed on page, card or image'),
       warning(2, 'attribute "padding" is only allowed on card'),
-      warning(2, 'unknown attribute "format": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
       warning(3, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
     ]);
     const node = renderWireframe(parsed)!.querySelector(".wf-switch")!;

@@ -14,7 +14,7 @@ export const LIMITS = {
  * a root, a row, a table, a table row (a row directly inside a table), a toggle,
  * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, rows, switches and tabs.
  */
-export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
+export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "ruler" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -38,7 +38,7 @@ const TEXT_COLOURS: readonly string[] = ["muted", ...HUE_VARIANTS];
 
 /** Muted competes with hues on text; other kinds keep their semantic variants. */
 export function colourVariants(kind: string): readonly string[] {
-  return kind === "icon" ? HUE_VARIANTS : kind === "text" ? TEXT_COLOURS : [];
+  return kind === "icon" ? HUE_VARIANTS : kind === "text" ? TEXT_COLOURS : kind === "mark" ? ["red", "green"] : [];
 }
 
 // A Map, so a kind such as `constructor` cannot find an Object.prototype member.
@@ -57,6 +57,8 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   // Inside a table, a row holds cells; inside a layout row, it is a plain group.
   ["row", { place: ["root", "dock", "card", "row", "table"], variants: [...ROW_LAYOUT_VARIANTS, "head"], label: false }],
   ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
+  ["ruler", { place: ["row"], variants: [], label: false }],
+  ["mark", { place: ["ruler"], variants: ["red", "green"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus"], label: true }],
   // The label is the icon's name.
   ["icon", { place: ["root", "dock", "cell", "button", "option"], variants: ["filled", ...HUE_VARIANTS], label: true }],

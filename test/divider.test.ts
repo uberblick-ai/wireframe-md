@@ -47,7 +47,7 @@ describe("divider", () => {
       { line: 2, severity: "warning", message: 'unknown variant ".dashed": divider takes no variants' },
       { line: 2, severity: "warning", message: 'attribute "label" is only allowed on input or select' },
       { line: 2, severity: "warning", message: 'attribute "width" is only allowed on page, card or image' },
-      { line: 2, severity: "warning", message: 'unknown attribute "tone": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)' },
+      { line: 2, severity: "warning", message: 'unknown attribute "tone": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)' },
       { line: 2, severity: "warning", message: "divider takes no label" },
       { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card or row" },
     ]);
@@ -60,6 +60,6 @@ describe("divider", () => {
   });
 
   it("lists divider among the expected kinds", () => {
-    expect(parseWireframe("unknown").diagnostics[0]!.message).toContain("row, divider, button");
+    expect(parseWireframe("unknown").diagnostics[0]!.message).toContain("row, divider, ruler, mark, button");
   });
 });

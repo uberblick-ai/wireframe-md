@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -245,7 +245,7 @@ describe("warnings", () => {
     for (const prefix of ["card\n  ", "frame\n  card\n    "]) {
       for (const kind of KINDS.keys()) {
         if (["text", "image", "fold", "row", "switch", "tabs"].includes(kind)) continue;
-        const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : ""}`);
+        const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : kind === "mark" ? " at=50" : ""}`);
         expect(diagnostics).toHaveLength(1);
         expect(diagnostics[0]).toMatchObject({ line: prefix.split("\n").length, severity: "warning" });
         expect(diagnostics[0]!.message).toContain(kind);
@@ -355,9 +355,9 @@ describe("warnings", () => {
 
   it("warns about every unknown attribute", () => {
     expect(warnings("banner tone=warning\n  text a=1 b=2 Hi")).toEqual([
-      warning(1, 'unknown attribute "tone": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
-      warning(2, 'unknown attribute "b": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(1, 'unknown attribute "tone": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "b": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
     ]);
   });
 
@@ -447,7 +447,7 @@ describe("warnings", () => {
 
   it("still warns about other attributes on a labelled field", () => {
     expect(warnings('page\n  input label=Email size=20 name@company.com')).toEqual([
-      warning(2, 'unknown attribute "size": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "size": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
     ]);
   });
 
@@ -701,7 +701,7 @@ describe("errors", () => {
     expect(errors('dialog\n  text "Hello\n  text a="b c\n  text "end\\"')).toEqual([
       error(2, 'unterminated quote: expected a closing "'),
       error(3, 'unterminated quote: expected a closing "'),
-      warning(3, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(3, 'unknown attribute "a": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
       error(4, 'unterminated quote: expected a closing "'),
     ]);
     expect(parseWireframe('text "Hello').nodes[0]?.label).toBe("Hello");
@@ -713,7 +713,7 @@ describe("errors", () => {
     ]);
     expect(errors('dialog\n  text a="b"c Label')).toEqual([
       error(2, "expected a space after the closing quote"),
-      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, or padding on card (quote a label that starts with word=)'),
+      warning(2, 'unknown attribute "a": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
     ]);
   });
 

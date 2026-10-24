@@ -5,6 +5,9 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `ruler` draws a slim overview track beside a row's content. Decorative
+  `mark at=0` to `mark at=100` lines show changes in warning, red or green;
+  the ruler spans the row's height beside ordinary and fractional cards.
 - `fold LABEL` draws a static, full-width dashed bar for collapsed content in
   roots, cards and docks. Labels wrap in small muted text; a bare fold draws an
   empty bar and reads as “fold”. Banner folds take their own full-width line.

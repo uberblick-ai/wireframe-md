@@ -128,6 +128,7 @@ describe("AUTHORING.md", () => {
       dock: "a `dock`",
       card: "a `card`",
       row: "a `row`",
+      ruler: "a `ruler`",
       table: "a `table`",
       "table row": "a table `row`",
       toggle: "a `toggle`",
