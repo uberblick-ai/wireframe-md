@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `fold LABEL` draws a static, full-width dashed bar for collapsed content in
+  roots, cards and docks. Labels wrap in small muted text; a bare fold draws an
+  empty bar and reads as “fold”. Banner folds take their own full-width line.
+
 ## 0.3.1 — 2026-10-24
 
 Layouts gain tab bars, on/off switches, grouped content inside rows, browser
