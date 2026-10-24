@@ -205,6 +205,11 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       element.append(placeholder);
       break;
     }
+    case "fold":
+      // Plain text is read once without giving the static bar an interactive
+      // role. A bare fold keeps its name in the reading order, but draws empty.
+      element.append(node.label !== "" ? document.createTextNode(node.label) : text(document, "span", ["wf-fold-name"], "fold"));
+      break;
     case "text":
       for (const run of textRuns(node.label)) {
         element.append(run.mono
@@ -299,12 +304,12 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     }
   }
   if (node.kind === "banner") {
-    // Each strip or tinted text gets its own line. Keep intervening source in the banner's
+    // Each strip, fold or tinted text gets its own line. Keep intervening source in the banner's
     // usual nowrap flex line. Use the same layout without strips, so adding
     // tabs cannot change percentage media's intrinsic sizing pass.
     let line: HTMLElement | undefined;
     for (const child of [...element.children]) {
-      if (child.matches(`.wf-tabs, .wf-text:is(${TEXT_BACKGROUND_VARIANTS.map((variant) => `.wf-${variant}`).join(", ")})`)) line = undefined;
+      if (child.matches(`.wf-tabs, .wf-fold, .wf-text:is(${TEXT_BACKGROUND_VARIANTS.map((variant) => `.wf-${variant}`).join(", ")})`)) line = undefined;
       else {
         if (line === undefined) {
           line = create(document, "div", ["wf-banner-line"]);

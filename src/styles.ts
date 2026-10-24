@@ -13,10 +13,10 @@
 //   --wf-ink           text, the secondary button's caption, phone status and home indicator
 //   --wf-muted         text.muted, a neutral banner's icon, an icon outside a banner, an unknown kind's name,
 //                      an input's placeholder, a select's chevron-down, options but the current one, a table's
-//                      header row, cell.sortable's arrows and chip.more
+//                      header row, cell.sortable's arrows, fold labels and chip.more
 //   --wf-paper         cards, a page, a phone screen and the secondary button's fill
 //   --wf-line          borders: cards, a page, buttons, inputs, selects, the banner's base and unknown boxes;
-//                      a table's rules and dividers; mixed into a chip's fill
+//                      a table's rules, dividers and folds; mixed into a chip's fill
 //   --wf-scrim         the faint backdrop behind a dialog's card
 //   --wf-shadow        the dialog card's box-shadow
 //   --wf-primary       button.primary's fill; --wf-primary-ink is its caption
@@ -675,6 +675,24 @@ const STYLES = `.wf-root {
   flex: 1 1 auto;
 }
 
+/* Collapsed content is a static bar. Even unbroken labels wrap without setting
+   the container's minimum width; an empty bar keeps one line of height. */
+.wf-root .wf-fold {
+  align-self: stretch;
+  justify-self: stretch;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: calc(2.15em + 2 * var(--_wf-stroke));
+  padding: 0.375em 0.75em;
+  border: var(--_wf-stroke) dashed var(--_wf-line);
+  color: var(--_wf-muted);
+  font-size: calc(0.85 * var(--_wf-text-size));
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .wf-root .wf-text {
   margin: 0;
 }
@@ -962,8 +980,9 @@ const STYLES = `.wf-root {
   overflow-wrap: break-word;
 }
 
-/* Keep the state in the reading order without drawing extra On/Off labels. */
-.wf-root .wf-switch-state {
+/* Keep names and state in the reading order without drawing extra labels. */
+.wf-root .wf-switch-state,
+.wf-root .wf-fold-name {
   position: absolute;
   width: 1px;
   height: 1px;

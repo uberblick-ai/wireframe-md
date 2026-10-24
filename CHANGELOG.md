@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `fold LABEL` draws a static, full-width dashed bar for collapsed content in
+  roots, cards and docks. Labels wrap in small muted text; a bare fold draws an
+  empty bar and reads as “fold”. Banner folds take their own full-width line.
+
 - Cards directly inside full-width, non-scroll rows accept fractional widths
   such as `width=1/3`. Fractions divide the room left after gaps, pixel cards
   and other children; unsized cards share the rest. Over-full fractions warn

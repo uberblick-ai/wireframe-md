@@ -12,7 +12,7 @@ export const LIMITS = {
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
  * a root, a row, a table, a table row (a row directly inside a table), a toggle,
- * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, rows, switches and tabs.
+ * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, rows, switches and tabs.
  */
 export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
 
@@ -52,6 +52,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["dock", { place: ["phone"], variants: [], label: false }],
   ["card", { place: ["top", "root", "dock", "row"], variants: [], label: false }],
   ["image", { place: ["root", "dock", "card", "row"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
+  ["fold", { place: ["root", "dock", "card"], variants: [], label: true }],
   ["text", { place: ["root", "dock", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS, ...TEXT_BACKGROUND_VARIANTS], label: true }],
   // Inside a table, a row holds cells; inside a layout row, it is a plain group.
   ["row", { place: ["root", "dock", "card", "row", "table"], variants: [...ROW_LAYOUT_VARIANTS, "head"], label: false }],
