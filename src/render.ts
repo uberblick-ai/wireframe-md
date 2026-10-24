@@ -48,12 +48,13 @@ export function renderWireframe(
     root.className = ROOT_CLASS;
     for (const node of result.nodes) root.append(draw(document, node));
     // Share sizing only with the nearest boundary. A content boundary shares
-    // with its affected direct children; independent boxes inside sibling cards
-    // keep their own caps, even when that content box is itself nested in a row.
+    // with its affected direct children. A card stops sharing, so its inner
+    // rows keep their own caps even when the card is itself inside a sized row.
     for (const wrap of root.querySelectorAll(".wf-banner-wrap, .wf-row-wrap, .wf-content-wrap, .wf-row-cap")) {
       if (wrap.closest('[aria-hidden="true"]') !== null) continue;
-      const boundary = wrap.parentElement?.closest(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap");
-      if (boundary && (!boundary.classList.contains("wf-content-size") || wrap.classList.contains("wf-content-item"))) {
+      const boundary = wrap.parentElement?.closest(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-row-cap, .wf-card");
+      if (boundary && !boundary.classList.contains("wf-card") &&
+        (!boundary.classList.contains("wf-content-size") || wrap.classList.contains("wf-content-item"))) {
         wrap.classList.add("wf-shared");
       }
     }
@@ -221,6 +222,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       const alternative = text(document, "span", ["wf-switch-state"], `${node.label === "" ? "switch" : ""}, ${state}`);
       if (node.label === "") element.append(alternative);
       else {
+        if (parent?.kind === "row" && grandparent?.kind !== "table") element.classList.add("wf-switch-row");
         const caption = text(document, "span", ["wf-switch-caption"], node.label);
         caption.append(alternative);
         element.append(caption);
@@ -307,19 +309,19 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
         line.append(child);
       }
     }
-    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized, :scope > .wf-banner-line .wf-banner-wrap") !== null) {
-      // Measure the image cap against available space, independently of the
-      // banner expanding to enclose the image and its neighbouring content.
+    if (element.querySelector(":scope > .wf-banner-line > .wf-image.wf-sized, :scope > .wf-banner-line .wf-banner-wrap, :scope > .wf-banner-line > .wf-row-wrap .wf-switch-row") !== null) {
+      // Measure image and row-caption caps against available space, independently
+      // of the banner expanding to enclose them and their neighbouring content.
       // Nested sized banners need the outer boundary even without a direct image.
       // A size container cannot supply an intrinsic width. Keep a hidden sizing
       // copy beside it so shrink-to-fit hosts can still measure the content.
       return sizingBoundary(document, element, "banner");
     }
   }
-  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
-    // A misplaced banner still shrinks and wraps beside row siblings. Measure
-    // its image cap against the row's available width, before content widens
-    // the row, rather than against the banner's remaining slice of that line.
+  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap, :scope > .wf-switch-row") !== null) {
+    // Measure image and switch-caption caps against the row's available width
+    // before siblings widen it, rather than against their remaining slice of
+    // that line. Compact groups share the enclosing row's available width.
     // Scroll rows already have inline-size containment and need no wrapper.
     if (!element.classList.contains("wf-scroll")) return sizingBoundary(document, element, "row");
     element.classList.add("wf-row-cap");
@@ -338,7 +340,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   return element;
 }
 
-/** Keep available-width image caps independent of intrinsic content sizing. */
+/** Keep available-width caps independent of intrinsic content sizing. */
 function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
   const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
   intrinsic.setAttribute("aria-hidden", "true");

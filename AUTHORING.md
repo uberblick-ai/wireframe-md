@@ -300,8 +300,14 @@ A `switch` draws a small rounded track and round thumb, sized from
 `--wf-primary-ink` thumb at the end, like `button.primary`. The thumb stays
 visible in light and dark. The caption follows on the same line; long captions
 wrap beside the track, with every line starting under the caption's first line
-and the track beside that first line. Captions also break unbroken strings and
-never widen the card, wireframe or document. Backticks stay literal.
+and the track beside that first line. In a non-table row, including a compact
+group, a caption wraps like `text`: it breaks between words and keeps at least
+its longest word's width. A word too wide for the row's whole available width
+still breaks inside the caption without widening the card, wireframe or document.
+If the switch and its siblings still cannot fit, the row follows the shared fit
+rules: overflow scrolls sideways inside the wireframe or phone screen, never the
+document. Outside rows, captions also break unbroken strings without widening
+their container. Backticks stay literal.
 
 ```wireframe
 page

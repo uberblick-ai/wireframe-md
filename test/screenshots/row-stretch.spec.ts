@@ -17,7 +17,7 @@ const rows = (variant: string, cards = true): string => `page\n${children.map((c
   `  row${variant}\n${cards ? "    card width=120\n      text Short\n    card\n      text One\n      text Two\n      text Three\n      text Four\n" : ""}    ${child.replaceAll("\n", "\n    ")}`,
 ).join("\n")}`;
 
-const measure = (page: Page) => page.locator(".wf-page > .wf-row").evaluateAll((nodes) => nodes.map((row) => {
+const measure = (page: Page) => page.locator(".wf-page .wf-row[data-line]:not(.wf-row-group)").evaluateAll((nodes) => nodes.map((row) => {
   const box = (node: Element) => {
     const rect = node.getBoundingClientRect();
     return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, height: rect.height };

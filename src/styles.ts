@@ -838,6 +838,17 @@ const STYLES = `.wf-root {
   overflow-wrap: anywhere;
 }
 
+/* A row caption keeps its longest word, capped at the row's whole available
+   width before siblings widen it. Only words wider than that cap break.
+   Reserve one em of caption even in a collapsed shrink-to-fit scroll row. */
+.wf-root .wf-row > .wf-switch-row {
+  max-width: max(3.75em, var(--_wf-content-width, 100cqi));
+}
+
+.wf-root .wf-switch-row > .wf-switch-caption {
+  overflow-wrap: break-word;
+}
+
 /* Keep the state in the reading order without drawing extra On/Off labels. */
 .wf-root .wf-switch-state {
   position: absolute;
@@ -1172,6 +1183,12 @@ const STYLES = `.wf-root {
 .wf-root .wf-row-cap.wf-shared {
   --_wf-banner-cap: inherit;
   --_wf-content-width: inherit;
+}
+
+/* Banner rows share the boundary outside the banner's insets. Caption caps
+   use the inner line's available width, just like its sized images. */
+.wf-root .wf-banner-line > .wf-row-wrap:has(.wf-switch-row) > .wf-row-size {
+  --_wf-content-width: var(--_wf-banner-cap, calc(100cqi - 1.5em - 2 * var(--_wf-stroke)));
 }
 
 .wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
