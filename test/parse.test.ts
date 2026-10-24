@@ -14,7 +14,7 @@ const node = (line: number, kind: string, fields: Partial<WireframeNode> = {}): 
 });
 
 /** Every kind, as an unknown kind's warning lists them. */
-const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip";
+const KIND_LIST = "dialog, banner, page, frame, phone, dock, card, image, fold, item, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip";
 
 const warning = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "warning", message });
 const error = (line: number, message: string): WireframeDiagnostic => ({ line, severity: "error", message });
@@ -241,10 +241,10 @@ describe("warnings", () => {
     }
   });
 
-  it("warns about every known kind except text, image, fold, row, switch and tabs directly inside a card", () => {
+  it("warns about every known kind except text, image, fold, item, row, switch and tabs directly inside a card", () => {
     for (const prefix of ["card\n  ", "frame\n  card\n    "]) {
       for (const kind of KINDS.keys()) {
-        if (["text", "image", "fold", "row", "switch", "tabs"].includes(kind)) continue;
+        if (["text", "image", "fold", "item", "row", "switch", "tabs"].includes(kind)) continue;
         const diagnostics = warnings(`${prefix}${kind}${kind === "icon" ? " archive" : kind === "mark" ? " at=50" : ""}`);
         expect(diagnostics).toHaveLength(1);
         expect(diagnostics[0]).toMatchObject({ line: prefix.split("\n").length, severity: "warning" });
@@ -282,7 +282,7 @@ describe("warnings", () => {
     ]);
     expect(result.diagnostics).toEqual([
       warning(2, `unknown kind "box": expected ${KIND_LIST}`),
-      warning(3, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
+      warning(3, "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"),
     ]);
   });
 
@@ -476,12 +476,12 @@ describe("warnings", () => {
 
   it("warns about text, row and icon outside a root", () => {
     expect(warnings("text Hi\nrow\nicon archive")).toEqual([
-      warning(1, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"),
+      warning(1, "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"),
       warning(2, "row must be directly inside dialog, banner, page, frame, phone, dock, card, row or table"),
-      warning(3, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
+      warning(3, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button, option or item"),
     ]);
     expect(warnings("dialog\n  row\n    text Hi\n    row\n    icon archive")).toEqual([
-      warning(5, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button or option"),
+      warning(5, "icon must be directly inside dialog, banner, page, frame, phone, dock, cell, button, option or item"),
     ]);
   });
 

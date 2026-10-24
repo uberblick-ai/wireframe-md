@@ -113,7 +113,7 @@ one too deep. A block over a limit gets an error and doesn't render.
 ## Kinds
 
 `dialog`, `banner`, `page`, `frame` and `phone` are roots: they stand at the top level and hold the
-rest. A `card` may also stand at the top level, but holds text, images, folds, rows, switches and tabs.
+rest. A `card` may also stand at the top level, but holds text, images, folds, items, rows, switches and tabs.
 
 | Kind | Where | Variants | Label |
 | --- | --- | --- | --- |
@@ -123,16 +123,17 @@ rest. A `card` may also stand at the top level, but holds text, images, folds, r
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, folds, rows, switches and tabs; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
-| `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, folds, items, rows, switches and tabs; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
+| `image` | directly inside a root or a `dock` or a `card` or a `row` or an `item` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=`; only `.round` as an item's first child |
 | `fold` | directly inside a root or a `dock` or a `card` | none | the collapsed content's label, or none for an empty bar |
-| `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
+| `item` | directly inside a root or a `card` | `.current`: the selected entry | the main line; holds text lines and an optional leading icon or round image |
+| `text` | directly inside a root or a `dock` or a `card` or a `row` or an `item` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
 | `ruler` | directly inside a `row` | none | none: last child of a non-table row; holds marks |
 | `mark` | directly inside a `ruler` | `.red`, `.green`: semantic colours; warning by default | none: requires `at=0` to `at=100`; no children |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring; `.disabled`: an unavailable action, muted | the caption, or none when it holds an icon |
-| `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive` |
+| `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` or an `item` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive`; only as an item's first child |
 | `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
 | `switch` | directly inside a root or a `dock` or a `card` or a `row` | `.on`: the on state; off by default | the caption, or none for a bare switch |
@@ -144,7 +145,7 @@ rest. A `card` may also stand at the top level, but holds text, images, folds, r
 | `chip` | directly inside a `row` or a `cell` | `.more`: the count of the rest, such as `+2` | the tag |
 
 A `dialog` draws as a modal card on a faint scrim. A `banner` draws as a full-width
-strip with its icon, text and buttons on one line; tabs, folds and tinted text take a full-width line.
+strip with its icon, text and buttons on one line; tabs, folds, items and tinted text take a full-width line.
 A `page` draws as a framed
 screen whose children stack at full width. A `button` with no variant is a
 secondary button. `button.primary.danger` is a filled destructive button, and
@@ -190,6 +191,41 @@ card
   text.strong Checklist
 ```
 
+`item LABEL` draws one list entry with a main line and child `text` lines stacked
+closely below it. Text keeps every variant and inline monospace. Long labels
+and second lines wrap, including unbroken words, without widening the card.
+An entry may start with one `icon` or `image.round` child; its label and text
+lines draw beside that picture. A round avatar keeps its usual size or explicit
+width, capped at half the entry's width to leave room for text.
+The leading picture is decorative to assistive
+technology. Other children warn and still draw. An icon or image after the first
+child, or an image whose first shape is not `.round`, warns
+`item takes one icon or image.round as its first child` and still draws.
+
+Items stand directly inside roots or cards; in a banner each gets a full-width
+line. Elsewhere they warn
+`item must be directly inside dialog, banner, page, frame, phone or card`.
+`item.current` adds a neutral tint behind the whole entry, reaching both inner
+edges through the container's padding, without a border or radius. Its content
+stays aligned with the container's other content. The tint mixes 10% `--wf-ink`
+with `--wf-paper`, using existing theme properties in light and dark.
+Only the first direct `item.current` in each root or card is current. Later ones
+warn `card takes one current item: the first is used` (naming the container's
+kind) and draw plain. Assistive technology reads the main line followed by
+“current”, then its child text. Plain entries read as text. Items are inert and
+never name their root in the accessible summary.
+
+```wireframe
+card width=240
+  item lena in the browser
+    text.small.muted 2 hours ago · Reviewed with Lena
+  item.current ben in the browser
+    text.small.muted 3 hours ago
+  item uberblick-agent
+    icon robot
+    text.small.muted via Claude Code · 16:40
+```
+
 `divider` draws a horizontal line directly inside a `dialog`, `page`, `frame`, `phone` or `dock`.
 It takes no variants, label, attributes or children; an optional `#id` works as
 on any kind. A `row` arranges content side by side; a divider holds no content.
@@ -232,11 +268,13 @@ Use the base name, not `pin-filled`. If a name lacks the requested style, it war
 and draws the available style instead. An unknown name warns and draws a dashed
 box showing the name; `pin-filled` also suggests `icon.filled pin`.
 
-An icon may stand directly inside a root, dock, cell, button or option. It is muted on its
+An icon may stand directly inside a root, dock, cell, button, option or item. It is muted on its
 own, uses a banner's tone and inherits a button's or option's colour. Outline icons match
 the controls' stroke weight; filled icons draw solid shapes. Each icon's text
 alternative is its name with hyphens read as spaces, so `dots-vertical` is read
 as “dots vertical”. The root's accessible summary stays the same.
+
+Leading item pictures are decorative and hidden from assistive technology.
 
 Only `icon` and `text` accept the named colours `.red`, `.amber`, `.green` and
 `.blue`. They reuse the existing theme properties: red is `--wf-danger`, amber
@@ -409,7 +447,7 @@ examples summarize as `Wireframe: page “Review settings”` and `Wireframe: ca
 | --- | --- |
 | `switch` at the top level or inside another kind such as `cell`, `toggle`, `tabs`, `option` or `button` | `switch must be directly inside dialog, banner, page, frame, phone, dock, card or row` |
 | `switch` directly in a table row | `switch in a table row: expected cell` |
-| A child under `switch`, such as `text` | That child's placement warning, e.g. `text must be directly inside dialog, banner, page, frame, phone, dock, card or row`; the child draws inside the switch |
+| A child under `switch`, such as `text` | That child's placement warning, e.g. `text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item`; the child draws inside the switch |
 | Another variant, such as `.off` or `.disabled` | `unknown variant ".off" on switch: expected .on` (using the written variant) |
 
 `tabs` draws a left-aligned line of `option` captions without separators, above
@@ -446,7 +484,7 @@ Warnings retain the source and still draw:
 | Source | Diagnostic | Drawing |
 | --- | --- | --- |
 | A later `option.current` in one `tabs` | `tabs takes one current option: the first is used` | later current options draw muted |
-| `text` directly in `tabs` (other non-option children get their usual placement warning) | `text must be directly inside dialog, banner, page, frame, phone, dock, card or row` | child still draws |
+| `text` directly in `tabs` (other non-option children get their usual placement warning) | `text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item` | child still draws |
 | `tabs` outside a root or card, including in a dock or row | `tabs must be directly inside dialog, banner, page, frame, phone or card` | strip still draws |
 | `option` outside a toggle or tabs | `option must be directly inside toggle or tabs` | option still draws |
 | `tabs.pills` | `unknown variant ".pills": tabs takes no variants` | plain tabs |
@@ -1360,7 +1398,7 @@ Diagnostics:
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
 line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue
-line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, fold, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
+line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, fold, item, text, row, divider, ruler, mark, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
 ```
 
 Fixed without an icon, since this banner is not about archiving:

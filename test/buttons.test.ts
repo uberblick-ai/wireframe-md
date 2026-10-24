@@ -43,7 +43,7 @@ describe("disabled buttons", () => {
     const parsed = parseWireframe("frame\n  button.disabled Restore\n    icon pinn\n    text Child");
     expect(parsed.diagnostics.map(({ line, message }) => [line, message])).toEqual([
       [3, 'unknown icon "pinn": expected a Tabler icon name'],
-      [4, "text must be directly inside dialog, banner, page, frame, phone, dock, card or row"],
+      [4, "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"],
     ]);
     const button = renderWireframe(parsed)!.querySelector(".wf-button")!;
     expect(button.querySelector(".wf-icon-unknown")!.textContent).toBe("pinn");

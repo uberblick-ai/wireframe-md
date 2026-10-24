@@ -176,7 +176,7 @@ describe("tabs", () => {
       { line: 2, severity: "warning", message: 'attribute "label" is only allowed on input or select' },
       { line: 2, severity: "warning", message: 'attribute "width" is only allowed on page, card or image' },
       { line: 2, severity: "warning", message: "tabs takes no label" },
-      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card or row" },
+      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item" },
       { line: 6, severity: "warning", message: "option takes only one icon" },
     ]);
     const tabs = renderWireframe(parsed)!.querySelector(".wf-tabs")!;

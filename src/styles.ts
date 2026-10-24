@@ -693,6 +693,85 @@ const STYLES = `.wf-root {
   overflow-wrap: anywhere;
 }
 
+/* Entry lines share one compact stack; container gaps separate entries. */
+.wf-root .wf-item {
+  --_wf-item-inset: 0px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+  align-self: stretch;
+  justify-self: stretch;
+  gap: 0.625em;
+  min-width: 0;
+  padding-block: 0.375em;
+  overflow-wrap: anywhere;
+}
+
+.wf-root .wf-item-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125em;
+  min-width: 0;
+}
+
+.wf-root .wf-item-label {
+  min-height: 1.4em;
+}
+
+.wf-root .wf-item > .wf-item-leading {
+  flex: none;
+}
+
+.wf-root .wf-item > .wf-image.wf-item-leading {
+  max-width: 50%;
+}
+
+/* Paint through the container's padding without moving its aligned content.
+   Each direct placement supplies its inset, so nested cards stay independent. */
+.wf-root .wf-item.wf-current::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline: calc(-1 * var(--_wf-item-inset));
+  background: color-mix(in oklab, var(--_wf-ink) 10%, var(--_wf-paper));
+}
+
+.wf-root .wf-dialog-card > .wf-item { --_wf-item-inset: 1.5em; }
+.wf-root .wf-banner > .wf-item { --_wf-item-inset: 0.75em; }
+.wf-root :is(.wf-page, .wf-page-content) > .wf-item { --_wf-item-inset: 1.75em; }
+.wf-root .wf-frame > .wf-item { --_wf-item-inset: 1em; }
+.wf-root .wf-phone-content > .wf-item { --_wf-item-inset: 1.25em; }
+.wf-root .wf-card > .wf-item { --_wf-item-inset: var(--_wf-card-padding); }
+.wf-root .wf-card.wf-sized > .wf-item {
+  --_wf-item-inset: max(0px, min(var(--_wf-card-padding), calc(var(--_wf-width) / 2 - var(--_wf-stroke))));
+}
+
+/* Anchor the stripe to the card's real inner edges when its padding is capped
+   by a narrow host or a fractional track. The entry still sets its height. */
+@supports (anchor-name: --_wf-current-item) {
+  .wf-root .wf-card:has(> .wf-item.wf-current) {
+    position: relative;
+    isolation: isolate;
+    anchor-scope: --_wf-current-item;
+  }
+  .wf-root .wf-card > .wf-item.wf-current {
+    position: static;
+    isolation: auto;
+    anchor-name: --_wf-current-item;
+  }
+  .wf-root .wf-card > .wf-item.wf-current::before {
+    inset-inline: 0;
+    top: anchor(--_wf-current-item top);
+    bottom: anchor(--_wf-current-item bottom);
+  }
+  .wf-root .wf-card.wf-sized > .wf-item.wf-current::before {
+    inset-inline: var(--_wf-stroke);
+  }
+}
+
 .wf-root .wf-text {
   margin: 0;
 }
@@ -1021,6 +1100,7 @@ const STYLES = `.wf-root {
 /* Keep names and state in the reading order without drawing extra labels. */
 .wf-root .wf-switch-state,
 .wf-root .wf-button-state,
+.wf-root .wf-item-state,
 .wf-root .wf-fold-name {
   position: absolute;
   width: 1px;

@@ -257,6 +257,14 @@ function checkNode(
     parent.children.filter((child) => child.kind === "option" && child.variants.includes("current")).length > 1) {
     warn("tabs takes one current option: the first is used");
   }
+  if (kind === "item" && parent !== undefined && (ROOTS.includes(parent.kind) || parent.kind === "card") &&
+    node.variants.includes("current") && parent.children.filter((child) => child.kind === "item" && child.variants.includes("current")).length > 1) {
+    warn(`${parent.kind} takes one current item: the first is used`);
+  }
+  if (parent?.kind === "item" && (kind === "icon" || kind === "image") &&
+    (node !== parent.children[0] || (kind === "image" && node.variants.find((variant) => IMAGE_SHAPE_VARIANTS.includes(variant)) !== "round"))) {
+    warn("item takes one icon or image.round as its first child");
+  }
   if (kind === "icon") {
     if (parent?.kind === "option" && parent.children.filter((child) => child.kind === "icon").length > 1) {
       warn("option takes only one icon");
@@ -276,7 +284,7 @@ function checkNode(
     return;
   }
   // These kinds keep their own placement warning even in a table row.
-  if (kind === "divider" || kind === "dock" || kind === "tabs") {
+  if (kind === "divider" || kind === "dock" || kind === "tabs" || kind === "item") {
     if (!rule.place.some((place) => place === parent?.kind || (place === "root" && ROOTS.includes(parent?.kind ?? "")))) {
       warn(`${kind} must be directly inside ${inside(rule.place)}`);
     }
@@ -319,7 +327,7 @@ function placeOf(parent: WireframeNode | undefined, grandparent: WireframeNode |
   if (parent.kind === "frame") return "frame";
   if (ROOTS.includes(parent.kind)) return "root";
   if (parent.kind === "row") return grandparent?.kind === "table" ? "table row" : "row";
-  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "tabs" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option" || parent.kind === "ruler") return parent.kind;
+  if (parent.kind === "table" || parent.kind === "toggle" || parent.kind === "tabs" || parent.kind === "cell" || parent.kind === "card" || parent.kind === "item" || parent.kind === "button" || parent.kind === "dock" || parent.kind === "option" || parent.kind === "ruler") return parent.kind;
   return undefined;
 }
 

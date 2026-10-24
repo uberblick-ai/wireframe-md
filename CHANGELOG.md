@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `item LABEL` groups a label and compact text lines, with an optional leading
+  icon or round avatar. The first `item.current` in a root or card gets a neutral
+  tint through the container's padding and reads as “label, current”. Long lines
+  wrap within the entry in light and dark.
+
 - `button.disabled` draws unavailable actions muted, preserving variant styling
   and at least 3:1 default caption contrast in light and dark. Assistive
   technology reads the caption (or icon name) followed by “unavailable”.

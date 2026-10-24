@@ -12,9 +12,9 @@ export const LIMITS = {
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
  * a root, a row, a table, a table row (a row directly inside a table), a toggle,
- * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, rows, switches and tabs.
+ * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, items, rows, switches and tabs.
  */
-export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "row" | "ruler" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
+export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "item" | "row" | "ruler" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
 
 export interface KindRule {
   /** Where the kind may stand. */
@@ -51,9 +51,10 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["phone", { place: ["top"], variants: [], label: false }],
   ["dock", { place: ["phone"], variants: [], label: false }],
   ["card", { place: ["top", "root", "dock", "row"], variants: [], label: false }],
-  ["image", { place: ["root", "dock", "card", "row"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
+  ["image", { place: ["root", "dock", "card", "row", "item"], variants: IMAGE_SHAPE_VARIANTS, label: true }],
   ["fold", { place: ["root", "dock", "card"], variants: [], label: true }],
-  ["text", { place: ["root", "dock", "card", "row"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS, ...TEXT_BACKGROUND_VARIANTS], label: true }],
+  ["item", { place: ["root", "card"], variants: ["current"], label: true }],
+  ["text", { place: ["root", "dock", "card", "row", "item"], variants: ["muted", "strong", "title", "small", ...HUE_VARIANTS, ...TEXT_BACKGROUND_VARIANTS], label: true }],
   // Inside a table, a row holds cells; inside a layout row, it is a plain group.
   ["row", { place: ["root", "dock", "card", "row", "table"], variants: [...ROW_LAYOUT_VARIANTS, "head"], label: false }],
   ["divider", { place: ["dialog", "page", "frame", "phone", "dock"], variants: [], label: false }],
@@ -61,7 +62,7 @@ export const KINDS: ReadonlyMap<string, KindRule> = new Map<string, KindRule>([
   ["mark", { place: ["ruler"], variants: ["red", "green"], label: false }],
   ["button", { place: ["row", "cell", "frame"], variants: ["primary", "danger", "link", "focus", "disabled"], label: true }],
   // The label is the icon's name.
-  ["icon", { place: ["root", "dock", "cell", "button", "option"], variants: ["filled", ...HUE_VARIANTS], label: true }],
+  ["icon", { place: ["root", "dock", "cell", "button", "option", "item"], variants: ["filled", ...HUE_VARIANTS], label: true }],
   // The label is the placeholder.
   ["input", { place: ["root", "dock", "row"], variants: [], label: true }],
   // The label is the chosen value.

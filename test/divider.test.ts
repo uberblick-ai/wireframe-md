@@ -49,7 +49,7 @@ describe("divider", () => {
       { line: 2, severity: "warning", message: 'attribute "width" is only allowed on page, card or image' },
       { line: 2, severity: "warning", message: 'unknown attribute "tone": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)' },
       { line: 2, severity: "warning", message: "divider takes no label" },
-      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card or row" },
+      { line: 3, severity: "warning", message: "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item" },
     ]);
     const divider = renderWireframe(parsed)!.querySelector(".wf-divider")!;
     expect(divider.className).toBe("wf-divider");

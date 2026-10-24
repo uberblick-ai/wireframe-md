@@ -1,0 +1,22 @@
+card width=280
+  text.title Revision history
+  item lena in the browser
+    text.small.muted 2 hours ago · Reviewed with Lena
+  item.current ben in the browser
+    text.small.muted 3 hours ago
+    text.small Revision `e9faf4df`
+  item uberblick-agent
+    icon robot
+    text.small.muted via Claude Code · 16:40
+  item Maya in the browser
+    image.round width=32 Maya
+    text.small.muted Yesterday · Updated the introduction
+
+card width=280 padding=8
+  text.title Inbox
+  item.current Review the launch notes
+    icon mail
+    text.small.muted Lena · 10 minutes ago
+  item Project update
+    image.round width=32 Ben
+    text.small.muted Ben · The next review is ready
