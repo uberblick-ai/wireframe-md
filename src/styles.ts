@@ -1185,6 +1185,12 @@ const STYLES = `.wf-root {
   --_wf-content-width: inherit;
 }
 
+/* Banner rows share the boundary outside the banner's insets. Caption caps
+   use the inner line's available width, just like its sized images. */
+.wf-root .wf-banner-line > .wf-row-wrap:has(.wf-switch-row) > .wf-row-size {
+  --_wf-content-width: var(--_wf-banner-cap, calc(100cqi - 1.5em - 2 * var(--_wf-stroke)));
+}
+
 .wf-root .wf-banner-intrinsic > .wf-banner-line > .wf-image.wf-sized {
   width: var(--_wf-width);
 }

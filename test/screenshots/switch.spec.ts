@@ -154,7 +154,7 @@ for (const scheme of ["light", "dark"] as const) {
       for (const kind of [
         "card\n  row.between", "card width=160\n  row.between\n    row",
         "page width=220\n  row", "page.window Settings\n  row",
-        "dialog\n  row", "frame\n  row", "phone\n  row",
+        "dialog\n  row", "banner\n  row", "banner\n  row\n    row", "frame\n  row", "phone\n  row",
         "phone\n  dock\n    row", "card width=220\n  row.scroll",
       ]) {
         const indent = "  ".repeat(kind.split("\n").length);
