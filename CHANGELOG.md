@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Switch captions in rows keep words whole beside children that cannot shrink.
+  Words too wide for the row still wrap inside the caption; unfitting siblings
+  scroll inside the wireframe or phone screen.
+
 - `row.stretch` gives direct child cards equal heights with content at the top.
   Other children keep their height and align to the top. It combines with
   `.end` or `.between`; `.scroll` conflicts and the first written wins.

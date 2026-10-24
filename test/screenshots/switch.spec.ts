@@ -3,11 +3,62 @@ import { expect, test } from "@playwright/test";
 import { open, show } from "./page.js";
 
 const example = (name: string) => readFileSync(new URL(`../../examples/forms/4-switches/${name}.wireframe`, import.meta.url), "utf8");
+const rowCaption = `card width=300
+  row.between
+    switch.on Collapse unchanged
+    row
+      button.link Previous change
+      button.link Next change`;
 
 test.beforeEach(async ({ page }) => open(page));
 
 for (const scheme of ["light", "dark"] as const) {
   for (const host of ["standalone", "column"] as const) {
+    test(`row switch captions keep whole words beside non-shrinking actions in ${scheme}, ${host}`, async ({ page }) => {
+      for (const source of [
+        rowCaption,
+        rowCaption.replace("    switch.on", "    row\n      switch.on"),
+        rowCaption.replace("row.between", "row.scroll"),
+        rowCaption.replace("card width=300", "phone"),
+      ]) {
+        const shot = await show(page, source, { scheme, host });
+        const geometry = await page.locator(".wf-switch[data-line]").evaluate((node) => {
+          const caption = node.querySelector(".wf-switch-caption")!;
+          const text = caption.firstChild!;
+          const range = document.createRange();
+          const words = [...text.textContent!.matchAll(/\S+/g)].map((word) => {
+            range.setStart(text, word.index);
+            range.setEnd(text, word.index + word[0].length);
+            return [...range.getClientRects()].map((rect) => ({ left: rect.left, right: rect.right }));
+          });
+          range.selectNode(text);
+          const lines = range.getClientRects().length;
+          const box = node.getBoundingClientRect();
+          const track = node.querySelector(".wf-switch-track")!.getBoundingClientRect();
+          const action = node.closest(".wf-card, .wf-phone-content")!.querySelector(".wf-button[data-line]")!.getBoundingClientRect();
+          return { words, lines, switchRight: box.right, trackRight: track.right, actionLeft: action.left };
+        });
+        expect(geometry.lines, source).toBeGreaterThanOrEqual(1);
+        expect(geometry.lines, source).toBeLessThanOrEqual(2);
+        for (const word of geometry.words) {
+          expect(word, source).toHaveLength(1);
+          expect(word[0]!.left, source).toBeGreaterThan(geometry.trackRight);
+          expect(word[0]!.right, source).toBeLessThanOrEqual(geometry.switchRight);
+        }
+        expect(geometry.actionLeft, source).toBeGreaterThan(geometry.switchRight);
+        await expect(page.locator(".wf-switch[data-line]")).toMatchAriaSnapshot('- text: Collapse unchanged , on');
+        if (source === rowCaption) await expect(shot).toHaveScreenshot(`switch-row-caption-${scheme}-${host}.png`);
+        // A narrow host makes the unfitting row reach the wireframe's edge.
+        await page.locator(host === "column" ? ".column" : ".standalone").evaluate((node) => { node.style.width = "240px"; });
+        expect(await page.locator(".column").evaluateAll((nodes) => nodes.map((node) => node.scrollWidth - node.clientWidth)), source)
+          .toEqual(host === "column" ? [0] : []);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), source).toBe(0);
+        const scroller = page.locator(source.startsWith("phone") ? ".wf-phone-viewport" : source.includes("row.scroll") ? ".wf-row.wf-scroll" : ".wf-root");
+        expect(await scroller.evaluate((node) => node.scrollWidth - node.clientWidth), source).toBeGreaterThan(0);
+        expect(await scroller.evaluate((node) => { node.scrollLeft = 10000; return node.scrollLeft; }), source).toBeGreaterThan(0);
+      }
+    });
+
     test(`switch thumbs show on/off and bare switches trail rows in ${scheme}, ${host}`, async ({ page }) => {
       await show(page, `${example("settings")}\n${example("bare")}`, { scheme, host });
       const tracks = await page.locator(".wf-switch-track").evaluateAll((nodes) => nodes.map((node) => {
@@ -97,6 +148,37 @@ for (const scheme of ["light", "dark"] as const) {
       expect(overflow).toEqual(overflow.map(() => 0));
     });
   }
+
+  test(`unbroken row captions keep their available-width cap when siblings overflow in ${scheme}`, async ({ page }) => {
+    for (const layout of ["block", "flex", "grid", "fit-content"] as const) {
+      for (const kind of [
+        "card\n  row.between", "card width=160\n  row.between\n    row",
+        "page width=220\n  row", "page.window Settings\n  row",
+        "dialog\n  row", "frame\n  row", "phone\n  row",
+        "phone\n  dock\n    row", "card width=220\n  row.scroll",
+      ]) {
+        const indent = "  ".repeat(kind.split("\n").length);
+        const source = `${kind}\n${indent}switch.on ${"LongUnbrokenCaption".repeat(20)}`;
+        const dimensions = () => page.locator(".wf-switch[data-line]").evaluate((node) => {
+          const caption = node.querySelector(".wf-switch-caption")!;
+          const range = document.createRange();
+          range.selectNode(caption.firstChild!);
+          return { width: node.getBoundingClientRect().width, lines: range.getClientRects().length, overflow: node.scrollWidth - node.clientWidth };
+        });
+        await show(page, source, { scheme, host: "column", width: 240, layout });
+        const before = await dimensions();
+        const overflow = await page.locator(".wf-root, .wf-card, .wf-phone-viewport, .column").evaluateAll((nodes) => nodes.map((node) => node.scrollWidth - node.clientWidth));
+        expect(overflow, `${kind}, ${layout}`).toEqual(overflow.map(() => 0));
+        await show(page, `${source}\n${indent}button.link Previous change\n${indent}button.link Next change`, { scheme, host: "column", width: 240, layout });
+        const after = await dimensions();
+        expect(after.width, `${kind}, ${layout}`).toBeCloseTo(before.width, 1);
+        expect(after.lines, `${kind}, ${layout}`).toBeGreaterThan(1);
+        expect(after.overflow, `${kind}, ${layout}`).toBe(0);
+        expect(await page.locator(".column").evaluate((node) => node.scrollWidth - node.clientWidth), `${kind}, ${layout}`).toBe(0);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${kind}, ${layout}`).toBe(0);
+      }
+    }
+  });
 
   test(`switch captions fit every container and host layout in ${scheme}`, async ({ page }) => {
     for (const layout of ["block", "flex", "grid", "fit-content"] as const) {

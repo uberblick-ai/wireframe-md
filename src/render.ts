@@ -221,6 +221,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       const alternative = text(document, "span", ["wf-switch-state"], `${node.label === "" ? "switch" : ""}, ${state}`);
       if (node.label === "") element.append(alternative);
       else {
+        if (parent?.kind === "row" && grandparent?.kind !== "table") element.classList.add("wf-switch-row");
         const caption = text(document, "span", ["wf-switch-caption"], node.label);
         caption.append(alternative);
         element.append(caption);
@@ -316,10 +317,10 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       return sizingBoundary(document, element, "banner");
     }
   }
-  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
-    // A misplaced banner still shrinks and wraps beside row siblings. Measure
-    // its image cap against the row's available width, before content widens
-    // the row, rather than against the banner's remaining slice of that line.
+  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap, :scope > .wf-switch-row") !== null) {
+    // Measure image and switch-caption caps against the row's available width
+    // before siblings widen it, rather than against their remaining slice of
+    // that line. Compact groups share the enclosing row's available width.
     // Scroll rows already have inline-size containment and need no wrapper.
     if (!element.classList.contains("wf-scroll")) return sizingBoundary(document, element, "row");
     element.classList.add("wf-row-cap");
@@ -338,7 +339,7 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   return element;
 }
 
-/** Keep available-width image caps independent of intrinsic content sizing. */
+/** Keep available-width caps independent of intrinsic content sizing. */
 function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
   const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
   intrinsic.setAttribute("aria-hidden", "true");

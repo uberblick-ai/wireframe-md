@@ -838,6 +838,17 @@ const STYLES = `.wf-root {
   overflow-wrap: anywhere;
 }
 
+/* A row caption keeps its longest word, capped at the row's whole available
+   width before siblings widen it. Only words wider than that cap break.
+   Reserve one em of caption even in a collapsed shrink-to-fit scroll row. */
+.wf-root .wf-row > .wf-switch-row {
+  max-width: max(3.75em, var(--_wf-content-width, 100cqi));
+}
+
+.wf-root .wf-switch-row > .wf-switch-caption {
+  overflow-wrap: break-word;
+}
+
 /* Keep the state in the reading order without drawing extra On/Off labels. */
 .wf-root .wf-switch-state {
   position: absolute;

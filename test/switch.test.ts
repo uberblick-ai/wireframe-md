@@ -18,8 +18,8 @@ describe("switch", () => {
     const indent = "  ".repeat(parent.split("\n").length);
     const parsed = parseWireframe(`${parent}\n${indent}switch.on Caption\n${indent}switch`);
     expect(parsed.diagnostics).toEqual([]);
-    const switches = renderWireframe(parsed)!.querySelectorAll(".wf-switch");
-    expect([...switches].map((node) => node.className)).toEqual(["wf-switch wf-on", "wf-switch"]);
+    const switches = renderWireframe(parsed)!.querySelectorAll(".wf-switch[data-line]");
+    expect([...switches].map((node) => node.classList.contains("wf-on"))).toEqual([true, false]);
     expect([...switches].map((node) => node.textContent)).toEqual(["Caption, on", "switch, off"]);
   });
 
