@@ -12,7 +12,7 @@ export const LIMITS = {
 /**
  * Where a node stands, named by its parent: at the top level, or directly inside
  * a root, a row, a table, a table row (a row directly inside a table), a toggle,
- * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, rows, switches and tabs.
+ * tabs or a cell. A dock holds the phone vocabulary; a card holds text, images, folds, items, rows, switches and tabs.
  */
 export type Place = "top" | "root" | "dialog" | "page" | "frame" | "phone" | "dock" | "card" | "item" | "row" | "ruler" | "table" | "table row" | "toggle" | "tabs" | "option" | "cell" | "button";
 

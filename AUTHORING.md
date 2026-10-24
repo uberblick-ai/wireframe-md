@@ -195,7 +195,9 @@ card
 closely below it. Text keeps every variant and inline monospace. Long labels
 and second lines wrap, including unbroken words, without widening the card.
 An entry may start with one `icon` or `image.round` child; its label and text
-lines draw beside that picture. The leading picture is decorative to assistive
+lines draw beside that picture. A round avatar keeps its usual size or explicit
+width, capped at half the entry's width to leave room for text.
+The leading picture is decorative to assistive
 technology. Other children warn and still draw. An icon or image after the first
 child, or an image whose first shape is not `.round`, warns
 `item takes one icon or image.round as its first child` and still draws.

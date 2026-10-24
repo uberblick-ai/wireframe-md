@@ -7,6 +7,7 @@ for (const scheme of ["light", "dark"] as const) {
   for (const [kind, selector] of [
     ["card", ".wf-card"], ["card width=240", ".wf-card"],
     ["card width=240 padding=0", ".wf-card"], ["card width=240 padding=32", ".wf-card"],
+    ["card width=9999 padding=64", ".wf-card"],
     ["dialog", ".wf-dialog-card"], ["banner", ".wf-banner"], ["page", ".wf-page"],
     ["page.window History", ".wf-page-content"], ["frame History", ".wf-frame"],
     ["phone", ".wf-phone-content"],
@@ -19,6 +20,9 @@ for (const scheme of ["light", "dark"] as const) {
         const item = container.querySelector(".wf-item.wf-current")!;
         const rect = item.getBoundingClientRect();
         const tint = getComputedStyle(item, "::before");
+        const anchored = getComputedStyle(item).position === "static";
+        const origin = anchored ? box : rect;
+        const originStyle = getComputedStyle(anchored ? container : item);
         const label = item.querySelector(".wf-item-label")!.getBoundingClientRect();
         const lines = [...item.querySelectorAll(".wf-text")].map((line) => line.getBoundingClientRect());
         const previous = container.querySelector(".wf-item")!;
@@ -29,9 +33,11 @@ for (const scheme of ["light", "dark"] as const) {
         return {
           innerLeft: box.left + Math.max(stroke, Number.parseFloat(style.borderLeftWidth)),
           innerRight: box.right - Math.max(stroke, Number.parseFloat(style.borderRightWidth)),
-          tintLeft: rect.left + Number.parseFloat(tint.left),
-          tintRight: rect.right - Number.parseFloat(tint.right),
-          tintTop: tint.top, tintBottom: tint.bottom, tintBorder: tint.borderStyle, tintRadius: tint.borderRadius,
+          tintLeft: origin.left + Number.parseFloat(originStyle.borderLeftWidth) + Number.parseFloat(tint.left),
+          tintRight: origin.right - Number.parseFloat(originStyle.borderRightWidth) - Number.parseFloat(tint.right),
+          tintTop: origin.top + Number.parseFloat(originStyle.borderTopWidth) + Number.parseFloat(tint.top),
+          tintBottom: origin.bottom - Number.parseFloat(originStyle.borderBottomWidth) - Number.parseFloat(tint.bottom),
+          top: rect.top, bottom: rect.bottom, tintBorder: tint.borderStyle, tintRadius: tint.borderRadius,
           tint: tint.backgroundColor, paper: style.backgroundColor,
           labelLeft: label.left,
           otherLeft: container.querySelector('.wf-text[data-line="2"]')!.getBoundingClientRect().left,
@@ -52,8 +58,8 @@ for (const scheme of ["light", "dark"] as const) {
       }
       expect(geometry.tint).not.toBe(geometry.paper);
       expect(geometry.tint).not.toBe("rgba(0, 0, 0, 0)");
-      expect(geometry.tintTop).toBe("0px");
-      expect(geometry.tintBottom).toBe("0px");
+      expect(geometry.tintTop).toBeCloseTo(geometry.top, 1);
+      expect(geometry.tintBottom).toBeCloseTo(geometry.bottom, 1);
       expect(geometry.tintBorder).toBe("none");
       expect(geometry.tintRadius).toBe("0px");
       expect(geometry.currentCount).toBe(1);
@@ -61,7 +67,28 @@ for (const scheme of ["light", "dark"] as const) {
     });
   }
 
-  for (const leading of ["", "    icon robot\n", "    image.round width=32 Avatar\n"]) {
+  test(`selection stays inside capped padding and narrow fractional cards in ${scheme}`, async ({ page }) => {
+    for (const source of [
+      "card width=9999 padding=64\n  item.current Label",
+      "page\n  row\n    card width=1/3 padding=14\n      item.current Label\n    card\n      text Other",
+    ]) {
+      await show(page, source, { scheme, host: "column", width: 120 });
+      const geometry = await page.locator(".wf-card").first().evaluate((card) => {
+        const box = card.getBoundingClientRect();
+        const tint = getComputedStyle(card.querySelector(".wf-current")!, "::before");
+        return { width: box.width, left: Number.parseFloat(tint.left), right: Number.parseFloat(tint.right), tintWidth: Number.parseFloat(tint.width) };
+      });
+      expect(geometry.left).toBe(1);
+      expect(geometry.right).toBe(1);
+      expect(geometry.tintWidth).toBeCloseTo(geometry.width - 2, 1);
+      const selectedOverflow = await page.locator(".wf-root").evaluate((root) => root.scrollWidth - root.clientWidth);
+      await show(page, source.replace("item.current", "item"), { scheme, host: "column", width: 120 });
+      // Unfitting row neighbours may already require the root's native scroll.
+      expect(await page.locator(".wf-root").evaluate((root) => root.scrollWidth - root.clientWidth)).toBe(selectedOverflow);
+    }
+  });
+
+  for (const leading of ["", "    icon robot\n", "    image.round width=32 Avatar\n", "    image.round width=9999 Avatar\n"]) {
     test(`long item lines wrap beside ${leading.trim() || "no picture"} without widening their card in ${scheme}`, async ({ page }) => {
       const word = "RevisionMetadata".repeat(10);
       for (const layout of ["block", "flex", "grid", "fit-content"] as const) {

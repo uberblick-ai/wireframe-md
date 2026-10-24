@@ -724,6 +724,10 @@ const STYLES = `.wf-root {
   flex: none;
 }
 
+.wf-root .wf-item > .wf-image.wf-item-leading {
+  max-width: 50%;
+}
+
 /* Paint through the container's padding without moving its aligned content.
    Each direct placement supplies its inset, so nested cards stay independent. */
 .wf-root .wf-item.wf-current::before {
@@ -743,6 +747,29 @@ const STYLES = `.wf-root {
 .wf-root .wf-card > .wf-item { --_wf-item-inset: var(--_wf-card-padding); }
 .wf-root .wf-card.wf-sized > .wf-item {
   --_wf-item-inset: max(0px, min(var(--_wf-card-padding), calc(var(--_wf-width) / 2 - var(--_wf-stroke))));
+}
+
+/* Anchor the stripe to the card's real inner edges when its padding is capped
+   by a narrow host or a fractional track. The entry still sets its height. */
+@supports (anchor-name: --_wf-current-item) {
+  .wf-root .wf-card:has(> .wf-item.wf-current) {
+    position: relative;
+    isolation: isolate;
+    anchor-scope: --_wf-current-item;
+  }
+  .wf-root .wf-card > .wf-item.wf-current {
+    position: static;
+    isolation: auto;
+    anchor-name: --_wf-current-item;
+  }
+  .wf-root .wf-card > .wf-item.wf-current::before {
+    inset-inline: 0;
+    top: anchor(--_wf-current-item top);
+    bottom: anchor(--_wf-current-item bottom);
+  }
+  .wf-root .wf-card.wf-sized > .wf-item.wf-current::before {
+    inset-inline: var(--_wf-stroke);
+  }
 }
 
 .wf-root .wf-text {
