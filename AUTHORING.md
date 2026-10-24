@@ -207,11 +207,12 @@ its other variants, in any order, such as `text.small.amber` or
 contrast against paper in light and dark. Light amber text mixes 80% warning
 with 20% ink for contrast; dark amber text uses warning unchanged.
 
-Use one colour per node. Competing colours warn and the first written draws;
-on `text`, `.muted` counts as a text colour too. Other hues and colours on other kinds
-get the usual unknown-variant warning and add no colour. A coloured icon's text
-alternative names its colour before its name: `icon.filled.red point` is read
-as “red point”. Text hues are not announced, and the summary stays the same.
+Use one text or icon colour per node. Competing colours warn and the first
+written draws; on `text`, `.muted` counts as a text colour too. Other hues and
+colours on other kinds get the usual unknown-variant warning and add no colour.
+A coloured icon's text alternative names its colour before its name:
+`icon.filled.red point` is read as “red point”. Text hues are not announced,
+and the summary stays the same.
 Pair every coloured state with words so colour is not its only meaning:
 
 ```wireframe

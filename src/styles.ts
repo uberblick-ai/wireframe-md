@@ -873,7 +873,7 @@ const STYLES = `.wf-root {
   overflow-wrap: break-word;
 }
 
-/* Keep alternatives in reading order without drawing extra labels. */
+/* Keep the state in the reading order without drawing extra On/Off labels. */
 .wf-root .wf-switch-state {
   position: absolute;
   width: 1px;
