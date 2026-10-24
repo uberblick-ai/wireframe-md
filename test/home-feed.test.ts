@@ -38,7 +38,7 @@ describe("home screen vocabulary", () => {
     const prefix = kind === "image" ? "page\n  " : "";
     const line = kind === "image" ? 2 : 1;
     expect(warnings(`${prefix}${kind} width=0 width=256`)).toEqual([
-      `${line}: invalid width "0": expected a whole number of pixels from 1 to 9999, such as width=240`,
+      `${line}: invalid width "0": expected a whole number of pixels from 1 to 9999, such as width=240${kind === "card" ? ", or a fraction of the row such as width=1/3" : ""}`,
       `${line}: repeated attribute "width": the first value is used`,
     ]);
     expect(render(`${prefix}${kind} width=0 width=256`).querySelector("[style]")).toBeNull();

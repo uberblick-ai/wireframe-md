@@ -771,6 +771,95 @@ const STYLES = `.wf-root {
   flex: 0 1 auto;
 }
 
+/* Only rows containing fractions use tracks. Their combined basis and growth
+   match ordinary unsized cards, preserving neighbouring controls' allocation.
+   Tracks may shrink below that basis, keeping large padding out of the row's
+   intrinsic minimum. Neighbours shrink first, as beside unsized cards; their
+   relative weights are unchanged. The priority is beyond layout precision. */
+.wf-root .wf-fractions > :is(.wf-card-track, .wf-card-space) {
+  flex: var(--_wf-grow) 1 calc(var(--_wf-card-basis) * var(--_wf-share));
+  min-width: 0;
+}
+
+.wf-root .wf-fractions > :is(.wf-card.wf-sized, .wf-text, .wf-input, .wf-field, .wf-switch, .wf-row-group, .wf-toggle, .wf-option, .wf-cell, .wf-table, .wf-page, .wf-frame, .wf-dialog, .wf-banner, .wf-unknown, .wf-divider, .wf-banner-wrap, .wf-content-wrap) {
+  flex-shrink: 1000000000;
+}
+
+.wf-root .wf-card-track {
+  display: flex;
+  flex-direction: column;
+}
+
+.wf-root .wf-card-track > .wf-card.wf-sized {
+  --_wf-card-padding-limit: 50%;
+}
+
+/* Only the hidden row uses grid: fr tracks contribute enough preferred width
+   for their content at the declared ratio, including unclaimed empty shares. */
+.wf-root .wf-fraction-sizer {
+  display: grid;
+  column-gap: 0;
+}
+
+/* Percentage caps disappear during intrinsic sizing. An invisible copy keeps
+   full insets in the preferred content width. Its zero height and clipped
+   contents never affect drawing or accessible output. */
+.wf-root .wf-card-intrinsic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 0;
+  min-width: 0;
+  flex: none;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.wf-root .wf-card-intrinsic > .wf-card.wf-sized {
+  --_wf-card-padding-limit: calc(var(--_wf-card-padding) + var(--_wf-stroke));
+}
+
+/* Also include insets in the minimum when content needs them. Intrinsically
+   empty fluid media contributes no minimum: padding alone must still shrink.
+   The separate grid strut retains the track's preferred padding basis even
+   when that content width is zero. Older engines use the preferred-width
+   correction above and keep the existing minimum-width behaviour. */
+@supports (width: calc-size(auto, size + sign(size) * 1px)) {
+  .wf-root .wf-card-intrinsic {
+    display: block;
+  }
+
+  .wf-root .wf-card-intrinsic::before {
+    content: "";
+    display: grid;
+    grid-template-columns: minmax(0, calc(var(--_wf-card-basis) * var(--_wf-share)));
+  }
+
+  .wf-root .wf-card-intrinsic > .wf-card.wf-sized {
+    padding: 0;
+    width: calc-size(auto, size + sign(size) * 2 * (var(--_wf-card-padding) + var(--_wf-stroke)));
+  }
+}
+
+.wf-root .wf-fractions.wf-stretch > .wf-card-track {
+  align-self: stretch;
+}
+
+.wf-root .wf-fractions.wf-stretch > .wf-card-track > .wf-card {
+  flex: 1;
+}
+
+.wf-root .wf-fraction-edge > .wf-card-space {
+  margin-inline-start: -0.5em;
+}
+
+.wf-root .wf-fraction-gaps {
+  gap: 0;
+}
+
+.wf-root .wf-fraction-gaps > .wf-card-space {
+  margin-inline: 0.25em;
+}
+
 /* A scroll row alone owns its overflow, leaving all surrounding widths fixed.
    Native scroll focus and chaining need no tabindex or event handler. */
 .wf-root .wf-row.wf-scroll,
