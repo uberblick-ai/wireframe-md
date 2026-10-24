@@ -322,10 +322,11 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       return sizingBoundary(document, element, "banner");
     }
   }
-  if (node.kind === "row" && parent?.kind !== "table" && element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap, :scope > .wf-switch-row") !== null) {
+  if (node.kind === "row" && parent?.kind !== "table" && (element.classList.contains("wf-fractions") || element.querySelector(":scope > .wf-banner-wrap, :scope > .wf-row-wrap, :scope > .wf-content-wrap, :scope > .wf-switch-row") !== null)) {
     // Measure image and switch-caption caps against the row's available width
     // before siblings widen it, rather than against their remaining slice of
     // that line. Compact groups share the enclosing row's available width.
+    // Fractional rows also use the sizing copy for their preferred ratio.
     // Scroll rows already have inline-size containment and need no wrapper.
     if (!element.classList.contains("wf-scroll")) return sizingBoundary(document, element, "row");
     element.classList.add("wf-row-cap");
@@ -404,7 +405,38 @@ function divideCards(document: Document, row: HTMLElement, node: WireframeNode):
 function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
   const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
   intrinsic.setAttribute("aria-hidden", "true");
-  if (kind !== "banner") intrinsic.append(element.cloneNode(true));
+  if (kind !== "banner") {
+    const copy = element.cloneNode(true) as HTMLElement;
+    if (element.classList.contains("wf-fractions")) {
+      // Grid's preferred fr size fits the largest content-to-share ratio.
+      // The visible flex row still owns neighbours' allocation and shrinking.
+      const items = [...copy.children] as HTMLElement[];
+      const grows = items.map((child) => child.matches(".wf-field, .wf-input") ? 1 : Number(child.style.getPropertyValue("--_wf-grow")));
+      // Intrinsic grid sizing floors flex factors below 1. Normalize every
+      // positive share to at least 1fr so the preferred width keeps the ratio.
+      const smallest = Math.min(...grows.filter((grow) => grow > 0));
+      const columns: string[] = [];
+      for (const [index, child] of items.entries()) {
+        if (index > 0 && !copy.classList.contains("wf-fraction-gaps")) columns.push("0.5em");
+        const start = columns.length + 1;
+        const grow = grows[index] ?? 0;
+        if (grow > 0) {
+          // Separate the flex basis from growth. Spanning both columns makes
+          // grid solve for the extra room each item needs after its basis;
+          // growing fields/inputs then claim the same extra room as in flex.
+          const basis = child.classList.contains("wf-input") ? "12em" : child.classList.contains("wf-field") ? "0px" : `calc(var(--_wf-card-basis) * ${child.style.getPropertyValue("--_wf-share")})`;
+          columns.push(`minmax(0, ${basis})`, `minmax(auto, ${grow / smallest}fr)`);
+          child.style.gridColumn = `${start} / span 2`;
+        } else {
+          columns.push(child.classList.contains("wf-card-track") ? "0px" : "auto");
+          child.style.gridColumn = String(start);
+        }
+      }
+      copy.style.gridTemplateColumns = columns.join(" ");
+      copy.classList.add("wf-fraction-sizer");
+    }
+    intrinsic.append(copy);
+  }
   else for (const child of element.children) {
     if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
   }

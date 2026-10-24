@@ -34,6 +34,14 @@ const geometry = (page: Page) => page.locator(".wf-row[data-line]:not(.wf-row-gr
   };
 }));
 
+const escapedCardText = (page: Page) => page.locator(".wf-card > .wf-text[data-line]").evaluateAll((texts) => texts.flatMap((text) => {
+  const card = text.parentElement!.getBoundingClientRect();
+  if (card.width === 0) return [];
+  const range = document.createRange();
+  range.selectNodeContents(text);
+  return [...range.getClientRects()].filter((rect) => rect.left < card.left - 0.1 || rect.right > card.right + 0.1).map(() => text.textContent);
+}));
+
 test.beforeEach(async ({ page }) => open(page));
 
 for (const scheme of ["light", "dark"] as const) {
@@ -127,7 +135,7 @@ for (const scheme of ["light", "dark"] as const) {
     for (const width of [80, 120, 360]) {
       await show(page, `page width=${width}\n  row\n    card width=1/3 padding=64\n      image.square\n    card width=2/3 padding=64\n      image.square`, { scheme });
       const row = (await geometry(page))[0]!;
-      expect((await page.locator(".wf-page").boundingBox())!.width).toBe(width);
+      expect((await page.locator(".wf-page[data-line]").boundingBox())!.width).toBe(width);
       expect(row.children[0]!.width).toBeCloseTo((row.box.width - row.gap) / 3, 1);
       expect(row.children[1]!.width).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
       expect(row.children[1]!.right).toBeCloseTo(row.box.right, 1);
@@ -143,24 +151,58 @@ for (const scheme of ["light", "dark"] as const) {
     card width=2/3
       text.title Onboarding flow
       text Goals`;
-    const layouts = ["fit-content", "inline-block", "flex-content", "grid-content", "block"] as const;
+    const layouts = ["fit-content", "inline-block", "flex-content", "grid-content", "float", "block"] as const;
+    const samples = [
+      { source: sample, share: 1 / 3 },
+      { source: "page\n  row.stretch\n    card width=1/3\n      text.title Onboarding flow\n      text Goals\n    card width=2/3\n      text.strong History\n      text Today", share: 1 / 3 },
+      { source: "page\n  row.stretch\n    card width=1/4\n      text Navigation\n    card width=3/4\n      text Main", share: 1 / 4 },
+      { source: "page\n  row.stretch\n    card width=1/3\n      text.strong Filters\n    card\n      text Results", share: 1 / 3 },
+    ];
     for (const layout of layouts) {
-      for (const width of [710, 240]) {
-        await show(page, sample, { scheme, host: "column", layout, width });
-        const row = (await geometry(page))[0]!;
-        expect(row.children[0]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) / 3, 1);
-        expect(row.children[1]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
-        const escaped = await page.locator(".wf-card > .wf-text[data-line]").evaluateAll((texts) => texts.flatMap((text) => {
-          const card = text.parentElement!.getBoundingClientRect();
-          const range = document.createRange();
-          range.selectNodeContents(text);
-          return [...range.getClientRects()].filter((rect) => rect.left < card.left - 0.1 || rect.right > card.right + 0.1).map(() => text.textContent);
-        }));
-        expect(escaped, `${layout}, ${width}`).toEqual([]);
+      for (const [index, { source, share }] of samples.entries()) {
+        for (const width of index === 0 ? [710, 240] : [710]) {
+          await show(page, source, { scheme, host: "column", layout, width });
+          const row = (await geometry(page))[0]!;
+          expect(row.children[0]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) * share, 1);
+          expect(row.children[1]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) * (1 - share), 1);
+          expect(row.children[0]!.height).toBe(row.children[1]!.height);
+          expect(await escapedCardText(page), `${layout}, ${width}, sample ${index}`).toEqual([]);
+          expect(await page.locator(".column").evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+        }
       }
     }
-    const host = await show(page, sample, { scheme, host: "column", layout: "fit-content" });
+    const host = await show(page, `page\n${samples.map(({ source }) => source.slice(5)).join("\n")}`, { scheme, host: "column", layout: "fit-content" });
     await expect(host).toHaveScreenshot(`fractional-card-content-${scheme}.png`);
+  });
+
+  test(`content sizing accounts for growing neighbours, empty shares and nested fractions, ${scheme}`, async ({ page }) => {
+    const bodies = [
+      "card width=1/4\n  text Navigation\ncard width=3/4\n  text Main",
+      "card width=1/4\n  text Navigation\ncard width=1/4\n  text Main",
+      "card width=2/3\n  text Navigation\ncard width=2/3\n  text Main\ncard\n  text No room",
+      "card width=1/2\n  row\n    card width=1/4\n      text Navigation\n    card width=3/4\n      text Main\ncard width=1/2\n  text Other",
+    ];
+    for (const body of bodies) {
+      for (const alignment of ["", ".end", ".between", ".stretch"]) {
+        for (const neighbour of ["input label=Name Hint", "select label=Role Viewer", "input Hint"]) {
+          const sample = `page\n  row${alignment}\n    ${body.replaceAll("\n", "\n    ")}\n    ${neighbour}`;
+          await show(page, sample, { scheme, host: "column", layout: "fit-content", width: 1400 });
+          expect(await escapedCardText(page), `${alignment}, ${neighbour}, ${body}`).toEqual([]);
+          const accessible = await page.locator(".wf-root").ariaSnapshot();
+          expect(accessible.match(/Navigation/g)).toHaveLength(1);
+          expect(await page.locator('[aria-hidden="true"] [data-line]').count()).toBe(0);
+          for (const [index, row] of (await geometry(page)).entries()) {
+            const pool = row.children[0]!.width + row.children[1]!.width;
+            if (index === 0 && (body.includes("card width=2/3") || body.includes("card width=1/2"))) {
+              expect(row.children[0]!.width).toBeCloseTo(pool / 2, 1);
+            } else {
+              const share = body.includes("card width=3/4") ? 1 / 4 : 1 / 2;
+              expect(row.children[0]!.width).toBeCloseTo(pool * share, 1);
+            }
+          }
+        }
+      }
+    }
   });
 
   test(`fractions resize inside every full-width container without another render, ${scheme}`, async ({ page }) => {

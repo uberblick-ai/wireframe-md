@@ -10,7 +10,7 @@ format, the vocabulary and the rendering may change in any minor version.
   and other children; unsized cards share the rest. Over-full fractions warn
   and scale proportionally. Fractions include border and padding and combine
   with `row.stretch`, `.end`, `.between` and `padding=`. Content-sized hosts
-  account for the cards' insets when fitting the row.
+  account for the cards' insets and content-to-share ratios when fitting the row.
 
 - `text.bg-red`, `text.bg-amber`, `text.bg-green` and `text.bg-blue` draw text on
   the existing theme tints, independently of text colour. They combine with

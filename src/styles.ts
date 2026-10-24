@@ -794,6 +794,13 @@ const STYLES = `.wf-root {
   --_wf-card-padding-limit: 50%;
 }
 
+/* Only the hidden row uses grid: fr tracks contribute enough preferred width
+   for their content at the declared ratio, including unclaimed empty shares. */
+.wf-root .wf-fraction-sizer {
+  display: grid;
+  column-gap: 0;
+}
+
 /* Percentage caps disappear during intrinsic sizing. An invisible copy keeps
    full insets in the preferred content width. Its zero height and clipped
    contents never affect drawing or accessible output. */
