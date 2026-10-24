@@ -5,6 +5,13 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+## 0.3.1 — 2026-10-24
+
+Layouts gain tab bars, on/off switches, grouped content inside rows, browser
+and macOS window frames, card padding, equal-height cards and fractional card
+widths. Text can sit on a tinted background in any of the named colours. Mock
+controls remain inert.
+
 - Cards directly inside full-width, non-scroll rows accept fractional widths
   such as `width=1/3`. Fractions divide the room left after gaps, pixel cards
   and other children; unsized cards share the rest. Over-full fractions warn
