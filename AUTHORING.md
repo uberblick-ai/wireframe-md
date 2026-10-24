@@ -124,7 +124,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows, sw
 | `dock` | directly inside a `phone` | none | none |
 | `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; optional `width=` and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
-| `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named colours | the text |
+| `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
 | `divider` | directly inside a `dialog` or a `page` or a `frame` or a `phone` or a `dock` | none | none |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring | the caption, or none when it holds an icon |
@@ -207,11 +207,12 @@ its other variants, in any order, such as `text.small.amber` or
 contrast against paper in light and dark. Light amber text mixes 80% warning
 with 20% ink for contrast; dark amber text uses warning unchanged.
 
-Use one colour per node. Competing colours warn and the first written draws;
-on `text`, `.muted` counts as a colour too. Other hues and colours on other kinds
-get the usual unknown-variant warning and add no colour. A coloured icon's text
-alternative names its colour before its name: `icon.filled.red point` is read
-as “red point”. Text colour is not announced, and the summary stays the same.
+Use one text or icon colour per node. Competing colours warn and the first
+written draws; on `text`, `.muted` counts as a text colour too. Other hues and
+colours on other kinds get the usual unknown-variant warning and add no colour.
+A coloured icon's text alternative names its colour before its name:
+`icon.filled.red point` is read as “red point”. Text hues are not announced,
+and the summary stays the same.
 Pair every coloured state with words so colour is not its only meaning:
 
 ```wireframe
@@ -229,6 +230,38 @@ page
       cell Offline
         icon.filled.red point
   text Offline. Changes are saved on this device.
+```
+
+`text.bg-red`, `text.bg-amber`, `text.bg-green` and `text.bg-blue` draw a line on
+a tinted background with a small inset. They reuse `--wf-danger-tint`,
+`--wf-warning-tint`, `--wf-success-tint` and `--wf-info-tint`, respectively.
+Text stays ink unless a text colour is also written. Directly inside a root,
+dock or card, the tint fills the content width; a tinted line in a banner takes
+its own line. Inside a row it covers the text's own width and keeps the usual
+row layout. Backgrounds combine with `.strong`, `.small`, `.title` and
+paired-backtick inline mono.
+
+Choose one text colour and one background independently, in any order:
+`text.red.bg-blue` and `text.bg-blue.red` draw the same. Competing backgrounds,
+including repeats, warn and use the first: `text.bg-green.bg-red` draws green.
+Background variants on other kinds get the usual unknown-variant warning and
+add no background. With the default theme, ink and `.muted` text reach 4.5:1
+contrast on every tint in light and dark. Other text hues on backgrounds draw
+as written, with no contrast promise.
+
+Background colour is not announced, and root summaries keep the text alone.
+Pair a tinted line with words or a sign such as `+` or `−` so colour is not its
+only meaning:
+
+```wireframe
+page
+  row
+    card
+      text New members land on an empty workspace.
+      text.bg-red − They sign up with a password.
+    card
+      text New members land on an empty workspace.
+      text.bg-green + They sign in with `GitHub`.
 ```
 
 A button holding an icon and no caption is an icon-only mock action. With a
@@ -1197,7 +1230,7 @@ Diagnostics:
 
 ```text
 line 2: warning: unknown icon "pinn": expected a Tabler icon name
-line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue
+line 3: warning: unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue
 line 5: warning: unknown kind "link": expected dialog, banner, page, frame, phone, dock, card, image, text, row, divider, button, icon, input, select, switch, toggle, tabs, option, table, cell or chip
 ```
 

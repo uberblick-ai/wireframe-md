@@ -26,12 +26,13 @@
 //   --wf-info, --wf-warning, --wf-success       a banner's icon, also mixed into its border
 //   The named icon/text hues reuse danger (red), warning (amber), success (green)
 //   and info (blue). Light amber text mixes warning with ink for contrast.
+//   Text backgrounds reuse the matching semantic tints independently of ink hues.
 //   --wf-neutral-tint  a neutral banner's, frame's, image's and phone bezel's fill;
 //                      --wf-muted is the frame's bar and caption and the phone's outline
 //   Phone island: light --wf-ink / dark --wf-danger-ink, solid dark in both schemes
 //   --wf-info-tint,
 //   --wf-warning-tint, --wf-danger-tint,
-//   --wf-success-tint                          a banner's fill
+//   --wf-success-tint                          a banner's or text.bg-<hue>'s fill
 //   --wf-stroke        border width; icon, select chevron and cell sort strokes are one and a half times it
 //   --wf-focus-width   the focus ring's width
 //   --wf-radius        cards, a frame's right corners, buttons, banners, inputs, selects, chips and unknown boxes
@@ -707,6 +708,29 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-text.wf-small {
   font-size: calc(0.85 * var(--_wf-text-size));
+}
+
+/* Tints leave text colour independent. Stacked lines stretch; row text keeps
+   its own width and flex behaviour. */
+.wf-root .wf-text:is(.wf-bg-red, .wf-bg-amber, .wf-bg-green, .wf-bg-blue) {
+  box-sizing: border-box;
+  padding: 0.2em 0.65em;
+}
+
+.wf-root .wf-text.wf-bg-red {
+  background: var(--_wf-danger-tint);
+}
+
+.wf-root .wf-text.wf-bg-amber {
+  background: var(--_wf-warning-tint);
+}
+
+.wf-root .wf-text.wf-bg-green {
+  background: var(--_wf-success-tint);
+}
+
+.wf-root .wf-text.wf-bg-blue {
+  background: var(--_wf-info-tint);
 }
 
 .wf-root .wf-row {

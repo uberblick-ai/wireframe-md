@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 // show its "Must read at a glance" points.
 
 const samples = [
+  {
+    name: "text-changed-lines",
+    source: readFileSync(new URL("../../examples/reference/vocabulary/changed-lines.wireframe", import.meta.url), "utf8"),
+    intro: "Text backgrounds use four tints in cards and rows, with independent text colours.",
+  },
   ...["settings", "bare", "long-caption"].map((name) => ({
     name: `forms-switches-${name}`,
     source: readFileSync(new URL(`../../examples/forms/4-switches/${name}.wireframe`, import.meta.url), "utf8"),

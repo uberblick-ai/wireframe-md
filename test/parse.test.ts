@@ -299,7 +299,7 @@ describe("warnings", () => {
   it("warns about unknown variants", () => {
     expect(warnings("banner.alert\n  text.muted.big Hi\n  row.end.start")).toEqual([
       warning(1, 'unknown variant ".alert" on banner: expected .neutral, .info, .warning, .danger or .success'),
-      warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
+      warning(2, 'unknown variant ".big" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue'),
       warning(3, 'unknown variant ".start" on row: expected .end, .between, .scroll, .stretch or .head'),
     ]);
     expect(warnings("dialog.wide\n  icon.big archive\n  row\n    button.ghost Go")).toEqual([
@@ -316,7 +316,7 @@ describe("warnings", () => {
   it("warns about unknown hues and hues on other kinds", () => {
     expect(warnings("page\n  icon.purple point\n  text.purple State\n  row\n    chip.red Tag\n    button.green Save\n    input.blue Hint\n    select.amber Value\n    toggle\n      option.red Choice\n  table\n    row\n      cell.blue State\nbanner.red\nframe.green Caption")).toEqual([
       warning(2, 'unknown variant ".purple" on icon: expected .filled, .red, .amber, .green or .blue'),
-      warning(3, 'unknown variant ".purple" on text: expected .muted, .strong, .title, .small, .red, .amber, .green or .blue'),
+      warning(3, 'unknown variant ".purple" on text: expected .muted, .strong, .title, .small, .red, .amber, .green, .blue, .bg-red, .bg-amber, .bg-green or .bg-blue'),
       warning(5, 'unknown variant ".red" on chip: expected .more'),
       warning(6, 'unknown variant ".green" on button: expected .primary, .danger, .link or .focus'),
       warning(7, 'unknown variant ".blue": input takes no variants'),

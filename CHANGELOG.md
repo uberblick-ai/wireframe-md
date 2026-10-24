@@ -5,6 +5,11 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- `text.bg-red`, `text.bg-amber`, `text.bg-green` and `text.bg-blue` draw text on
+  the existing theme tints, independently of text colour. They combine with
+  strong, small, title and inline mono; competing backgrounds warn and use the
+  first. Background colour is not announced and root summaries stay unchanged.
+
 - Switch captions in rows keep words whole beside children that cannot shrink.
   Words too wide for the row still wrap inside the caption; unfitting siblings
   scroll inside the wireframe or phone screen.
