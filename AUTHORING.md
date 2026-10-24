@@ -38,7 +38,8 @@ kind.variant#id key=value Label
   change the drawing.
 - **key=value** is an attribute between the first word and the line's label.
   v0.1 defines `label` on `input` and `select`: `label=Role` or
-  `label="Work email"`, `width` on `page`, `card` and `image`: `width=256`,
+  `label="Work email"`, `width` on `page`, `card` and `image`: `width=256`
+  (also `width=1/3` on a card directly inside a full-width row),
   and `padding` on `card`: `padding=8`.
   Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
@@ -122,7 +123,7 @@ rest. A `card` may also stand at the top level, but holds text, images, rows, sw
 | `frame` | at the top level | none | the caption: the block's name, then its title |
 | `phone` | at the top level | none | none: its title goes on a `text.title` line |
 | `dock` | directly inside a `phone` | none | none |
-| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; optional `width=` and `padding=` |
+| `card` | at the top level or directly inside a root or a `dock` or a `row` | none | none: it holds text, images, rows, switches and tabs; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
 | `image` | directly inside a root or a `dock` or a `card` or a `row` | `.square`: 1:1; `.round`: a small circle | what the image shows; optional `width=` |
 | `text` | directly inside a root or a `dock` or a `card` or a `row` | `.muted`: secondary text, in grey; `.strong`: bold; `.title`: a page's title, or a card's title directly inside a card; `.small`: the size of a chip's caption; `.red`, `.amber`, `.green`, `.blue`: named text colours; `.bg-red`, `.bg-amber`, `.bg-green`, `.bg-blue`: tinted backgrounds | the text |
 | `row` | directly inside a root, a `dock`, a `card` or a non-table `row`; or inside a `table` as a table row | `.end`: aligns its children to the right; `.between`: spreads its children; `.scroll`: scrolls sideways; `.stretch`: gives direct cards equal heights and aligns other children to the top; these four belong only in roots, docks and cards; `.head`: a table's header row, in grey | none |
@@ -733,11 +734,53 @@ cannot fit beside the capped image widens the banner, which encloses the line.
 A valid `width=` overrides the default, and the ratio determines the height.
 Use only one shape variant: `.square.round` warns and uses the first.
 
-`width=` on a card or image uses the page's rule: digits from 1 to 9999 CSS px,
+Pixel `width=` on a card or image uses the page's rule: digits from 1 to 9999 CSS px,
 independent of `--wf-text-size`. An invalid first width leaves the default size;
 repeated widths warn and use the first. Outside a scroll row the width is capped
 at the available space. Inside a scroll row it is exact. A card without a width
 is 144 px in a scroll row; in another row unsized cards share the room equally.
+
+A card directly inside a **full-width row** also accepts `width=N/M`, a
+fraction of the room available to cards, such as `width=1/3`. Both numbers
+are whole numbers written in digits, with `1 <= N <= M <= 9999`. The row must
+be directly inside a dialog, page, frame, phone, dock or card and must not draw
+as a scroll row. Banner rows and rows nested inside rows are content-width,
+so they do not accept fractional widths. The name and form are provisional
+until the vocabulary review.
+
+```wireframe
+page width=1080
+  row.stretch
+    card width=1/3
+      text.strong History
+      text Today
+    card width=2/3
+      text.title Onboarding flow
+      text Goals
+```
+
+Gaps come out first. Pixel cards and other children retain their existing
+widths beside unsized cards. Each fractional card takes its fraction of the
+room left for flexible cards; unsized cards share the rest equally. Thus
+`1/3` and `2/3` fill that room in a 1:2 ratio at every page width. Fractions
+that add up to more than 1 scale down proportionally to fill it, leaving
+unsized cards zero width. The row warns once on its own line. When fractions
+leave unused room and there are no unsized cards, `.end` and `.between`
+place the children in that room as usual. Fractions combine with `.stretch`
+and `padding=`. Their outer width includes border and padding, with the inset
+on each side capped at half the card's width, just as for pixel widths.
+Fractions do not change accessible summaries.
+
+| Source | Warning | Drawing |
+| --- | --- | --- |
+| `card width=33%` (also `0/3`, `4/3`, `1/0`, `1.5/3` or `240px`) | `invalid width "33%": expected a whole number of pixels from 1 to 9999, such as width=240, or a fraction of the row such as width=1/3` | default size |
+| `card width=1/3` outside a full-width row, or `page width=1/3` or `image width=1/3` | `fractional width is only allowed on a card directly inside a row` | default size |
+| A full-width row with two `card width=2/3` children | `fractional card widths in a row add up to more than 1: scaled to fit` | equal halves after gaps and other children |
+
+Other kinds keep `attribute "width" is only allowed on page, card or image`.
+Malformed widths on pages and images keep the pixel-only warning under
+[Page widths](#page-widths). A repeated `width=` still uses the first value,
+even if it is invalid.
 
 `row.between` puts the first child at the start and the last at the end.
 A plain `row` directly inside a non-table `row` is an invisible group: it counts

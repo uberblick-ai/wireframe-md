@@ -32,6 +32,8 @@ pnpm add @uberblick/wireframe
 
 An ES module with type declarations and no runtime dependencies. Rendering needs
 a DOM and a browser with CSS `light-dark()` and `color-mix()`.
+CSS `calc-size()` improves minimum-width fitting for fractional cards. Without
+it, unbreakable text can extend past a narrow fractional card's border.
 
 ## Usage
 
@@ -57,7 +59,7 @@ bundler, `getEmbedStyles()` returns the same stylesheet as a string.
 | --- | --- |
 | `image` | Labelled placeholders; `.square`, `.round` and pixel `width=` |
 | `row` | `.between` spreads children; `.scroll` scrolls cards sideways |
-| `card` | Holds text, images and rows; pixel `width=` and `padding=` |
+| `card` | Holds text, images and rows; pixel `width=`, fractional `width=1/3` in full-width rows, and `padding=` |
 | `dock` | One final phone child, pinned above the home indicator |
 | `option` | One icon; a dock's direct `toggle` draws equal-width tabs |
 

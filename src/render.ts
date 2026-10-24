@@ -1,6 +1,7 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
 import { paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
+import { cardFraction, fullWidthRow, rowFractions } from "./layout.js";
 import { textRuns } from "./text.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, PAGE_CHROME_VARIANTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
 
@@ -273,6 +274,9 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       ? phoneViewport : child.kind === "button" && actions !== undefined ? actions : body;
     target.append(draw(document, child, node, parent));
   }
+  if (fullWidthRow(node, parent) && node.children.some((child) => cardFraction(child) !== undefined)) {
+    divideCards(document, element, node);
+  }
   if (["dialog", "page", "frame", "phone"].includes(node.kind) && body.querySelector(":scope > .wf-row-wrap, :scope > .wf-content-wrap") !== null) {
     // Keep wrapped rows and misplaced content boxes in the intrinsic sizing
     // path at every level. The boundary sits outside the enclosing box, so
@@ -340,6 +344,62 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
   return element;
 }
 
+/** Divide the room that the row's flexible cards would have received together.
+ * Keep their combined flex basis and growth, so other children size as before.
+ * Separate tracks keep card insets out of flex sizing and cap them even at 0px.
+ */
+function divideCards(document: Document, row: HTMLElement, node: WireframeNode): void {
+  const { total, overfull } = rowFractions(node);
+  const flexible = node.children.filter((child) => child.kind === "card" &&
+    widthPixels(child.attributes.find((attribute) => attribute.key === "width")?.value) === undefined);
+  const unsized = flexible.filter((child) => cardFraction(child) === undefined).length;
+  const remaining = Math.max(0, 1 - total);
+  const basis = flexible.map((child) => {
+    const padding = paddingPixels(child.attributes.find((attribute) => attribute.key === "padding")?.value);
+    return `2 * (${padding === undefined ? "1em" : `${padding}px`} + var(--_wf-stroke))`;
+  }).join(" + ");
+  row.classList.add("wf-fractions");
+  row.style.setProperty("--_wf-card-basis", `calc(${basis})`);
+  const track = (share: number, className: string): HTMLElement => {
+    const slot = create(document, "div", [className]);
+    slot.style.setProperty("--_wf-share", String(share));
+    slot.style.setProperty("--_wf-grow", String(share * flexible.length));
+    return slot;
+  };
+  // An unsupported row label still draws before the source children.
+  const children = [...row.children].slice(-node.children.length);
+  for (const [index, child] of node.children.entries()) {
+    if (!flexible.includes(child)) continue;
+    const fraction = cardFraction(child);
+    const share = fraction === undefined ? remaining / unsized : fraction.numerator / fraction.denominator / (overfull ? total : 1);
+    const card = children[index] as HTMLElement;
+    const slot = track(share, "wf-card-track");
+    card.classList.add("wf-sized");
+    card.style.setProperty("--_wf-width", "100%");
+    row.insertBefore(slot, card);
+    slot.append(card);
+    const intrinsic = create(document, "div", ["wf-card-intrinsic"]);
+    intrinsic.setAttribute("aria-hidden", "true");
+    intrinsic.append(card.cloneNode(true));
+    cleanSizingCopy(intrinsic);
+    slot.append(intrinsic);
+  }
+  // Unclaimed room participates in flex sizing like the missing card share.
+  // Spacers replace gaps for between; at either edge they cancel their own gap.
+  if (remaining > 0 && unsized === 0) {
+    const items = [...row.children];
+    if (row.classList.contains("wf-between") && items.length > 1) {
+      row.classList.add("wf-fraction-gaps");
+      for (const item of items.slice(1)) row.insertBefore(track(remaining / (items.length - 1), "wf-card-space"), item);
+    } else {
+      const space = track(remaining, "wf-card-space");
+      row.classList.add("wf-fraction-edge");
+      if (row.classList.contains("wf-end")) row.prepend(space);
+      else row.append(space);
+    }
+  }
+}
+
 /** Keep available-width caps independent of intrinsic content sizing. */
 function sizingBoundary(document: Document, element: HTMLElement, kind: "banner" | "row" | "content"): HTMLElement {
   const intrinsic = create(document, "div", [`wf-${kind}-intrinsic`]);
@@ -348,11 +408,7 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
   else for (const child of element.children) {
     if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
   }
-  // Nested boundaries contribute through their sizing copies. Drop contained
-  // real boxes so each nested banner or row is measured only once.
-  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size")) child.remove();
-  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
-  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
+  cleanSizingCopy(intrinsic);
   const size = create(document, "div", [`wf-${kind}-size`]);
   size.append(element);
   const wrap = create(document, "div", [`wf-${kind}-wrap`]);
@@ -363,6 +419,13 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
   }
   wrap.append(size, intrinsic);
   return wrap;
+}
+
+/** Nested boundaries contribute once, through their sizing copies. */
+function cleanSizingCopy(intrinsic: HTMLElement): void {
+  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-card-track > .wf-card")) child.remove();
+  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
+  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
 }
 
 /** A dashed box showing the kind as written, the label and the children. */

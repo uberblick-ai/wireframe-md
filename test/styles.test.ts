@@ -37,10 +37,10 @@ const declarations = rules.flatMap((rule) => rule.declarations);
 const publicDeclarations = root.declarations.filter(([property]) => property.startsWith("--_wf-"));
 
 describe("getEmbedStyles", () => {
-  it("returns the same stylesheet with only the image size container query", () => {
+  it("returns the same stylesheet with only the intrinsic-size feature and image size queries", () => {
     expect(getEmbedStyles()).toBe(getEmbedStyles());
-    expect(css.match(/@[^ {][^{]*/g)).toEqual(["@container (min-width: 80px) "]);
-    expect(rules).toHaveLength(css.split("{").length - 2);
+    expect(css.match(/@[^ {][^{]*/g)).toEqual(["@container (min-width: 80px) ", "@supports (width: calc-size(auto, size + sign(size) * 1px)) "]);
+    expect(rules).toHaveLength(css.split("{").length - 3);
     expect(rules.length).toBeGreaterThan(20);
   });
 
