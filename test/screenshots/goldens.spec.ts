@@ -3,10 +3,9 @@ import { expect, test } from "@playwright/test";
 import { archivedBanner, cardBlock, deleteConfirmation, documentList, figmaPrivate, figmaReading } from "../samples.js";
 import { type Host, open, type Scheme, show } from "./page.js";
 
-// The goldens: both samples from "Samples", and the document list page from the
-// product corpus, which draws every kind and variant that page needs. Each in
-// light and dark, on a bare page and inside a 710 px document column. Each must
-// show its "Must read at a glance" points.
+// Every sample has light and dark goldens inside a 710 px document column,
+// the primary embedding context. One sample per outer container also covers
+// a bare page; focused browser checks exercise other host and layout variants.
 
 const samples = [
   {
@@ -153,9 +152,19 @@ const samples = [
   },
 ];
 
+const standaloneSamples = new Set([
+  "delete-confirmation", // dialog
+  "archived-banner", // banner
+  "web-ui-document-list", // page
+  "figma-block-reading", // frame
+  "card-block", // card
+  "phones-home-feed", // phone
+]);
+
 for (const { name, source, intro } of samples) {
+  const hosts: Host[] = standaloneSamples.has(name) ? ["standalone", "column"] : ["column"];
   for (const scheme of ["light", "dark"] satisfies Scheme[]) {
-    for (const host of ["standalone", "column"] satisfies Host[]) {
+    for (const host of hosts) {
       test(`${name}, ${scheme}, ${host}`, async ({ page }) => {
         await open(page);
         const shot = await show(page, source, { scheme, host, intro });
