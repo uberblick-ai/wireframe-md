@@ -1,6 +1,7 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { paddingPixels, widthPixels } from "./attributes.js";
+import { paddingPixels, widthFraction, widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
+import { fullWidthRow, rowFractions } from "./layout.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
 
 // An attribute is a token that starts with `word=`.
@@ -43,17 +44,20 @@ export function parseWireframe(source: string): WireframeParseResult {
     checkNode(node, parent, open[depth - 2], diagnostics);
   });
   // Last-child validation needs the completed tree. Keep diagnostics in line order.
-  const checkDocks = (children: WireframeNode[]): void => {
+  const checkChildren = (children: WireframeNode[], parent?: WireframeNode): void => {
     for (const node of children) {
+      if (fullWidthRow(node, parent) && rowFractions(node).overfull) {
+        diagnostics.push({ line: node.line, severity: "warning", message: "fractional card widths in a row add up to more than 1: scaled to fit" });
+      }
       if (node.kind === "phone") {
         for (const child of node.children.slice(0, -1)) {
           if (child.kind === "dock") diagnostics.push({ line: child.line, severity: "warning", message: "dock must be its phone's last child" });
         }
       }
-      checkDocks(node.children);
+      checkChildren(node.children, node);
     }
   };
-  checkDocks(nodes);
+  checkChildren(nodes);
   diagnostics.sort((a, b) => a.line - b.line);
   return { nodes, diagnostics, renderable: diagnostics.every((d) => d.severity === "warning") };
 }
@@ -216,8 +220,12 @@ function checkNode(
       }
     } else if (!["page", "card", "image"].includes(kind)) {
       warn('attribute "width" is only allowed on page, card or image');
+    } else if (widthFraction(value) !== undefined) {
+      if (kind !== "card" || !fullWidthRow(parent, grandparent)) {
+        warn("fractional width is only allowed on a card directly inside a row");
+      }
     } else if (widthPixels(value) === undefined) {
-      warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240`);
+      warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240${kind === "card" ? ", or a fraction of the row such as width=1/3" : ""}`);
     }
   }
   if (rule === undefined) return;

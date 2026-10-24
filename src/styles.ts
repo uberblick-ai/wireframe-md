@@ -771,6 +771,42 @@ const STYLES = `.wf-root {
   flex: 0 1 auto;
 }
 
+/* Only rows containing fractions use tracks. Their combined basis and growth
+   match ordinary unsized cards, preserving neighbouring controls' allocation. */
+.wf-root .wf-fractions > :is(.wf-card-track, .wf-card-space) {
+  flex: var(--_wf-grow) 0 calc(var(--_wf-card-basis) * var(--_wf-share));
+  min-width: 0;
+}
+
+.wf-root .wf-card-track {
+  display: flex;
+  flex-direction: column;
+}
+
+.wf-root .wf-card-track > .wf-card.wf-sized {
+  --_wf-card-padding-limit: 50%;
+}
+
+.wf-root .wf-fractions.wf-stretch > .wf-card-track {
+  align-self: stretch;
+}
+
+.wf-root .wf-fractions.wf-stretch > .wf-card-track > .wf-card {
+  flex: 1;
+}
+
+.wf-root .wf-fraction-edge > .wf-card-space {
+  margin-inline-start: -0.5em;
+}
+
+.wf-root .wf-fraction-gaps {
+  gap: 0;
+}
+
+.wf-root .wf-fraction-gaps > .wf-card-space {
+  margin-inline: 0.25em;
+}
+
 /* A scroll row alone owns its overflow, leaving all surrounding widths fixed.
    Native scroll focus and chaining need no tabindex or event handler. */
 .wf-root .wf-row.wf-scroll,
