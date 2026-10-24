@@ -103,8 +103,9 @@ describe("fractional card widths", () => {
   it("retains unsupported row labels and unknown children alongside fractional cards", () => {
     const source = "page\n  row Unsupported label\n    mystery Unknown child\n    card width=1/3\n      text First card\n    card\n      text Second card";
     const root = draw(source);
-    expect(root.textContent).toBe("Unsupported labelmysteryUnknown childFirst cardSecond card");
-    expect([...root.querySelectorAll(".wf-card")].map((card) => card.textContent)).toEqual(["First card", "Second card"]);
+    expect(root.querySelector(".wf-row > .wf-text")!.textContent).toBe("Unsupported label");
+    expect(root.querySelector(".wf-unknown")!.textContent).toBe("mysteryUnknown child");
+    expect([...root.querySelectorAll(".wf-card[data-line]")].map((card) => card.textContent)).toEqual(["First card", "Second card"]);
     expect(root.querySelector(".wf-unknown")!.getAttribute("data-line")).toBe("3");
   });
 });

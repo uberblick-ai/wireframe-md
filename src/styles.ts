@@ -781,7 +781,7 @@ const STYLES = `.wf-root {
   min-width: 0;
 }
 
-.wf-root .wf-fractions > :is(.wf-card.wf-sized, .wf-text, .wf-input, .wf-field, .wf-switch, .wf-row-group) {
+.wf-root .wf-fractions > :is(.wf-card.wf-sized, .wf-text, .wf-input, .wf-field, .wf-switch, .wf-row-group, .wf-toggle, .wf-option, .wf-cell, .wf-table, .wf-page, .wf-frame, .wf-dialog, .wf-banner, .wf-unknown, .wf-divider, .wf-banner-wrap, .wf-content-wrap) {
   flex-shrink: 1000000000;
 }
 
@@ -792,6 +792,45 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-card-track > .wf-card.wf-sized {
   --_wf-card-padding-limit: 50%;
+}
+
+/* Percentage caps disappear during intrinsic sizing. An invisible copy keeps
+   full insets in the preferred content width. Its zero height and clipped
+   contents never affect drawing or accessible output. */
+.wf-root .wf-card-intrinsic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 0;
+  min-width: 0;
+  flex: none;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.wf-root .wf-card-intrinsic > .wf-card.wf-sized {
+  --_wf-card-padding-limit: calc(var(--_wf-card-padding) + var(--_wf-stroke));
+}
+
+/* Also include insets in the minimum when content needs them. Intrinsically
+   empty fluid media contributes no minimum: padding alone must still shrink.
+   The separate grid strut retains the track's preferred padding basis even
+   when that content width is zero. Older engines use the preferred-width
+   correction above and keep the existing minimum-width behaviour. */
+@supports (width: calc-size(auto, size + sign(size) * 1px)) {
+  .wf-root .wf-card-intrinsic {
+    display: block;
+  }
+
+  .wf-root .wf-card-intrinsic::before {
+    content: "";
+    display: grid;
+    grid-template-columns: minmax(0, calc(var(--_wf-card-basis) * var(--_wf-share)));
+  }
+
+  .wf-root .wf-card-intrinsic > .wf-card.wf-sized {
+    padding: 0;
+    width: calc-size(auto, size + sign(size) * 2 * (var(--_wf-card-padding) + var(--_wf-stroke)));
+  }
 }
 
 .wf-root .wf-fractions.wf-stretch > .wf-card-track {

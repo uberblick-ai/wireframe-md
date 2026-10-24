@@ -378,6 +378,11 @@ function divideCards(document: Document, row: HTMLElement, node: WireframeNode):
     card.style.setProperty("--_wf-width", "100%");
     row.insertBefore(slot, card);
     slot.append(card);
+    const intrinsic = create(document, "div", ["wf-card-intrinsic"]);
+    intrinsic.setAttribute("aria-hidden", "true");
+    intrinsic.append(card.cloneNode(true));
+    cleanSizingCopy(intrinsic);
+    slot.append(intrinsic);
   }
   // Unclaimed room participates in flex sizing like the missing card share.
   // Spacers replace gaps for between; at either edge they cancel their own gap.
@@ -403,11 +408,7 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
   else for (const child of element.children) {
     if (!child.classList.contains("wf-tabs")) intrinsic.append(child.cloneNode(true));
   }
-  // Nested boundaries contribute through their sizing copies. Drop contained
-  // real boxes so each nested banner or row is measured only once.
-  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size")) child.remove();
-  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
-  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
+  cleanSizingCopy(intrinsic);
   const size = create(document, "div", [`wf-${kind}-size`]);
   size.append(element);
   const wrap = create(document, "div", [`wf-${kind}-wrap`]);
@@ -418,6 +419,13 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
   }
   wrap.append(size, intrinsic);
   return wrap;
+}
+
+/** Nested boundaries contribute once, through their sizing copies. */
+function cleanSizingCopy(intrinsic: HTMLElement): void {
+  for (const child of intrinsic.querySelectorAll(".wf-banner-size, .wf-row-size, .wf-content-size, .wf-card-track > .wf-card")) child.remove();
+  for (const child of intrinsic.querySelectorAll(".wf-content-item")) child.classList.remove("wf-content-item");
+  for (const child of intrinsic.querySelectorAll("[data-line]")) child.removeAttribute("data-line");
 }
 
 /** A dashed box showing the kind as written, the label and the children. */

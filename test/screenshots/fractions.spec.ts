@@ -12,7 +12,7 @@ const source = (width: number) => `page width=${width}
       text Goals
   row
     card width=1/4 padding=8
-      text Quarter
+      text Part
     card width=80 padding=8
       text Pixels
     card padding=8
@@ -61,6 +61,7 @@ for (const scheme of ["light", "dark"] as const) {
       "text A longer caption that wraps beside the cards in a narrow row",
       "image.square width=80 Cover", "button Run", "input Hint", "input label=Name Hint",
       "select Choice", "select label=Role Viewer", "switch.on A longer switch caption that wraps beside the cards",
+      "toggle\n  option.current Alpha\n  option Beta", "mystery Unknown child", "page\n  text Misplaced page",
       "row\n  card width=60\n    text Group\n  text.small Tag",
     ];
     for (const width of [360, 710]) {
@@ -131,6 +132,35 @@ for (const scheme of ["light", "dark"] as const) {
       expect(row.children[1]!.width).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
       expect(row.children[1]!.right).toBeCloseTo(row.box.right, 1);
     }
+  });
+
+  test(`fractional cards include insets when sizing to content, ${scheme}`, async ({ page }) => {
+    const sample = `page
+  row.stretch
+    card width=1/3
+      text.strong History
+      text Today
+    card width=2/3
+      text.title Onboarding flow
+      text Goals`;
+    const layouts = ["fit-content", "inline-block", "flex-content", "grid-content", "block"] as const;
+    for (const layout of layouts) {
+      for (const width of [710, 240]) {
+        await show(page, sample, { scheme, host: "column", layout, width });
+        const row = (await geometry(page))[0]!;
+        expect(row.children[0]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) / 3, 1);
+        expect(row.children[1]!.width, `${layout}, ${width}`).toBeCloseTo((row.box.width - row.gap) * 2 / 3, 1);
+        const escaped = await page.locator(".wf-card > .wf-text[data-line]").evaluateAll((texts) => texts.flatMap((text) => {
+          const card = text.parentElement!.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          return [...range.getClientRects()].filter((rect) => rect.left < card.left - 0.1 || rect.right > card.right + 0.1).map(() => text.textContent);
+        }));
+        expect(escaped, `${layout}, ${width}`).toEqual([]);
+      }
+    }
+    const host = await show(page, sample, { scheme, host: "column", layout: "fit-content" });
+    await expect(host).toHaveScreenshot(`fractional-card-content-${scheme}.png`);
   });
 
   test(`fractions resize inside every full-width container without another render, ${scheme}`, async ({ page }) => {
