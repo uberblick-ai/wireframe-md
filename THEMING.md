@@ -25,16 +25,20 @@ inherits.
 | `--wf-warning` | `banner.warning`'s icon and border; amber icons and text (light text mixes 80% warning with 20% ink) | `oklch(0.66 0.13 70)` | `oklch(0.78 0.14 75)` |
 | `--wf-success` | `banner.success`'s icon and border; green icons and text | `oklch(0.55 0.15 150)` | `oklch(0.75 0.14 150)` |
 | `--wf-neutral-tint` | a neutral banner's and a frame's fill | `oklch(0.985 0.002 75)` | `oklch(0.2 0.004 65)` |
-| `--wf-info-tint` | `banner.info`'s and `text.bg-blue`'s fill | `oklch(0.965 0.02 250)` | `oklch(0.24 0.035 250)` |
-| `--wf-warning-tint` | `banner.warning`'s and `text.bg-amber`'s fill | `oklch(0.975 0.022 85)` | `oklch(0.24 0.035 75)` |
-| `--wf-danger-tint` | `banner.danger`'s and `text.bg-red`'s fill | `oklch(0.96 0.025 27.325)` | `oklch(0.25 0.04 22.216)` |
-| `--wf-success-tint` | `banner.success`'s and `text.bg-green`'s fill | `oklch(0.965 0.025 150)` | `oklch(0.24 0.035 150)` |
+| `--wf-info-tint` | `banner.info`'s and `text.bg-blue`'s fill | `oklch(0.965 0.02 250)` | `oklch(0.3 0.07 250)` |
+| `--wf-warning-tint` | `banner.warning`'s and `text.bg-amber`'s fill | `oklch(0.975 0.022 85)` | `oklch(0.3 0.07 75)` |
+| `--wf-danger-tint` | `banner.danger`'s and `text.bg-red`'s fill | `oklch(0.96 0.025 27.325)` | `oklch(0.3 0.07 22.216)` |
+| `--wf-success-tint` | `banner.success`'s and `text.bg-green`'s fill | `oklch(0.965 0.025 150)` | `oklch(0.3 0.07 150)` |
 
 The sizes and mono face are the same in light and dark.
 
-Text backgrounds leave text colour independent: ink by default, or the written
-text colour. Default ink and muted text reach 4.5:1 on all four tints in light
-and dark; other text hue/background combinations have no contrast promise.
+Banners and `text.bg-<hue>` share these four semantic tints, including host
+overrides. Text backgrounds leave text colour independent: ink by default,
+or the written text colour. Default ink and muted text reach 4.5:1 on all four
+tints in light and dark. In dark, each tint reaches 1.2:1 against paper, each
+named text colour reaches 4.5:1 on its own tint, and each toned banner's icon
+reaches 3:1 on its fill. Other text hue/background combinations have no
+contrast promise.
 
 Current list items mix 10% `--wf-ink` with `--wf-paper` for their neutral tint.
 

@@ -59,10 +59,10 @@ const STYLES = `.wf-root {
   --_wf-warning: var(--wf-warning, light-dark(oklch(0.66 0.13 70), oklch(0.78 0.14 75)));
   --_wf-success: var(--wf-success, light-dark(oklch(0.55 0.15 150), oklch(0.75 0.14 150)));
   --_wf-neutral-tint: var(--wf-neutral-tint, light-dark(oklch(0.985 0.002 75), oklch(0.2 0.004 65)));
-  --_wf-info-tint: var(--wf-info-tint, light-dark(oklch(0.965 0.02 250), oklch(0.24 0.035 250)));
-  --_wf-warning-tint: var(--wf-warning-tint, light-dark(oklch(0.975 0.022 85), oklch(0.24 0.035 75)));
-  --_wf-danger-tint: var(--wf-danger-tint, light-dark(oklch(0.96 0.025 27.325), oklch(0.25 0.04 22.216)));
-  --_wf-success-tint: var(--wf-success-tint, light-dark(oklch(0.965 0.025 150), oklch(0.24 0.035 150)));
+  --_wf-info-tint: var(--wf-info-tint, light-dark(oklch(0.965 0.02 250), oklch(0.3 0.07 250)));
+  --_wf-warning-tint: var(--wf-warning-tint, light-dark(oklch(0.975 0.022 85), oklch(0.3 0.07 75)));
+  --_wf-danger-tint: var(--wf-danger-tint, light-dark(oklch(0.96 0.025 27.325), oklch(0.3 0.07 22.216)));
+  --_wf-success-tint: var(--wf-success-tint, light-dark(oklch(0.965 0.025 150), oklch(0.3 0.07 150)));
   --_wf-stroke: var(--wf-stroke, 1px);
   --_wf-focus-width: var(--wf-focus-width, 2px);
   --_wf-radius: var(--wf-radius, 6px);

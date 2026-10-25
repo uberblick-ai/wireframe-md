@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { open, show } from "./page.js";
 
-const hues = ["red", "amber", "green", "blue"];
+const tones = { red: "danger", amber: "warning", green: "success", blue: "info" } as const;
+const hues = Object.keys(tones) as (keyof typeof tones)[];
 
 test.beforeEach(async ({ page }) => open(page));
 
@@ -118,6 +119,76 @@ for (const scheme of ["light", "dark"] as const) {
     expect(styles[0]!.size).toBe(styles[4]!.size);
     expect(styles[0]!.weight).toBe(styles[4]!.weight);
     for (const line of await page.locator(".wf-title.wf-bg-blue").all()) await expect(line).toMatchAriaSnapshot('- text: Use GitHub.');
+  });
+
+  test(`banners share text tints and host overrides, with readable dark highlights in ${scheme}`, async ({ page }) => {
+    const source = [
+      "page",
+      "  card",
+      ...hues.map((hue) => `    text.${hue}.bg-${hue} ${hue}`),
+      ...hues.flatMap((hue) => [
+        `banner.${tones[hue]}`,
+        "  icon point",
+        "  text State",
+        "  text.muted Details",
+      ]),
+    ].join("\n");
+    const host = await show(page, source, { scheme, host: "column" });
+    const styles = () => page.evaluate((tones) => {
+      const paper = getComputedStyle(document.querySelector(".wf-page")!).backgroundColor;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const context = canvas.getContext("2d")!;
+      const luminance = (colour: string) => {
+        context.fillStyle = colour;
+        context.fillRect(0, 0, 1, 1);
+        const rgb = [...context.getImageData(0, 0, 1, 1).data].slice(0, 3).map((channel) => {
+          const value = channel / 255;
+          return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        });
+        return rgb[0]! * 0.2126 + rgb[1]! * 0.7152 + rgb[2]! * 0.0722;
+      };
+      const contrast = (foreground: string, background: string) => {
+        const a = luminance(foreground);
+        const b = luminance(background);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      return Object.entries(tones).map(([hue, tone]) => {
+        const text = getComputedStyle(document.querySelector(`.wf-text.wf-bg-${hue}`)!);
+        const banner = document.querySelector(`.wf-banner.wf-${tone}`)!;
+        const fill = getComputedStyle(banner).backgroundColor;
+        return {
+          hue, textTint: text.backgroundColor, bannerTint: fill,
+          paperContrast: contrast(text.backgroundColor, paper),
+          hueContrast: contrast(text.color, text.backgroundColor),
+          iconContrast: contrast(getComputedStyle(banner.querySelector(".wf-icon")!).color, fill),
+          inkContrast: contrast(getComputedStyle(banner.querySelector(".wf-text:not(.wf-muted)")!).color, fill),
+          mutedContrast: contrast(getComputedStyle(banner.querySelector(".wf-muted")!).color, fill),
+        };
+      });
+    }, tones);
+    for (const actual of await styles()) {
+      expect(actual.bannerTint, actual.hue).toBe(actual.textTint);
+      expect(actual.inkContrast, actual.hue).toBeGreaterThanOrEqual(4.5);
+      expect(actual.mutedContrast, actual.hue).toBeGreaterThanOrEqual(4.5);
+      if (scheme === "dark") {
+        expect(actual.iconContrast, actual.hue).toBeGreaterThanOrEqual(3);
+        expect(actual.paperContrast, actual.hue).toBeGreaterThanOrEqual(1.2);
+        expect(actual.hueContrast, actual.hue).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+    const overrides = {
+      danger: "rgb(250, 230, 235)", warning: "rgb(250, 245, 220)",
+      success: "rgb(230, 250, 235)", info: "rgb(230, 235, 250)",
+    };
+    await host.evaluate((node, overrides) => {
+      for (const [tone, tint] of Object.entries(overrides)) node.style.setProperty(`--wf-${tone}-tint`, tint);
+    }, overrides);
+    for (const actual of await styles()) {
+      const expected = overrides[tones[actual.hue as keyof typeof tones]];
+      expect(actual.textTint, actual.hue).toBe(expected);
+      expect(actual.bannerTint, actual.hue).toBe(expected);
+    }
   });
 
   test(`tinted lines wrap in narrow cards and rows in both directions in ${scheme}`, async ({ page }) => {
