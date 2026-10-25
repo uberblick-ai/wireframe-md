@@ -166,6 +166,18 @@ const standaloneSamples = new Set([
   "phones-home-feed", // phone
 ]);
 
+// These dark fills can change visibly while staying below Playwright's default
+// perceptual threshold. Compare exact colours so their goldens track the tints.
+const tintedSamples = new Set([
+  "folds-collapsed-content",
+  "text-changed-lines",
+  "archived-banner",
+  "banners-success-banner",
+  "banners-banner-with-actions",
+  "banners-wrapping-text",
+  "banners-stacked-above-page",
+]);
+
 for (const { name, source, intro } of samples) {
   const hosts: Host[] = standaloneSamples.has(name) ? ["standalone", "column"] : ["column"];
   for (const scheme of ["light", "dark"] satisfies Scheme[]) {
@@ -173,7 +185,8 @@ for (const { name, source, intro } of samples) {
       test(`${name}, ${scheme}, ${host}`, async ({ page }) => {
         await open(page);
         const shot = await show(page, source, { scheme, host, intro });
-        await expect(shot).toHaveScreenshot(`${name}-${scheme}-${host}.png`);
+        await expect(shot).toHaveScreenshot(`${name}-${scheme}-${host}.png`,
+          scheme === "dark" && tintedSamples.has(name) ? { threshold: 0 } : {});
       });
     }
   }
