@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+- Dark red, amber, green and blue tints make changed text lines and toned
+  banners more visible against paper, preserving readable ink, muted text
+  and matching named text colours. Light defaults stay the same.
+
 - `item LABEL` groups a label and compact text lines, with an optional leading
   icon or round avatar. The first `item.current` in a root or card gets a neutral
   tint through the container's padding and reads as “label, current”. Long lines

@@ -698,7 +698,7 @@ test.describe("theming", () => {
       });
       const defaults = await appearance();
       expect(defaults.icon).toBe(scheme === "light" ? "oklch(0.55 0.15 150)" : "oklch(0.75 0.14 150)");
-      expect(defaults.tint).toBe(scheme === "light" ? "oklch(0.965 0.025 150)" : "oklch(0.24 0.035 150)");
+      expect(defaults.tint).toBe(scheme === "light" ? "oklch(0.965 0.025 150)" : "oklch(0.3 0.07 150)");
       expect(defaults.text).toBe(defaults.ink);
       await host.evaluate((element) => element.style.setProperty("--wf-success", "rgb(10, 20, 30)"));
       const toned = await appearance();
