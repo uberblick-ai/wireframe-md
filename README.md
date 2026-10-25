@@ -73,6 +73,7 @@ See [Images, card rows and docks in AUTHORING.md](AUTHORING.md#images-card-rows-
 - [THEMING.md](THEMING.md): the `--wf-*` properties and mapping a host's tokens.
 - [playground/README.md](playground/README.md): the local playground and example
   approval, for working on this repository.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability privately.
 
 ## Credits
 
