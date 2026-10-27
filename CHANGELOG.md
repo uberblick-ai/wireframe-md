@@ -7,25 +7,16 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## 0.3.2 — 2026-10-27
 
-- Dark red, amber, green and blue tints make changed text lines and toned
-  banners more visible against paper, preserving readable ink, muted text
-  and matching named text colours. Light defaults stay the same.
+### Added
 
-- `item LABEL` groups a label and compact text lines, with an optional leading
-  icon or round avatar. The first `item.current` in a root or card gets a neutral
-  tint through the container's padding and reads as “label, current”. Long lines
-  wrap within the entry in light and dark.
+- `fold LABEL` shows collapsed content as a dashed bar ([#93](https://github.com/uberblick-ai/wireframe-md/issues/93)).
+- `ruler` and `mark` show an overview of changes beside row content ([#94](https://github.com/uberblick-ai/wireframe-md/issues/94)).
+- `button.disabled` shows unavailable actions and announces their state ([#95](https://github.com/uberblick-ai/wireframe-md/issues/95)).
+- `item LABEL` groups compact list entries with optional icons or avatars and a current state ([#96](https://github.com/uberblick-ai/wireframe-md/issues/96)).
 
-- `button.disabled` draws unavailable actions muted, preserving variant styling
-  and at least 3:1 default caption contrast in light and dark. Assistive
-  technology reads the caption (or icon name) followed by “unavailable”.
+### Fixed
 
-- `ruler` draws a slim overview track beside a row's content. Decorative
-  `mark at=0` to `mark at=100` lines show changes in warning, red or green;
-  the ruler spans the row's height beside ordinary and fractional cards.
-- `fold LABEL` draws a static, full-width dashed bar for collapsed content in
-  roots, cards and docks. Labels wrap in small muted text; a bare fold draws an
-  empty bar and reads as “fold”. Banner folds take their own full-width line.
+- Dark text backgrounds and banner tints are more visible against paper ([#106](https://github.com/uberblick-ai/wireframe-md/issues/106)).
 
 ## 0.3.1 — 2026-10-24
 
