@@ -5,6 +5,8 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+## 0.3.2 — 2026-10-27
+
 - Dark red, amber, green and blue tints make changed text lines and toned
   banners more visible against paper, preserving readable ink, muted text
   and matching named text colours. Light defaults stay the same.
