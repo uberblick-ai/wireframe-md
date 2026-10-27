@@ -21,6 +21,13 @@ changing its environment or skipping tests has not passed.
 Once `CHANGELOG.md` exists, a change a package user can notice adds a line under
 `Unreleased` in the same PR.
 
+Match the Uberblick and ub-agents style: group entries under `Added`, `Changed`
+and `Fixed`, using `Breaking` or `Removed` when needed and omitting empty groups.
+Each bullet is one short sentence describing the user-visible change, ending in
+a clickable link to its original issue. Keep syntax details, edge cases and
+validation in the authoring guide or linked issue. GitHub release notes copy the
+version's changelog section verbatim.
+
 ## Merging
 
 The integrator squash-merges when the reviewer approved the current head and the
