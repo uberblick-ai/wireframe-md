@@ -1101,6 +1101,7 @@ const STYLES = `.wf-root {
 .wf-root .wf-switch-state,
 .wf-root .wf-button-state,
 .wf-root .wf-item-state,
+.wf-root .wf-code-name,
 .wf-root .wf-fold-name {
   position: absolute;
   width: 1px;
@@ -1210,7 +1211,7 @@ const STYLES = `.wf-root {
 
 /* Fields share their border, radius, padding and height, with no fill. They
    hold the line height of text even when empty. */
-.wf-root .wf-input,
+.wf-root .wf-input:not(.wf-code),
 .wf-root .wf-select {
   box-sizing: border-box;
   min-height: calc(2.15em + 2 * var(--_wf-stroke));
@@ -1228,6 +1229,41 @@ const STYLES = `.wf-root {
 
 .wf-root .wf-row > .wf-input {
   flex: 1 1 12em;
+}
+
+/* Code fields keep their box count and natural width in every container. */
+.wf-root .wf-input.wf-code {
+  display: flex;
+  flex: none;
+  justify-self: start;
+  width: max-content;
+  min-height: 0;
+  padding: 0;
+  gap: 0.35em;
+  color: var(--_wf-ink);
+}
+
+.wf-root .wf-code-box {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: calc(2.15em + 2 * var(--_wf-stroke));
+  height: calc(2.15em + 2 * var(--_wf-stroke));
+  border: var(--_wf-stroke) solid var(--_wf-line);
+  border-radius: var(--_wf-radius);
+}
+
+.wf-root .wf-field.wf-code-field {
+  grid-template-columns: minmax(0, 1fr);
+  width: calc(var(--_wf-boxes) * (2.15em + 2 * var(--_wf-stroke)) + (var(--_wf-boxes) - 1) * 0.35em);
+  min-width: 0;
+  justify-self: start;
+}
+
+.wf-root .wf-row > .wf-code-field {
+  flex: none;
 }
 
 /* A closed select: its value in ink and a chevron at the far end. It takes its

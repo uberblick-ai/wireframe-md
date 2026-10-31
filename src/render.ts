@@ -1,5 +1,5 @@
 import type { WireframeNode, WireframeParseResult } from "./model.js";
-import { markPosition, paddingPixels, widthPixels } from "./attributes.js";
+import { boxesCount, markPosition, paddingPixels, widthPixels } from "./attributes.js";
 import { type IconStyle, resolveIcon } from "./icons.js";
 import { cardFraction, fullWidthRow, rowFractions } from "./layout.js";
 import { textRuns } from "./text.js";
@@ -69,6 +69,7 @@ export function renderWireframe(
 }
 
 function draw(document: Document, node: WireframeNode, parent?: WireframeNode, grandparent?: WireframeNode): HTMLElement | DocumentFragment {
+  const boxes = node.kind === "input" ? boxesCount(node.attributes.find((attribute) => attribute.key === "boxes")?.value) : undefined;
   const at = node.kind === "mark" ? markPosition(node.attributes.find((attribute) => attribute.key === "at")?.value) : undefined;
   // A mark has no fallback position. This is the deliberate warning exception.
   if (node.kind === "mark" && at === undefined) {
@@ -295,6 +296,20 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
       }
       break;
     }
+    case "input": {
+      if (boxes === undefined) element.textContent = node.label;
+      else {
+        element.classList.add("wf-code");
+        const characters = Array.from(node.label).slice(0, boxes);
+        element.append(text(document, "span", ["wf-code-name"], `${boxes}-character code${characters.length === 0 ? "" : `, ${characters.join(" ")}`}`));
+        for (let index = 0; index < boxes; index += 1) {
+          const box = text(document, "span", ["wf-code-box"], characters[index] ?? "");
+          box.setAttribute("aria-hidden", "true");
+          element.append(box);
+        }
+      }
+      break;
+    }
     case "select":
       // The chosen value, then the chevron-down.
       element.textContent = node.label;
@@ -384,6 +399,10 @@ function draw(document: Document, node: WireframeNode, parent?: WireframeNode, g
     const label = node.attributes.find((attribute) => attribute.key === "label");
     if (label !== undefined) {
       const field = create(document, "div", ["wf-field"]);
+      if (boxes !== undefined) {
+        field.classList.add("wf-code-field");
+        field.style.setProperty("--_wf-boxes", String(boxes));
+      }
       // The wrapper represents the source line; the control stays inert.
       field.dataset.line = String(node.line);
       delete element.dataset.line;
@@ -461,7 +480,7 @@ function sizingBoundary(document: Document, element: HTMLElement, kind: "banner"
       // Grid's preferred fr size fits the largest content-to-share ratio.
       // The visible flex row still owns neighbours' allocation and shrinking.
       const items = [...copy.children] as HTMLElement[];
-      const grows = items.map((child) => child.matches(".wf-field, .wf-input") ? 1 : Number(child.style.getPropertyValue("--_wf-grow")));
+      const grows = items.map((child) => child.matches(".wf-field:not(.wf-code-field), .wf-input:not(.wf-code)") ? 1 : Number(child.style.getPropertyValue("--_wf-grow")));
       // Intrinsic grid sizing floors flex factors below 1. Normalize every
       // positive share to at least 1fr so the preferred width keeps the ratio.
       const smallest = Math.min(...grows.filter((grow) => grow > 0));

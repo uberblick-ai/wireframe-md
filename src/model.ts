@@ -9,7 +9,7 @@ export interface WireframeNode {
   variants: string[];
   /** The `#id`, present only when the line has one. */
   id?: string;
-  /** `key=value` pairs in source order: `label` on input/select, `width` on page/card/image, `padding` on card, `at` on mark. */
+  /** `key=value` pairs in source order: `label` on input/select, `boxes` on input, `width` on page/card/image, `padding` on card, `at` on mark. */
   attributes: WireframeAttribute[];
   /** The rest of the line as plain text, without its quotes. Empty when there is none. */
   label: string;

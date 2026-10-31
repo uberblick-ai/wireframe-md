@@ -9,6 +9,11 @@ import { type Host, open, type Scheme, show } from "./page.js";
 
 const samples = [
   {
+    name: "forms-check-your-email",
+    source: readFileSync(new URL("../../examples/forms/2-simple-forms/check-your-email.wireframe", import.meta.url), "utf8"),
+    intro: "A verification field shows six single-character boxes with the first two filled.",
+  },
+  {
     name: "navigation-items-revision-history",
     source: readFileSync(new URL("../../examples/navigation/5-list-entries/revision-history.wireframe", import.meta.url), "utf8"),
     intro: "List entries group labels and metadata beside optional icons or avatars; the current entry has a full-width neutral tint.",

@@ -1,0 +1,6 @@
+dialog Check your email
+  text We sent a 6-digit code to b•••@gmail.com, the owner email in your feed.
+  input label=Code boxes=6 48
+  row.between
+    button.link Resend code
+    button.primary Verify
