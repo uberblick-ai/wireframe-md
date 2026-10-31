@@ -27,3 +27,10 @@ export function markPosition(value: string | undefined): number | undefined {
   const position = Number(value);
   return position >= 0 && position <= 100 ? position : undefined;
 }
+
+/** Code fields have four to eight single-character boxes. */
+export function boxesCount(value: string | undefined): number | undefined {
+  if (value === undefined || !/^[0-9]+$/.test(value)) return undefined;
+  const count = Number(value);
+  return count >= 4 && count <= 8 ? count : undefined;
+}

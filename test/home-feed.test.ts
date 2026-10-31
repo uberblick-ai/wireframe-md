@@ -43,7 +43,7 @@ describe("home screen vocabulary", () => {
     ]);
     expect(render(`${prefix}${kind} width=0 width=256`).querySelector("[style]")).toBeNull();
     expect(warnings(`${prefix}${kind} height=50`)).toEqual([
-      `${line}: unknown attribute "height": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)`,
+      `${line}: unknown attribute "height": expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)`,
     ]);
   });
 

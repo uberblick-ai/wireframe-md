@@ -5,6 +5,10 @@ format, the vocabulary and the rendering may change in any minor version.
 
 ## Unreleased
 
+### Added
+
+- Inputs can show one-time codes as a row of single-character boxes ([#111](https://github.com/uberblick-ai/wireframe-md/issues/111)).
+
 ## 0.3.2 — 2026-10-27
 
 ### Added

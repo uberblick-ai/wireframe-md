@@ -38,12 +38,13 @@ kind.variant#id key=value Label
   change the drawing.
 - **key=value** is an attribute between the first word and the line's label.
   v0.1 defines `label` on `input` and `select`: `label=Role` or
-  `label="Work email"`, `width` on `page`, `card` and `image`: `width=256`
+  `label="Work email"`, `boxes` on `input`: `boxes=6`,
+  `width` on `page`, `card` and `image`: `width=256`
   (also `width=1/3` on a card directly inside a full-width row),
   `padding` on `card`: `padding=8`, and `at` on `mark`: `at=22`.
   Values with spaces use quotes and the same escapes as a
   quoted label; a quoted attribute must be followed by a space or the line's end.
-  Other attributes get a warning. A repeated `label=`, `width=`, `padding=` or `at=`
+  Other attributes get a warning. A repeated `label=`, `boxes=`, `width=`, `padding=` or `at=`
   warns and uses the first value, even when invalid; an attribute on a kind
   that does not accept it warns and doesn't change its drawing.
 - **Label** is the rest of the line, without trailing spaces. On `text` lines,
@@ -134,7 +135,7 @@ rest. A `card` may also stand at the top level, but holds text, images, folds, i
 | `mark` | directly inside a `ruler` | `.red`, `.green`: semantic colours; warning by default | none: requires `at=0` to `at=100`; no children |
 | `button` | directly inside a `row` or a `cell` or a `frame` | `.primary`: the filled main action; `.danger`: the destructive colour; `.link`: an underlined text button with no box; `.focus`: shows a focus ring; `.disabled`: an unavailable action, muted | the caption, or none when it holds an icon |
 | `icon` | directly inside a root or a `dock` or a `cell` or a `button` or an `option` or an `item` | `.filled`: solid shapes; outline by default; `.red`, `.amber`, `.green`, `.blue`: named colours | its exact kebab-case Tabler name, such as `pin`, `dots-vertical` or `archive`; only as an item's first child |
-| `input` | directly inside a root or a `dock` or a `row` | none | the placeholder |
+| `input` | directly inside a root or a `dock` or a `row` | none | the placeholder, or typed characters with `boxes=` |
 | `select` | directly inside a root or a `dock` or a `row` | none | the chosen value |
 | `switch` | directly inside a root or a `dock` or a `card` or a `row` | `.on`: the on state; off by default | the caption, or none for a bare switch |
 | `toggle` | directly inside a root or a `dock` or a `row` | none | none: its choices are `option` lines |
@@ -382,7 +383,7 @@ larger than body text and smaller than a page's title. Elsewhere it keeps the
 page title's size. `text.small` changes only the size and combines with other
 variants, such as `text.small.muted`; write capitals in the source itself.
 
-An `input` is an empty bordered field showing its placeholder in muted. A
+An ordinary `input` is an empty bordered field showing its placeholder in muted. A
 `select` is a closed select with the same border, radius, height and padding as
 an input, with no fill, its chosen value in ink and a muted stroked chevron-down
 at the end. The select's chevron is separate from the icon catalog. Both fields
@@ -405,6 +406,42 @@ page
 
 A `toggle` draws its options on one line, separated by `·`. A `chip` is a small
 neutral tag, and `chip.more` the count of the tags that don't show.
+
+`input boxes=N` draws a one-time-code field with N equal square boxes and a
+small gap, for whole numbers from 4 to 8. Boxes share an ordinary input's
+border, radius and height, have no fill, and use the existing theme properties.
+The field keeps the width of its boxes on its own and in rows, including with
+`label=` above it. Long field names wrap within that width. Eight boxes fit
+inside a phone at its full screen width without sideways scrolling.
+
+On a code field the line's label is typed text, one character per box from the
+start, centred in ink; `input boxes=6 4•` fills two boxes and leaves four empty.
+Without a line label, all boxes are empty. Characters beyond the count warn and
+only the first N draw. Code fields keep ordinary input placement and warnings.
+They remain inert and non-focusable, with no role or caret. Assistive technology
+reads them once as “N-character code”, followed by filled characters separated
+by spaces: `input boxes=6 48` reads “6-character code, 4 8”. Individual boxes are
+decorative; field names remain visible text and root summaries stay unchanged.
+
+```wireframe
+dialog Check your email
+  text We sent a 6-digit code to b•••@gmail.com, the owner email in your feed.
+  input label=Code boxes=6 48
+  row.between
+    button.link Resend code
+    button.primary Verify
+```
+
+| Source | Warning | Drawing |
+| --- | --- | --- |
+| `input boxes=3 48` | `invalid boxes "3": expected a whole number from 4 to 8, such as boxes=6` | ordinary input with `48` as its placeholder |
+| `input boxes=6 1234567` | `too many characters for boxes=6: the first 6 are drawn` | six boxes showing `123456` |
+| `select boxes=6 Editor` | `attribute "boxes" is only allowed on input` | ordinary select |
+| `input boxes=4 boxes=6 48` | `repeated attribute "boxes": the first value is used` | four boxes |
+
+An invalid count such as `boxes=12`, `boxes=six` or an empty `boxes=` uses the
+same invalid-boxes message with its value and draws an ordinary input. A first
+invalid value remains ordinary even when a repeated value is valid.
 
 A `switch` draws a small rounded track and round thumb, sized from
 `--wf-text-size`. Off by default, it uses a neutral `--wf-line` track with a
@@ -606,7 +643,7 @@ These warnings still render:
 | `dialog width=256` (any kind other than `page`, `card` or `image`, whatever the value) | `attribute "width" is only allowed on page, card or image` | unchanged |
 | `page width=240px` (also `50%`, `0`, `12.5` or an empty value) | `invalid width "240px": expected a whole number of pixels from 1 to 9999, such as width=240` | fluid page |
 | `page width=256 width=400` | `repeated attribute "width": the first value is used` | the first width; a first invalid value stays fluid |
-| `page format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
+| `page format=PDF` | `unknown attribute "format": expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
 
 ## Card padding
 
@@ -641,7 +678,7 @@ These warnings keep the block renderable and report the source line:
 | `page padding=8` (any kind other than `card`, whatever the value) | `attribute "padding" is only allowed on card` | unchanged |
 | `card padding=8px` (also `-1`, `8.5`, `65`, `1em` or an empty value) | `invalid padding "8px": expected a whole number of pixels from 0 to 64, such as padding=8` | default padding |
 | `card padding=8 padding=4` | `repeated attribute "padding": the first value is used` | the first padding; an invalid first value keeps the default padding |
-| `card format=PDF` | `unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
+| `card format=PDF` | `unknown attribute "format": expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)` | unchanged |
 
 ## Page wrappers
 
@@ -1085,8 +1122,9 @@ Every problem gives a diagnostic with its line number and what was expected, suc
   good render. Bad indentation, an unterminated quote, text after a closing quote
   and an exceeded limit are errors.
 - **Warnings still draw.** An unknown kind, variant, attribute or icon, a malformed
-  `#id`, a label on a kind that takes none, `label=`, `width=`, `padding=` or `at=` on
-  the wrong kind, a repeated attribute, an invalid width or padding and a node in the wrong place are
+  `#id`, a label on a kind that takes none, `label=`, `boxes=`, `width=`, `padding=` or `at=` on
+  the wrong kind, a repeated attribute, an invalid width, padding or box count,
+  excess code characters and a node in the wrong place are
   warnings. The node draws where it was written, and an unknown kind draws as a
   dashed box showing its name. Fix warnings too: they mean the block doesn't say
   what you meant.
@@ -1239,7 +1277,7 @@ dialog Publish the page?
 ### A label that starts with `word=`
 
 The parser reads `format=PDF` as an attribute, so the label is only the rest of the
-line. Attributes are `label=` on `input` and `select`, `width=` on `page`, `card`
+line. Attributes are `label=` on `input` and `select`, `boxes=` on `input`, `width=` on `page`, `card`
 and `image`, `padding=` on `card`, and `at=` on `mark`. Quote any line label that starts with
 `word=`, including a placeholder that starts with `label=`. Wrong:
 
@@ -1251,7 +1289,7 @@ dialog Export
 Diagnostics:
 
 ```text
-line 2: warning: unknown attribute "format": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)
+line 2: warning: unknown attribute "format": expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)
 ```
 
 Fixed:

@@ -1,5 +1,5 @@
 import type { WireframeDiagnostic, WireframeNode, WireframeParseResult } from "./model.js";
-import { markPosition, paddingPixels, widthFraction, widthPixels } from "./attributes.js";
+import { boxesCount, markPosition, paddingPixels, widthFraction, widthPixels } from "./attributes.js";
 import { resolveIcon } from "./icons.js";
 import { fullWidthRow, rowFractions } from "./layout.js";
 import { CELL_SORT_VARIANTS, colourVariants, IMAGE_SHAPE_VARIANTS, KINDS, LIMITS, PAGE_CHROME_VARIANTS, type Place, ROOTS, ROW_LAYOUT_VARIANTS, ROW_VARIANT_CONFLICTS, TEXT_BACKGROUND_VARIANTS } from "./vocabulary.js";
@@ -210,14 +210,19 @@ function checkNode(
   }
   const seenAttributes = new Set<string>();
   for (const { key, value } of node.attributes) {
-    if (key !== "label" && key !== "width" && key !== "padding" && key !== "at") {
-      warn(`unknown attribute ${quote(key)}: expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)`);
+    if (key !== "label" && key !== "boxes" && key !== "width" && key !== "padding" && key !== "at") {
+      warn(`unknown attribute ${quote(key)}: expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)`);
       continue;
     }
     if (seenAttributes.has(key)) warn(`repeated attribute ${quote(key)}: the first value is used`);
     seenAttributes.add(key);
     if (key === "label") {
       if (kind !== "input" && kind !== "select") warn('attribute "label" is only allowed on input or select');
+    } else if (key === "boxes") {
+      if (kind !== "input") warn('attribute "boxes" is only allowed on input');
+      else if (boxesCount(value) === undefined) {
+        warn(`invalid boxes ${quote(value)}: expected a whole number from 4 to 8, such as boxes=6`);
+      }
     } else if (key === "at") {
       if (kind !== "mark") warn('attribute "at" is only allowed on mark');
     } else if (key === "padding") {
@@ -233,6 +238,12 @@ function checkNode(
       }
     } else if (widthPixels(value) === undefined) {
       warn(`invalid width ${quote(value)}: expected a whole number of pixels from 1 to 9999, such as width=240${kind === "card" ? ", or a fraction of the row such as width=1/3" : ""}`);
+    }
+  }
+  if (kind === "input") {
+    const boxes = boxesCount(node.attributes.find((attribute) => attribute.key === "boxes")?.value);
+    if (boxes !== undefined && Array.from(node.label).length > boxes) {
+      warn(`too many characters for boxes=${boxes}: the first ${boxes} are drawn`);
     }
   }
   if (kind === "mark") {

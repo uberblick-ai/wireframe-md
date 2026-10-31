@@ -107,7 +107,7 @@ describe("overview rulers", () => {
       warning(4, 'attribute "label" is only allowed on input or select'),
       warning(4, 'attribute "width" is only allowed on page, card or image'),
       warning(4, 'attribute "padding" is only allowed on card'),
-      warning(4, 'unknown attribute "other": expected label on input or select, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
+      warning(4, 'unknown attribute "other": expected label on input or select, boxes on input, width on page, card or image, padding on card, or at on mark (quote a label that starts with word=)'),
       warning(4, `${kind} takes no label`),
       ...(kind === "ruler" ? [warning(4, "ruler must be directly inside a non-table row")] : []),
       warning(5, "text must be directly inside dialog, banner, page, frame, phone, dock, card, row or item"),
