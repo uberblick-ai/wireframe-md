@@ -62,6 +62,22 @@ for (const scheme of ["light", "dark"] as const) {
     }
   });
 
+  test(`code fields follow ordinary input alignment beside taller row content, ${scheme}`, async ({ page }) => {
+    for (const variant of ["", ".end", ".between", ".scroll", ".stretch"]) {
+      await show(page, `page\n  row${variant}\n    image.square width=100 Cover\n    input boxes=6 48\n    input Hint`, { scheme, host: "column" });
+      const geometry = await page.locator('.wf-row[data-line]').evaluate((row) => {
+        const box = (selector: string) => {
+          const rect = row.querySelector(selector)!.getBoundingClientRect();
+          return { top: rect.top, height: rect.height };
+        };
+        return { code: box(".wf-code"), input: box(".wf-input:not(.wf-code)"), image: box(".wf-image") };
+      });
+      expect(geometry.code).toEqual(geometry.input);
+      if (variant === ".stretch") expect(geometry.code.top).toBe(geometry.image.top);
+      else expect(geometry.code.top + geometry.code.height / 2).toBeCloseTo(geometry.image.top + geometry.image.height / 2, 1);
+    }
+  });
+
   test(`a labelled code field stays at its box width beside fractional cards, ${scheme}`, async ({ page }) => {
     for (const layout of ["block", "flex", "grid", "fit-content"] as const) {
       await show(page, 'page\n  row.between.stretch\n    card width=1/2\n      text First\n    card width=1/2\n      text Second\n    input label="Long field name within the code width" boxes=4 48', { scheme, host: "column", layout });

@@ -1235,7 +1235,6 @@ const STYLES = `.wf-root {
 .wf-root .wf-input.wf-code {
   display: flex;
   flex: none;
-  align-self: start;
   justify-self: start;
   width: max-content;
   min-height: 0;
