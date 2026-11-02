@@ -69,6 +69,12 @@ runtime-args:
 # An agent's runtime-args list or mapping replaces these defaults entirely.
 # Omit the agent key to inherit; an empty list or mapping disables the defaults.
 
+# Update ub and the launcher once a day between runs; the launcher restarts in
+# place when a release allows independent upgrades.
+runtime-updates:
+  ub: auto
+  ub-agents: auto
+
 # Customize these outcomes and rules with the project's owners.
 agents:
   issue-preparer:
